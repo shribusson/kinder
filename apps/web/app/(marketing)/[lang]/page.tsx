@@ -1,24 +1,37 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 
 const content = {
   ru: {
     localeLabel: "Рус",
-    title: "Детский центр — логопед, психолог, подготовка к школе",
+    title: "School Kids — детский центр развития в Алматы",
     description:
-      "Детский центр: логопед, психолог, дефектолог. Индивидуальные программы, заботливые специалисты и удобная запись.",
-    heroTag: "Детский центр",
-    heroTitle: "Помогаем детям говорить, учиться и развиваться",
+      "Детский центр School Kids: логопед, психолог, дефектолог, подготовка к школе. ✓ Опытные педагоги ✓ Индивидуальный подход ✓ Современные методики ✓ Уютная атмосфера. Записаться на пробное занятие!",
+    heroTag: "School Kids — Детский центр развития",
+    heroTitle: "Раскрываем потенциал каждого ребёнка",
     heroSubtitle:
-      "Логопед, психолог, дефектолог и подготовка к школе. Индивидуальные программы и бережное сопровождение.",
-    ctaPrimary: "Записаться",
-    ctaSecondary: "Получить консультацию",
-    featuresTitle: "Преимущества центра",
+      "Помогаем детям говорить чётко, учиться с удовольствием и развиваться гармонично. Профессиональные логопеды, психологи и педагоги в уютном пространстве.",
+    ctaPrimary: "Записаться на пробное занятие",
+    ctaSecondary: "Получить бесплатную консультацию",
+    featuresTitle: "Почему родители выбирают School Kids",
     features: [
-      "Индивидуальные планы занятий",
-      "Комфортная адаптация ребёнка",
-      "Опытные специалисты и методики",
-      "Удобный график и напоминания"
+      {
+        title: "Опытные специалисты",
+        desc: "Дипломированные педагоги с опытом работы от 5 лет и регулярным повышением квалификации"
+      },
+      {
+        title: "Индивидуальный подход",
+        desc: "Персональная программа для каждого ребенка с учётом особенностей развития"
+      },
+      {
+        title: "Современные методики",
+        desc: "Проверенные программы развития, игровые формы обучения и комфортная атмосфера"
+      },
+      {
+        title: "Видимый результат",
+        desc: "Регулярная диагностика прогресса и подробная обратная связь родителям"
+      }
     ],
     servicesTitle: "Услуги центра",
     servicesSubtitle: "Основные направления работы и специалисты.",
@@ -225,139 +238,271 @@ export default function MarketingPage({ params }: { params: { lang: Locale } }) 
   const locale = content[params.lang] ?? content.ru;
 
   return (
-    <div className="flex flex-col gap-16">
-      <header className="flex items-center justify-between rounded-2xl bg-white px-6 py-4 shadow-sm ring-1 ring-slate-100">
-        <div className="flex items-center gap-3">
-          <img
-            src="/brand-logo.jpg"
-            alt="School Kids"
-            className="h-10 w-10 rounded-xl object-cover"
-          />
-          <div className="text-sm font-semibold text-slate-800">School Kids</div>
-        </div>
-        <div className="flex gap-2 text-sm">
-          {["ru", "kz", "en"].map((lang) => (
-            <Link
-              key={lang}
-              href={`/${lang}`}
-              className={
-                lang === params.lang
-                  ? "rounded-full bg-brand-600 px-3 py-1 text-white"
-                  : "rounded-full border border-slate-200 px-3 py-1 text-slate-600"
-              }
-            >
-              {content[lang as Locale].localeLabel}
-            </Link>
-          ))}
-        </div>
-      </header>
-
-      <section className="grid gap-8 rounded-3xl bg-white p-10 shadow-sm ring-1 ring-slate-100 lg:grid-cols-2">
-        <div className="flex flex-col gap-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-brand-600">
-            {locale.heroTag}
-          </p>
-          <h1 className="text-4xl font-semibold text-slate-900">{locale.heroTitle}</h1>
-          <p className="text-lg text-slate-600">{locale.heroSubtitle}</p>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href={`/${params.lang}/site`}
-              className="rounded-xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white"
-            >
-              {locale.ctaPrimary}
-            </Link>
-            <Link
-              href={`/${params.lang}/site`}
-              className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700"
-            >
-              {locale.ctaSecondary}
-            </Link>
-          </div>
-        </div>
-        <div className="grid gap-4">
-          {locale.features.map((feature) => (
-            <div key={feature} className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
-              {feature}
+    <div className="min-h-screen bg-gray-50">
+      {/* Navigation */}
+      <nav className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <Image
+                src="/brand-logo.jpg"
+                alt="School Kids"
+                width={48}
+                height={48}
+                className="rounded-full"
+              />
+              <span className="ml-3 text-xl font-bold text-gray-900">School Kids</span>
             </div>
-          ))}
+            <div className="hidden md:flex items-center space-x-8">
+              <Link href={`/${params.lang}/about`} className="text-gray-700 hover:text-blue-600">О нас</Link>
+              <Link href={`/${params.lang}/services`} className="text-gray-700 hover:text-blue-600">Услуги</Link>
+              <Link href={`/${params.lang}/contacts`} className="text-gray-700 hover:text-blue-600">Контакты</Link>
+              <Link
+                href={`/${params.lang}/contacts#contact`}
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+              >
+                Записаться
+              </Link>
+            </div>
+            <div className="flex items-center gap-2">
+              {["ru", "kz", "en"].map((lang) => (
+                <Link
+                  key={lang}
+                  href={`/${lang}`}
+                  className={
+                    lang === params.lang
+                      ? "px-3 py-1 rounded-full bg-blue-600 text-white text-sm font-medium"
+                      : "px-3 py-1 rounded-full border border-gray-300 text-gray-700 text-sm hover:bg-gray-50"
+                  }
+                >
+                  {content[lang as Locale].localeLabel}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-b from-blue-50 to-white py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold mb-6">
+                {locale.heroTag}
+              </div>
+              <h1 className="text-5xl font-bold text-gray-900 mb-6 leading-tight">
+                {locale.heroTitle}
+              </h1>
+              <p className="text-xl text-gray-600 mb-8">
+                {locale.heroSubtitle}
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link
+                  href={`/${params.lang}/contacts#contact`}
+                  className="bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-700 transition text-lg"
+                >
+                  {locale.ctaPrimary}
+                </Link>
+                <Link
+                  href={`/${params.lang}/contacts#contact`}
+                  className="border-2 border-blue-600 text-blue-600 px-8 py-4 rounded-lg font-semibold hover:bg-blue-50 transition text-lg"
+                >
+                  {locale.ctaSecondary}
+                </Link>
+              </div>
+            </div>
+            <div className="relative">
+              <div className="relative w-full aspect-square">
+                <Image
+                  src="/brand-logo.jpg"
+                  alt="School Kids"
+                  fill
+                  className="rounded-3xl shadow-2xl object-cover"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-3">
-        <div className="card lg:col-span-2">
-          <h2 className="text-2xl font-semibold text-slate-900">{locale.servicesTitle}</h2>
-          <p className="mt-2 text-sm text-slate-500">{locale.servicesSubtitle}</p>
-          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+      {/* Features */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-4xl font-bold text-gray-900 text-center mb-16">
+            {locale.featuresTitle}
+          </h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {locale.features.map((feature, idx) => (
+              <div key={idx} className="text-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-3xl">
+                    {idx === 0 && "👨‍🏫"}
+                    {idx === 1 && "🎯"}
+                    {idx === 2 && "📚"}
+                    {idx === 3 && "📈"}
+                  </span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
+                <p className="text-gray-600">{feature.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Services */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">{locale.servicesTitle}</h2>
+            <p className="text-xl text-gray-600">{locale.servicesSubtitle}</p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {locale.services.map((service) => (
-              <div key={service} className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
-                {service}
+              <div key={service} className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-md transition">
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">{service}</h3>
+                <Link
+                  href={`/${params.lang}/services`}
+                  className="text-blue-600 hover:text-blue-700 font-medium inline-flex items-center"
+                >
+                  Подробнее →
+                </Link>
               </div>
             ))}
           </div>
-        </div>
-        <div className="card">
-          <h3 className="text-lg font-semibold text-slate-900">{locale.trustTitle}</h3>
-          <ul className="mt-4 space-y-2 text-sm text-slate-600">
-            {locale.trustItems.map((item) => (
-              <li key={item} className="rounded-xl bg-slate-50 px-3 py-2">
-                {item}
-              </li>
-            ))}
-          </ul>
+          <div className="text-center mt-12">
+            <Link
+              href={`/${params.lang}/services`}
+              className="inline-block bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-700 transition"
+            >
+              Все услуги и цены
+            </Link>
+          </div>
         </div>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-2">
-        <div className="card">
-          <h3 className="text-lg font-semibold text-slate-900">{locale.processTitle}</h3>
-          <ol className="mt-4 space-y-3 text-sm text-slate-600">
+      {/* Process */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-4xl font-bold text-gray-900 text-center mb-16">
+            {locale.processTitle}
+          </h2>
+          <div className="grid md:grid-cols-3 gap-8">
             {locale.process.map((step, index) => (
-              <li key={step}>{index + 1}. {step}</li>
-            ))}
-          </ol>
-        </div>
-        <div className="card">
-          <h3 className="text-lg font-semibold text-slate-900">{locale.faqTitle}</h3>
-          <div className="mt-4 space-y-3 text-sm text-slate-600">
-            {locale.faq.map((item) => (
-              <div key={item.q} className="rounded-xl bg-slate-50 px-4 py-3">
-                <p className="font-medium text-slate-900">{item.q}</p>
-                <p className="mt-1 text-slate-500">{item.a}</p>
+              <div key={step} className="relative">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-xl font-bold">
+                    {index + 1}
+                  </div>
+                </div>
+                <p className="text-lg text-gray-700">{step}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-2">
-        <div className="card">
-          <h3 className="text-lg font-semibold text-slate-900">{locale.supportTitle}</h3>
-          <p className="mt-3 text-sm text-slate-600">{locale.supportText}</p>
-        </div>
-        <div className="card flex flex-col items-start justify-between gap-4">
-          <div>
-            <p className="text-sm text-slate-500">School Kids</p>
-            <h4 className="mt-2 text-xl font-semibold text-slate-900">{locale.ctaPrimary}</h4>
+      {/* Trust Signals */}
+      <section className="py-20 bg-blue-600">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-4xl font-bold text-white text-center mb-16">
+            {locale.trustTitle}
+          </h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            {locale.trustItems.map((item) => (
+              <div key={item} className="bg-white/10 backdrop-blur rounded-2xl p-8 text-white">
+                <p className="text-lg">{item}</p>
+              </div>
+            ))}
           </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-4xl font-bold text-gray-900 text-center mb-16">
+            {locale.faqTitle}
+          </h2>
+          <div className="space-y-6">
+            {locale.faq.map((item) => (
+              <div key={item.q} className="bg-white rounded-2xl p-8 shadow-sm">
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">{item.q}</h3>
+                <p className="text-gray-600">{item.a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section id="contact" className="py-20 bg-gradient-to-r from-blue-600 to-blue-700">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-4xl font-bold text-white mb-6">
+            {locale.footerTitle}
+          </h2>
+          <p className="text-xl text-blue-100 mb-8">
+            {locale.footerSubtitle}
+          </p>
           <Link
-            href={`/${params.lang}/site`}
-            className="inline-flex rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white"
+            href={`/${params.lang}/contacts#contact`}
+            className="inline-block bg-white text-blue-600 px-10 py-5 rounded-lg font-semibold hover:bg-blue-50 transition text-lg"
           >
-            {locale.supportCta}
+            {locale.leadCta}
           </Link>
         </div>
       </section>
 
-      <section className="card flex flex-col gap-4">
-        <h3 className="text-lg font-semibold text-slate-900">{locale.footerTitle}</h3>
-        <p className="text-sm text-slate-600">{locale.footerSubtitle}</p>
-        <Link
-          href={`/${params.lang}/site`}
-          className="inline-flex w-fit rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white"
-        >
-          {locale.leadCta}
-        </Link>
-      </section>
+      {/* Footer */}
+      <footer className="bg-gray-900 text-gray-300 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-4 gap-8">
+            <div>
+              <div className="flex items-center mb-4">
+                <Image
+                  src="/brand-logo.jpg"
+                  alt="School Kids"
+                  width={40}
+                  height={40}
+                  className="rounded-full"
+                />
+                <span className="ml-3 text-white font-bold">School Kids</span>
+              </div>
+              <p className="text-sm">
+                Детский центр развития в Алматы
+              </p>
+            </div>
+            <div>
+              <h3 className="text-white font-semibold mb-4">Навигация</h3>
+              <ul className="space-y-2 text-sm">
+                <li><Link href={`/${params.lang}/about`} className="hover:text-white">О нас</Link></li>
+                <li><Link href={`/${params.lang}/services`} className="hover:text-white">Услуги</Link></li>
+                <li><Link href={`/${params.lang}/contacts`} className="hover:text-white">Контакты</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-white font-semibold mb-4">Контакты</h3>
+              <ul className="space-y-2 text-sm">
+                <li>+7 (700) 123-45-67</li>
+                <li>info@schoolkids.kz</li>
+                <li>г. Алматы, ул. Примерная, 123</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-white font-semibold mb-4">График работы</h3>
+              <ul className="space-y-2 text-sm">
+                <li>Пн-Пт: 9:00 - 19:00</li>
+                <li>Суббота: 10:00 - 16:00</li>
+                <li>Воскресенье: выходной</li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-gray-800 mt-8 pt-8 text-sm text-center">
+            <p>&copy; 2024 School Kids. Все права защищены.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
