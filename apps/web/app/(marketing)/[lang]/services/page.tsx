@@ -3,10 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Услуги и программы — School Kids",
+  title: "Услуги и программы - School Kids",
   description: "Логопед, психолог, дефектолог, подготовка к школе в School Kids. Индивидуальные и групповые занятия. Современные методики развития детей в Алматы.",
   openGraph: {
-    title: "Услуги School Kids — логопед, психолог, подготовка к школе",
+    title: "Услуги School Kids - логопед, психолог, подготовка к школе",
     description: "Полный спектр услуг для развития вашего ребенка"
   }
 };

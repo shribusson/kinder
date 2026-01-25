@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Контакты — School Kids",
+  title: "Контакты - School Kids",
   description: "Детский центр School Kids в Алматы. Телефон, адрес, режим работы. Запишитесь на консультацию или пробное занятие.",
   openGraph: {
-    title: "Контакты School Kids — детский центр в Алматы",
+    title: "Контакты School Kids - детский центр в Алматы",
     description: "Свяжитесь с нами для записи на занятие"
   }
 };
@@ -91,7 +91,7 @@ export default function ContactsPage({ params }: { params: { lang: string } }) {
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Адрес</h3>
                   <p className="text-gray-700">г. Алматы, ул. Примерная, 123</p>
-                  <p className="text-sm text-gray-500 mt-1">Район "Медеу", рядом с парком</p>
+                  <p className="text-sm text-gray-500 mt-1">Район Медеу, рядом с парком</p>
                 </div>
               </div>
             </div>
