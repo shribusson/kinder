@@ -1,9 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { clsx } from "clsx";
 
 const navItems = [
-  { label: "Сайт", href: "/" },
-  { label: "CRM", href: "/crm" },
+  { label: "Дашборд", href: "/crm" },
   { label: "Лиды", href: "/crm/leads" },
   { label: "Сделки", href: "/crm/deals" },
   { label: "Записи", href: "/crm/bookings" },
@@ -42,8 +43,16 @@ export default function Sidebar() {
           </Link>
         ))}
       </nav>
-      <div className="mt-auto rounded-xl bg-slate-50 p-4 text-xs text-slate-600">
-        Каналы: Telegram, WhatsApp, телефония, сайт.
+      <div className="mt-auto">
+        <button
+          onClick={() => {
+            document.cookie = 'auth_token=; path=/; max-age=0';
+            window.location.href = '/crm/login';
+          }}
+          className="w-full rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200 transition-colors"
+        >
+          Выйти
+        </button>
       </div>
     </aside>
   );

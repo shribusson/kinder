@@ -1,106 +1,77 @@
 import Link from "next/link";
 
-const features = [
-  "Онлайн‑запись к специалистам и контроль загрузки",
-  "Сквозная аналитика рекламы и UTM‑источников",
-  "Канбан сделок и автоматизация работы менеджеров",
-  "Интеграции: Telegram, WhatsApp, телефония, сайт"
-];
-
 const services = [
   "Логопед",
   "Психолог",
   "Дефектолог",
   "Подготовка к школе",
-  "Коррекционные занятия"
+  "Групповые занятия"
 ];
 
-export default function MarketingPage() {
+export default function HomePage() {
   return (
-    <div className="flex flex-col gap-16">
-      <section className="grid gap-8 rounded-3xl bg-white p-10 shadow-sm ring-1 ring-slate-100 lg:grid-cols-2">
+    <div className="min-h-screen bg-white">
+      <section className="grid gap-10 rounded-3xl bg-gradient-to-r from-blue-50 to-white p-10 shadow-sm ring-1 ring-slate-100 lg:grid-cols-2">
         <div className="flex flex-col gap-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-brand-600">
-            Детский центр
-          </p>
-          <h1 className="text-4xl font-semibold text-slate-900">
-            Полноценный сайт и CRM для роста записей и выручки
-          </h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-600">Детский центр</p>
+          <h1 className="text-4xl font-semibold text-slate-900">School Kids — развитие детей в Алматы</h1>
           <p className="text-lg text-slate-600">
-            Продающий сайт, воронка лидов и интеграции с мессенджерами — всё в одном месте. Удобно
-            для владельца и менеджеров.
+            Помогаем детям говорить чётко, учиться с интересом и развиваться гармонично. Опытные логопеды,
+            психологи и педагоги, уютные кабинеты и понятная обратная связь для родителей.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Link
-              href="/site"
-              className="rounded-xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white"
-            >
+            <Link href="/ru/contacts" className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">
               Оставить заявку
             </Link>
-            <Link
-              href="/crm"
-              className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700"
-            >
-              Войти в CRM
+            <Link href="/ru/services" className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+              Посмотреть услуги
             </Link>
           </div>
         </div>
         <div className="grid gap-4">
-          {features.map((feature) => (
-            <div key={feature} className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
-              {feature}
+          <div className="rounded-2xl bg-white p-5 border border-slate-100">
+            <p className="text-sm text-slate-600">Индивидуальные программы и диагностика каждые 4–6 недель</p>
+          </div>
+          <div className="rounded-2xl bg-white p-5 border border-slate-100">
+            <p className="text-sm text-slate-600">Уютные кабинеты, занятия без стресса</p>
+          </div>
+          <div className="rounded-2xl bg-white p-5 border border-slate-100">
+            <p className="text-sm text-slate-600">Обратная связь родителям после каждого визита</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-4 py-16">
+        <h2 className="text-2xl font-semibold text-slate-900">Услуги центра</h2>
+        <p className="mt-2 text-sm text-slate-500">Основные направления работы и специалисты.</p>
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {services.map((service) => (
+            <div key={service} className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-slate-800">
+              {service}
             </div>
           ))}
         </div>
+        <Link href="/ru/services" className="mt-6 inline-flex rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition-colors">
+          Все услуги
+        </Link>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-3">
-        <div className="card lg:col-span-2">
-          <h2 className="text-2xl font-semibold text-slate-900">Услуги центра</h2>
-          <p className="mt-2 text-sm text-slate-500">
-            Основные направления работы и специалисты.
-          </p>
-          <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            {services.map((service) => (
-              <div key={service} className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
-                {service}
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="card">
-          <h3 className="text-lg font-semibold text-slate-900">Быстрая запись</h3>
-          <p className="mt-2 text-sm text-slate-500">
-            Оставьте заявку и мы подберем удобное время.
-          </p>
-          <Link
-            href="/site"
-            className="mt-6 inline-flex rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white"
-          >
-            Записаться
-          </Link>
-        </div>
-      </section>
-
-      <section className="grid gap-6 lg:grid-cols-2">
-        <div className="card">
-          <h3 className="text-lg font-semibold text-slate-900">Как мы работаем</h3>
+      <section className="max-w-6xl mx-auto px-4 pb-16 grid gap-6 lg:grid-cols-2">
+        <div className="rounded-2xl border border-slate-100 p-6">
+          <h3 className="text-lg font-semibold text-slate-900">Как пройти первое занятие</h3>
           <ol className="mt-4 space-y-3 text-sm text-slate-600">
-            <li>1. Получаем заявку с сайта или мессенджера.</li>
-            <li>2. Менеджер уточняет запрос и подбирает специалиста.</li>
-            <li>3. Вы записываетесь на удобное время и получаете напоминание.</li>
+            <li>1. Оставьте заявку — перезвоним и уточним запрос.</li>
+            <li>2. Подберем специалиста и удобное время.</li>
+            <li>3. Проведем диагностику и дадим рекомендации.</li>
           </ol>
         </div>
-        <div className="card">
-          <h3 className="text-lg font-semibold text-slate-900">Прозрачная статистика</h3>
-          <p className="mt-3 text-sm text-slate-600">
-            Отслеживайте эффективность рекламы, конверсию и средний чек прямо в CRM.
-          </p>
-          <Link
-            href="/crm/analytics"
-            className="mt-6 inline-flex rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"
-          >
-            Посмотреть аналитику
+        <div className="rounded-2xl border border-slate-100 p-6">
+          <h3 className="text-lg font-semibold text-slate-900">Контакты</h3>
+          <p className="mt-3 text-sm text-slate-600">г. Алматы, ул. Примерная, 123</p>
+          <p className="text-sm text-slate-600">+7 700 123 45 67</p>
+          <p className="text-sm text-slate-600">info@schoolkids.kz</p>
+          <Link href="/ru/contacts" className="mt-4 inline-flex rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">
+            Связаться
           </Link>
         </div>
       </section>
