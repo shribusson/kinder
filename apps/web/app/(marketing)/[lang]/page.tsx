@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 const content = {
   ru: {
     localeLabel: "Рус",
-    title: "School Kids — детский центр развития в Алматы",
+    title: "School Kids — детский центр развития в Караганде",
     description:
       "Детский центр School Kids: логопед, психолог, дефектолог, подготовка к школе. ✓ Опытные педагоги ✓ Индивидуальный подход ✓ Современные методики ✓ Уютная атмосфера. Записаться на пробное занятие!",
     heroTag: "School Kids — Детский центр развития",
@@ -457,7 +457,7 @@ export default function MarketingPage({ params }: { params: { lang: Locale } }) 
                 <span className="ml-3 text-white font-bold">School Kids</span>
               </div>
               <p className="text-sm">
-                Детский центр развития в Алматы
+                Детский центр развития в Караганде
               </p>
             </div>
             <div>
@@ -471,9 +471,10 @@ export default function MarketingPage({ params }: { params: { lang: Locale } }) 
             <div>
               <h3 className="text-white font-semibold mb-4">Контакты</h3>
               <ul className="space-y-2 text-sm">
-                <li>+7 (700) 123-45-67</li>
+                <li>+7 (708) 205-03-18</li>
+                <li>+7 (778) 654-52-58 (WhatsApp)</li>
                 <li>info@schoolkids.kz</li>
-                <li>г. Алматы, ул. Примерная, 123</li>
+                <li>г. Караганда, ул. Язева, 9</li>
               </ul>
             </div>
             <div>

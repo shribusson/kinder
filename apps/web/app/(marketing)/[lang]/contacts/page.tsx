@@ -3,9 +3,9 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Контакты - School Kids",
-  description: "Детский центр School Kids в Алматы. Телефон, адрес, режим работы. Запишитесь на консультацию или пробное занятие.",
+  description: "Детский центр School Kids в Караганде. Телефон, адрес, режим работы. Запишитесь на консультацию или пробное занятие.",
   openGraph: {
-    title: "Контакты School Kids - детский центр в Алматы",
+    title: "Контакты School Kids - детский центр в Караганде",
     description: "Свяжитесь с нами для записи на занятие"
   }
 };
@@ -41,8 +41,8 @@ export default function ContactsPage({ params }: { params: { lang: string } }) {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Телефон</h3>
-                  <a href="tel:+77001234567" className="text-blue-600 hover:text-blue-700">
-                    +7 (700) 123-45-67
+                  <a href="tel:+77082050318" className="text-blue-600 hover:text-blue-700">
+                    +7 (708) 205-03-18
                   </a>
                   <p className="text-sm text-gray-500 mt-1">Пн-Пт: 9:00 - 19:00, Сб: 10:00 - 16:00</p>
                 </div>
@@ -57,7 +57,7 @@ export default function ContactsPage({ params }: { params: { lang: string } }) {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">WhatsApp</h3>
-                  <a href="https://wa.me/77001234567" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700">
+                  <a href="https://wa.me/77786545258" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700">
                     Написать в WhatsApp
                   </a>
                   <p className="text-sm text-gray-500 mt-1">Быстрые ответы в мессенджере</p>
@@ -90,8 +90,8 @@ export default function ContactsPage({ params }: { params: { lang: string } }) {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Адрес</h3>
-                  <p className="text-gray-700">г. Алматы, ул. Примерная, 123</p>
-                  <p className="text-sm text-gray-500 mt-1">Район Медеу, рядом с парком</p>
+                  <p className="text-gray-700">г. Караганда, ул. Язева, 9</p>
+                  <p className="text-sm text-gray-500 mt-1">Казыбек Би район, Юго-Восточный м-н</p>
                 </div>
               </div>
             </div>
@@ -100,7 +100,7 @@ export default function ContactsPage({ params }: { params: { lang: string } }) {
             <div className="mt-8 pt-8 border-t border-gray-200">
               <h3 className="font-semibold text-gray-900 mb-4">Мы в соцсетях</h3>
               <div className="flex space-x-4">
-                <a href="#" className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-200 transition">
+                <a href="https://instagram.com/schoolkids.krg" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-200 transition">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                   </svg>

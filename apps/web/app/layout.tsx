@@ -4,16 +4,16 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   metadataBase: new URL('https://schoolkids.kz'),
   title: {
-    default: "School Kids — детский центр развития в Алматы | Логопед, психолог, подготовка к школе",
+    default: "School Kids — детский центр развития в Караганде | Логопед, психолог, подготовка к школе",
     template: "%s | School Kids"
   },
-  description: "School Kids — детский развивающий центр в Алматы. Профессиональный логопед, психолог, дефектолог, подготовка к школе. Индивидуальный подход к каждому ребенку. Запишитесь на бесплатную консультацию!",
+  description: "School Kids — детский развивающий центр в Караганде. Профессиональный логопед, психолог, дефектолог, подготовка к школе. Индивидуальный подход к каждому ребенку. Запишитесь на бесплатную консультацию!",
   keywords: [
-    "детский центр Алматы",
-    "логопед Алматы",
-    "детский психолог Алматы",
-    "дефектолог Алматы",
-    "подготовка к школе Алматы",
+    "детский центр Караганда",
+    "логопед Караганда",
+    "детский психолог Караганда",
+    "дефектолог Караганда",
+    "подготовка к школе Караганда",
     "развитие речи",
     "коррекционные занятия",
     "School Kids",
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     locale: "ru_RU",
     url: "https://schoolkids.kz",
     siteName: "School Kids",
-    title: "School Kids — детский центр развития в Алматы",
+    title: "School Kids — детский центр развития в Караганде",
     description: "Профессиональный логопед, психолог, подготовка к школе. Индивидуальный подход к каждому ребенку.",
     images: [
       {
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "School Kids — детский центр развития в Алматы",
+    title: "School Kids — детский центр развития в Караганде",
     description: "Логопед, психолог, подготовка к школе. Индивидуальный подход.",
     images: ["/brand-logo.jpg"]
   },
@@ -85,22 +85,24 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "EducationalOrganization",
               "name": "School Kids",
-              "description": "Детский развивающий центр в Алматы",
+              "description": "Детский развивающий центр в Караганде",
               "url": "https://schoolkids.kz",
               "logo": "https://schoolkids.kz/brand-logo.jpg",
               "image": "https://schoolkids.kz/brand-logo.jpg",
               "address": {
                 "@type": "PostalAddress",
-                "streetAddress": "ул. Примерная, 123",
-                "addressLocality": "Алматы",
+                "streetAddress": "ул. Язева, 9",
+                "addressLocality": "Караганда",
+                "addressRegion": "Казыбек Би район",
+                "postalCode": "100026",
                 "addressCountry": "KZ"
               },
               "geo": {
                 "@type": "GeoCoordinates",
-                "latitude": "43.238293",
-                "longitude": "76.889709"
+                "latitude": "49.772767",
+                "longitude": "73.131225"
               },
-              "telephone": "+77001234567",
+              "telephone": "+77082050318",
               "email": "info@schoolkids.kz",
               "openingHoursSpecification": [
                 {
@@ -117,13 +119,18 @@ export default function RootLayout({
                 }
               ],
               "sameAs": [
-                "https://instagram.com/schoolkids.kz",
-                "https://facebook.com/schoolkids.kz"
+                "https://instagram.com/schoolkids.krg",
+                "https://2gis.kz/karaganda/firm/70000001047590529"
               ],
               "priceRange": "$$",
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.8",
+                "reviewCount": "35"
+              },
               "areaServed": {
                 "@type": "City",
-                "name": "Алматы"
+                "name": "Караганда"
               }
             })
           }}

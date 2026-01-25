@@ -14,7 +14,7 @@ export default function HomePage() {
       <section className="grid gap-10 rounded-3xl bg-gradient-to-r from-blue-50 to-white p-10 shadow-sm ring-1 ring-slate-100 lg:grid-cols-2">
         <div className="flex flex-col gap-6">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-600">Детский центр</p>
-          <h1 className="text-4xl font-semibold text-slate-900">School Kids — развитие детей в Алматы</h1>
+          <h1 className="text-4xl font-semibold text-slate-900">School Kids — развитие детей в Караганде</h1>
           <p className="text-lg text-slate-600">
             Помогаем детям говорить чётко, учиться с интересом и развиваться гармонично. Опытные логопеды,
             психологи и педагоги, уютные кабинеты и понятная обратная связь для родителей.
@@ -67,8 +67,9 @@ export default function HomePage() {
         </div>
         <div className="rounded-2xl border border-slate-100 p-6">
           <h3 className="text-lg font-semibold text-slate-900">Контакты</h3>
-          <p className="mt-3 text-sm text-slate-600">г. Алматы, ул. Примерная, 123</p>
-          <p className="text-sm text-slate-600">+7 700 123 45 67</p>
+          <p className="mt-3 text-sm text-slate-600">г. Караганда, ул. Язева, 9</p>
+          <p className="text-sm text-slate-600">+7 708 205 03 18</p>
+          <p className="text-sm text-slate-600">+7 778 654 52 58 (WhatsApp)</p>
           <p className="text-sm text-slate-600">info@schoolkids.kz</p>
           <Link href="/ru/contacts" className="mt-4 inline-flex rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">
             Связаться
