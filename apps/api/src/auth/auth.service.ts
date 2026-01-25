@@ -150,7 +150,7 @@ export class AuthService {
       { sub: userId },
       {
         secret: process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET || 'refresh-secret',
-        expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+        expiresIn: '7d',
       },
     );
 

@@ -2,6 +2,27 @@
 
 **Enterprise-grade CRM + Client Portal + Marketing Site** for child education center with full channel synchronization, billing, content delivery, and self-hosted infrastructure.
 
+## 🚀 Quick Start (одной командой)
+
+```bash
+# Клонировать репозиторий
+git clone git@github.com:shribusson/kinder.git
+cd kinder
+
+# Запустить все сервисы
+docker compose up -d
+
+# Проверить статус
+docker compose ps
+```
+
+После запуска:
+- **Web приложение**: http://localhost:3000
+- **API**: http://localhost:3001
+- **API Health**: http://localhost:3001/health
+- **MinIO Console**: http://localhost:9001 (admin/admin123)
+- **Grafana**: http://localhost:3003
+
 ## 🎯 Overview
 
 Complete business management platform featuring:
