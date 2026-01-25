@@ -1,0 +1,886 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  superadmin
+  admin
+  manager
+  client
+}
+
+enum LeadStage {
+  new
+  contacted
+  qualified
+  trial_booked
+  attended
+  won
+  lost
+}
+
+enum DealStage {
+  new
+  contacted
+  qualified
+  trial_booked
+  attended
+  won
+  lost
+}
+
+enum InteractionChannel {
+  telegram
+  whatsapp
+  telephony
+  website
+  email
+  instagram
+  facebook
+  vk
+}
+
+enum WebhookStatus {
+  received
+  processed
+  failed
+}
+
+enum IntegrationStatus {
+  active
+  inactive
+  error
+  pending
+}
+
+enum ConversationStatus {
+  open
+  closed
+  archived
+}
+
+enum MessageDirection {
+  inbound
+  outbound
+}
+
+enum MessageStatus {
+  pending
+  sent
+  delivered
+  read
+  failed
+}
+
+enum CallDirection {
+  inbound
+  outbound
+}
+
+enum CallStatus {
+  initiated
+  ringing
+  answered
+  completed
+  failed
+  no_answer
+  busy
+}
+
+enum SocialPlatform {
+  instagram
+  facebook
+  vk
+  tiktok
+  youtube
+}
+
+enum AdPlatform {
+  meta
+  google
+  yandex
+  vk
+  tiktok
+}
+
+enum SubscriptionStatus {
+  active
+  canceled
+  expired
+  past_due
+}
+
+enum InvoiceStatus {
+  draft
+  pending
+  paid
+  overdue
+  canceled
+}
+
+enum PaymentStatus {
+  pending
+  succeeded
+  failed
+  refunded
+}
+
+enum PaymentMethod {
+  card
+  bank_transfer
+  cash
+}
+
+enum OrderStatus {
+  pending
+  processing
+  completed
+  canceled
+  refunded
+}
+
+enum ProductType {
+  service
+  webinar
+  course
+  material
+  software
+}
+
+enum ContentType {
+  video
+  text
+  pdf
+  live_stream
+}
+
+// ============================================
+// AUTHENTICATION & TENANCY
+// ============================================
+
+model Account {
+  id        String   @id @default(uuid())
+  name      String
+  domain    String?  @unique
+  plan      String   @default("basic")
+  settings  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users         User[]
+  memberships   Membership[]
+  leads         Lead[]
+  deals         Deal[]
+  bookings      Booking[]
+  campaigns     Campaign[]
+  interactions  Interaction[]
+  integrations  Integration[]
+  conversations Conversation[]
+  calls         Call[]
+  messages      Message[]
+  chatSessions  ChatSession[]
+  mediaFiles    MediaFile[]
+  socialAccounts SocialAccount[]
+  adAccounts    AdAccount[]
+  adCampaigns   AdCampaign[]
+  tags          Tag[]
+  subscriptions Subscription[]
+  invoices      Invoice[]
+  orders        Order[]
+  products      Product[]
+  serviceHistory ServiceHistory[]
+  auditLogs     AuditLog[]
+  salesPlans    SalesPlan[]
+
+  @@index([domain])
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  phone        String?
+  locale       String   @default("ru")
+  role         UserRole @default(client)
+  accountId    String?
+  avatarUrl    String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  account            Account?        @relation(fields: [accountId], references: [id])
+  memberships        Membership[]
+  sessions           Session[]
+  refreshTokens      RefreshToken[]
+  assignedConversations Conversation[]
+  orders             Order[]
+  accessGrants       AccessGrant[]
+  serviceHistory     ServiceHistory[]
+
+  @@index([email])
+  @@index([accountId])
+}
+
+model Membership {
+  id          String   @id @default(uuid())
+  userId      String
+  accountId   String
+  role        UserRole
+  permissions Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, accountId])
+  @@index([userId])
+  @@index([accountId])
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+}
+
+// ============================================
+// CRM CORE
+// ============================================
+
+model Lead {
+  id          String    @id @default(uuid())
+  accountId   String
+  name        String
+  phone       String?
+  email       String?
+  source      String
+  stage       LeadStage @default(new)
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmContent  String?
+  utmTerm     String?
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  account       Account        @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  deals         Deal[]
+  bookings      Booking[]
+  interactions  Interaction[]
+  conversations Conversation[]
+  calls         Call[]
+
+  @@index([accountId])
+  @@index([email])
+  @@index([phone])
+  @@index([source])
+  @@index([stage])
+  @@index([createdAt])
+}
+
+model Deal {
+  id        String    @id @default(uuid())
+  accountId String
+  leadId    String
+  title     String
+  stage     DealStage @default(new)
+  amount    Int
+  revenue   Int?
+  metadata  Json?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  lead    Lead    @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([leadId])
+  @@index([stage])
+  @@index([createdAt])
+}
+
+model Booking {
+  id          String   @id @default(uuid())
+  accountId   String
+  leadId      String
+  specialist  String
+  scheduledAt DateTime
+  status      String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  lead    Lead    @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([leadId])
+  @@index([scheduledAt])
+}
+
+model Campaign {
+  id        String   @id @default(uuid())
+  accountId String
+  name      String
+  source    String
+  spend     Int
+  leads     Int
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([source])
+  @@index([createdAt])
+}
+
+model Interaction {
+  id        String             @id @default(uuid())
+  accountId String
+  leadId    String?
+  channel   InteractionChannel
+  direction String
+  payload   Json
+  metadata  Json?
+  createdAt DateTime           @default(now())
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  lead    Lead?   @relation(fields: [leadId], references: [id], onDelete: SetNull)
+
+  @@index([accountId])
+  @@index([leadId])
+  @@index([channel])
+  @@index([createdAt])
+}
+
+model WebhookEvent {
+  id        String             @id @default(uuid())
+  channel   InteractionChannel
+  payload   Json
+  status    WebhookStatus      @default(received)
+  attempts  Int                @default(0)
+  lastError String?
+  metadata  Json?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@index([channel])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  accountId String
+  userId    String?
+  action    String
+  entity    String
+  entityId  String
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([entity])
+  @@index([entityId])
+  @@index([createdAt])
+}
+
+model SalesPlan {
+  id        String   @id @default(uuid())
+  accountId String
+  period    String
+  target    Int
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([period])
+}
+
+// ============================================
+// INTEGRATIONS & CHANNELS
+// ============================================
+
+model Integration {
+  id                  String            @id @default(uuid())
+  accountId           String
+  channel             InteractionChannel
+  status              IntegrationStatus @default(pending)
+  credentialsEncrypted String?
+  settings            Json?
+  lastSyncAt          DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, channel])
+  @@index([accountId])
+  @@index([channel])
+  @@index([status])
+}
+
+model Conversation {
+  id             String             @id @default(uuid())
+  accountId      String
+  leadId         String?
+  channel        InteractionChannel
+  assignedToUserId String?
+  status         ConversationStatus @default(open)
+  lastMessageAt  DateTime?
+  metadata       Json?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  account      Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  lead         Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  assignedTo   User?     @relation(fields: [assignedToUserId], references: [id], onDelete: SetNull)
+  messages     Message[]
+  chatSessions ChatSession[]
+
+  @@index([accountId])
+  @@index([leadId])
+  @@index([channel])
+  @@index([status])
+  @@index([assignedToUserId])
+  @@index([lastMessageAt])
+}
+
+model Message {
+  id             String          @id @default(uuid())
+  accountId      String
+  conversationId String
+  direction      MessageDirection
+  content        String?
+  mediaFileId    String?
+  status         MessageStatus   @default(pending)
+  externalId     String?
+  metadata       Json?
+  sentAt         DateTime?
+  deliveredAt    DateTime?
+  readAt         DateTime?
+  createdAt      DateTime        @default(now())
+
+  account      Account      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  mediaFile    MediaFile?   @relation(fields: [mediaFileId], references: [id], onDelete: SetNull)
+
+  @@index([accountId])
+  @@index([conversationId])
+  @@index([direction])
+  @@index([status])
+  @@index([createdAt])
+  @@index([externalId])
+}
+
+model Call {
+  id          String        @id @default(uuid())
+  accountId   String
+  leadId      String?
+  direction   CallDirection
+  phoneNumber String
+  status      CallStatus
+  duration    Int?
+  recordingId String?
+  metadata    Json?
+  startedAt   DateTime
+  endedAt     DateTime?
+  createdAt   DateTime      @default(now())
+
+  account        Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  lead           Lead?           @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  recording      CallRecording?
+
+  @@index([accountId])
+  @@index([leadId])
+  @@index([direction])
+  @@index([status])
+  @@index([startedAt])
+}
+
+model CallRecording {
+  id          String   @id @default(uuid())
+  callId      String   @unique
+  mediaFileId String
+  duration    Int
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  call      Call      @relation(fields: [callId], references: [id], onDelete: Cascade)
+  mediaFile MediaFile @relation(fields: [mediaFileId], references: [id], onDelete: Cascade)
+
+  @@index([callId])
+}
+
+model ChatSession {
+  id             String             @id @default(uuid())
+  accountId      String
+  conversationId String
+  channel        InteractionChannel
+  externalId     String?
+  metadata       Json?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  account      Account      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([conversationId])
+  @@index([channel])
+  @@index([externalId])
+}
+
+model MediaFile {
+  id        String   @id @default(uuid())
+  accountId String
+  url       String
+  bucket    String
+  key       String
+  mimeType  String
+  size      Int
+  metadata  Json?
+  uploadedAt DateTime @default(now())
+
+  account        Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  messages       Message[]
+  callRecordings CallRecording[]
+  contentItems   ContentItem[]
+
+  @@index([accountId])
+  @@index([bucket])
+  @@index([key])
+}
+
+// ============================================
+// SOCIAL & ADS
+// ============================================
+
+model SocialAccount {
+  id                  String         @id @default(uuid())
+  accountId           String
+  platform            SocialPlatform
+  externalId          String
+  username            String
+  accessTokenEncrypted String
+  metadata            Json?
+  lastSyncAt          DateTime?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, platform, externalId])
+  @@index([accountId])
+  @@index([platform])
+}
+
+model AdAccount {
+  id                  String       @id @default(uuid())
+  accountId           String
+  platform            AdPlatform
+  externalId          String
+  name                String?
+  accessTokenEncrypted String
+  metadata            Json?
+  lastSyncAt          DateTime?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  account     Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  adCampaigns AdCampaign[]
+
+  @@unique([accountId, platform, externalId])
+  @@index([accountId])
+  @@index([platform])
+}
+
+model AdCampaign {
+  id          String     @id @default(uuid())
+  accountId   String
+  adAccountId String
+  externalId  String
+  name        String
+  status      String?
+  spend       Float?
+  impressions Int?
+  clicks      Int?
+  conversions Int?
+  metadata    Json?
+  syncedAt    DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  account   Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  adAccount AdAccount @relation(fields: [adAccountId], references: [id], onDelete: Cascade)
+
+  @@unique([adAccountId, externalId])
+  @@index([accountId])
+  @@index([adAccountId])
+  @@index([syncedAt])
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  accountId String
+  name      String
+  color     String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  account        Account          @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  tagAssignments TagAssignment[]
+
+  @@unique([accountId, name])
+  @@index([accountId])
+}
+
+model TagAssignment {
+  id         String   @id @default(uuid())
+  tagId      String
+  entityType String
+  entityId   String
+  createdAt  DateTime @default(now())
+
+  tag Tag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([tagId, entityType, entityId])
+  @@index([tagId])
+  @@index([entityType, entityId])
+}
+
+// ============================================
+// BILLING & PAYMENTS
+// ============================================
+
+model Subscription {
+  id                String             @id @default(uuid())
+  accountId         String
+  plan              String
+  status            SubscriptionStatus @default(active)
+  currentPeriodStart DateTime
+  currentPeriodEnd  DateTime
+  cancelAt          DateTime?
+  metadata          Json?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  account  Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  invoices Invoice[]
+
+  @@index([accountId])
+  @@index([status])
+  @@index([currentPeriodEnd])
+}
+
+model Invoice {
+  id             String        @id @default(uuid())
+  accountId      String
+  subscriptionId String?
+  number         String        @unique
+  amount         Float
+  currency       String        @default("KZT")
+  status         InvoiceStatus @default(draft)
+  dueDate        DateTime?
+  paidAt         DateTime?
+  metadata       Json?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  account      Account      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  payments     Payment[]
+
+  @@index([accountId])
+  @@index([subscriptionId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  invoiceId     String
+  amount        Float
+  currency      String        @default("KZT")
+  method        PaymentMethod
+  transactionId String?
+  status        PaymentStatus @default(pending)
+  metadata      Json?
+  paidAt        DateTime?
+  createdAt     DateTime      @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@index([status])
+  @@index([transactionId])
+}
+
+model Order {
+  id        String      @id @default(uuid())
+  accountId String
+  userId    String
+  productId String
+  amount    Float
+  currency  String      @default("KZT")
+  status    OrderStatus @default(pending)
+  metadata  Json?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([userId])
+  @@index([productId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model ServiceHistory {
+  id          String   @id @default(uuid())
+  accountId   String
+  userId      String
+  serviceType String
+  description String?
+  metadata    Json?
+  completedAt DateTime
+  createdAt   DateTime @default(now())
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([userId])
+  @@index([serviceType])
+  @@index([completedAt])
+}
+
+// ============================================
+// EDUCATION & CONTENT
+// ============================================
+
+model Product {
+  id          String      @id @default(uuid())
+  accountId   String
+  type        ProductType
+  name        String
+  description String?
+  price       Float
+  currency    String      @default("KZT")
+  isActive    Boolean     @default(true)
+  metadata    Json?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  account      Account        @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  contentItems ContentItem[]
+  orders       Order[]
+  accessGrants AccessGrant[]
+  webinars     Webinar[]
+
+  @@index([accountId])
+  @@index([type])
+  @@index([isActive])
+}
+
+model ContentItem {
+  id          String      @id @default(uuid())
+  productId   String
+  type        ContentType
+  title       String
+  description String?
+  contentUrl  String?
+  mediaFileId String?
+  duration    Int?
+  order       Int         @default(0)
+  metadata    Json?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  mediaFile MediaFile? @relation(fields: [mediaFileId], references: [id], onDelete: SetNull)
+
+  @@index([productId])
+  @@index([type])
+  @@index([order])
+}
+
+model AccessGrant {
+  id        String    @id @default(uuid())
+  userId    String
+  productId String
+  grantedAt DateTime  @default(now())
+  expiresAt DateTime?
+  metadata  Json?
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
+  @@index([expiresAt])
+}
+
+model Webinar {
+  id          String   @id @default(uuid())
+  productId   String
+  title       String
+  description String?
+  scheduledAt DateTime
+  duration    Int?
+  streamUrl   String?
+  recordingId String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([scheduledAt])
+}
