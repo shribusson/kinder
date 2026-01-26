@@ -1,5 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { locales } from "@/i18n";
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://schoolkids.kz'),
@@ -28,8 +30,8 @@ export const metadata: Metadata = {
     telephone: false,
   },
   icons: {
-    icon: "/brand-logo.jpg",
-    apple: "/brand-logo.jpg"
+    icon: "/brand-logo.png",
+    apple: "/brand-logo.png"
   },
   openGraph: {
     type: "website",
@@ -40,7 +42,7 @@ export const metadata: Metadata = {
     description: "Профессиональный логопед, психолог, подготовка к школе. Индивидуальный подход к каждому ребенку.",
     images: [
       {
-        url: "/brand-logo.jpg",
+        url: "/brand-logo.png",
         width: 1200,
         height: 630,
         alt: "School Kids — детский центр развития"
@@ -51,7 +53,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "School Kids — детский центр развития в Караганде",
     description: "Логопед, психолог, подготовка к школе. Индивидуальный подход.",
-    images: ["/brand-logo.jpg"]
+    images: ["/brand-logo.png"]
   },
   robots: {
     index: true,
@@ -71,12 +73,21 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({
-  children
+  children,
+  params
 }: {
   children: React.ReactNode;
+  params: { locale?: string };
 }) {
+  // Validate that the incoming `locale` parameter is valid
+  if (params.locale && !locales.includes(params.locale as any)) {
+    notFound();
+  }
+
+  const lang = params.locale || 'ru';
+
   return (
-    <html lang="ru">
+    <html lang={lang}>
       <head>
         <script
           type="application/ld+json"
@@ -87,8 +98,8 @@ export default function RootLayout({
               "name": "School Kids",
               "description": "Детский развивающий центр в Караганде",
               "url": "https://schoolkids.kz",
-              "logo": "https://schoolkids.kz/brand-logo.jpg",
-              "image": "https://schoolkids.kz/brand-logo.jpg",
+              "logo": "https://schoolkids.kz/brand-logo.png",
+              "image": "https://schoolkids.kz/brand-logo.png",
               "address": {
                 "@type": "PostalAddress",
                 "streetAddress": "ул. Язева, 9",
@@ -118,9 +129,58 @@ export default function RootLayout({
                   "closes": "16:00"
                 }
               ],
+              "department": [
+                {
+                  "@type": "EducationalOrganization",
+                  "name": "School Kids — ул. Язева, 9",
+                  "address": {
+                    "@type": "PostalAddress",
+                    "streetAddress": "ул. Язева, 9",
+                    "addressLocality": "Караганда",
+                    "addressRegion": "Казыбек Би район",
+                    "postalCode": "100026",
+                    "addressCountry": "KZ"
+                  },
+                  "geo": {
+                    "@type": "GeoCoordinates",
+                    "latitude": "49.772767",
+                    "longitude": "73.131225"
+                  },
+                  "telephone": "+77082050318",
+                  "aggregateRating": {
+                    "@type": "AggregateRating",
+                    "ratingValue": "4.8",
+                    "reviewCount": "35"
+                  }
+                },
+                {
+                  "@type": "EducationalOrganization",
+                  "name": "School Kids — ул. Университетская, 17",
+                  "address": {
+                    "@type": "PostalAddress",
+                    "streetAddress": "ул. Университетская, 17",
+                    "addressLocality": "Караганда",
+                    "addressRegion": "Казыбек Би район",
+                    "postalCode": "100026",
+                    "addressCountry": "KZ"
+                  },
+                  "geo": {
+                    "@type": "GeoCoordinates",
+                    "latitude": "49.766347",
+                    "longitude": "73.13314"
+                  },
+                  "telephone": "+77082812899",
+                  "aggregateRating": {
+                    "@type": "AggregateRating",
+                    "ratingValue": "5",
+                    "reviewCount": "27"
+                  }
+                }
+              ],
               "sameAs": [
                 "https://instagram.com/schoolkids.krg",
-                "https://2gis.kz/karaganda/firm/70000001047590529"
+                "https://2gis.kz/karaganda/firm/70000001047590529",
+                "https://2gis.kz/karaganda/firm/70000001097016512"
               ],
               "priceRange": "$$",
               "aggregateRating": {

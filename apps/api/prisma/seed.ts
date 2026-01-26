@@ -25,7 +25,8 @@ async function main() {
   console.log('✅ Created default account:', account.name);
 
   // Create superadmin user
-  const passwordHash = await bcrypt.hash('admin123', 10);
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD || 'admin123';
+  const passwordHash = await bcrypt.hash(adminPassword, 10);
   const admin = await prisma.user.upsert({
     where: { email: 'admin@kinder.kz' },
     update: {},
@@ -40,7 +41,7 @@ async function main() {
     },
   });
   console.log('✅ Created admin user:', admin.email);
-  console.log('   Password: admin123 (change immediately!)');
+  console.log('   Password:', adminPassword === 'admin123' ? 'admin123 (change immediately!)' : '****** (from env)');
 
   // Create membership for admin
   await prisma.membership.upsert({

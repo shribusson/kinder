@@ -1,5 +1,7 @@
 import Topbar from "@/app/components/Topbar";
 import { fetchJson } from "@/app/lib/api";
+import Link from "next/link";
+import { IconMessage } from "@tabler/icons-react";
 
 export default async function DashboardPage() {
   const summary = await fetchJson<{
@@ -35,7 +37,11 @@ export default async function DashboardPage() {
       </section>
       <section className="card">
         <h3 className="text-lg font-semibold mb-4">Быстрый доступ</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <Link href="/crm/inbox" className="rounded-xl bg-red-50 p-4 hover:bg-red-100 transition-colors flex items-center gap-2">
+            <IconMessage className="w-5 h-5 text-red-600" />
+            <p className="text-sm font-medium text-red-900">Входящие</p>
+          </Link>
           <a href="/crm/leads" className="rounded-xl bg-blue-50 p-4 hover:bg-blue-100 transition-colors">
             <p className="text-sm font-medium text-blue-900">Лиды</p>
           </a>

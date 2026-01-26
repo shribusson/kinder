@@ -70,8 +70,8 @@ export class TelephonyController {
    */
   @Get('calls/:id')
   async getCall(
-    @Param('id', ParseIntPipe) id: number,
-    @Query('accountId', ParseIntPipe) accountId: string,
+    @Param('id') id: string,
+    @Query('accountId') accountId: string,
     @Req() req: any,
   ) {
     // Verify user has access to this account
@@ -100,8 +100,8 @@ export class TelephonyController {
    */
   @Get('calls/:id/recordings')
   async getRecordings(
-    @Param('id', ParseIntPipe) id: number,
-    @Query('accountId', ParseIntPipe) accountId: string,
+    @Param('id') id: string,
+    @Query('accountId') accountId: string,
     @Req() req: any,
   ) {
     // Verify user has access to this account
@@ -126,7 +126,7 @@ export class TelephonyController {
    */
   @Get('stats')
   async getStats(
-    @Query('accountId', ParseIntPipe) accountId: string,
+    @Query('accountId') accountId: string,
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
     @Req() req: any,

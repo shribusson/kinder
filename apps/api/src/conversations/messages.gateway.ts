@@ -6,10 +6,12 @@ import {
   SubscribeMessage,
   MessageBody,
   ConnectedSocket,
+  WsException,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Logger, UseGuards } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
+import { JwtService } from '@nestjs/jwt';
 
 @WebSocketGateway({
   cors: {
@@ -24,10 +26,28 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   private readonly logger = new Logger(MessagesGateway.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+  ) {}
 
-  handleConnection(client: Socket) {
-    this.logger.log(`Client connected: ${client.id}`);
+  async handleConnection(client: Socket) {
+    try {
+      const token = client.handshake.auth.token || client.handshake.headers.authorization?.replace('Bearer ', '');
+
+      if (!token) {
+        client.disconnect();
+        this.logger.warn(`Client ${client.id} disconnected: no token provided`);
+        return;
+      }
+
+      const decoded = await this.jwtService.verifyAsync(token);
+      client.data.user = decoded;
+      this.logger.log(`Client ${client.id} connected with userId: ${decoded.sub}`);
+    } catch (error) {
+      client.disconnect();
+      this.logger.warn(`Client ${client.id} disconnected: invalid token`);
+    }
   }
 
   handleDisconnect(client: Socket) {
@@ -42,7 +62,25 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
     @ConnectedSocket() client: Socket,
     @MessageBody() payload: { accountId: string; userId: string },
   ) {
-    // TODO: Verify user has access to this account
+    // Verify user is authenticated
+    if (!client.data.user) {
+      throw new WsException('Unauthorized');
+    }
+
+    // Verify user has access to this account
+    const membership = await this.prisma.membership.findUnique({
+      where: {
+        userId_accountId: {
+          userId: client.data.user.sub,
+          accountId: payload.accountId,
+        },
+      },
+    });
+
+    if (!membership) {
+      throw new WsException('Access denied to this account');
+    }
+
     const room = `account-${payload.accountId}`;
     client.join(room);
     this.logger.log(`Client ${client.id} joined room ${room}`);

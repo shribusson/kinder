@@ -6,10 +6,9 @@ import { CrmModule } from "./crm/crm.module";
 import { PrismaModule } from "./prisma.module";
 import { AuthModule } from "./auth/auth.module";
 import { StorageModule } from "./storage/storage.module";
-// TODO: Re-enable after schema migration
-// import { TelephonyModule } from "./telephony/telephony.module";
-// import { WhatsAppModule } from "./whatsapp/whatsapp.module";
-// import { TelegramModule } from "./telegram/telegram.module";
+import { TelephonyModule } from "./telephony/telephony.module";
+import { WhatsAppModule } from "./whatsapp/whatsapp.module";
+import { TelegramModule } from "./telegram/telegram.module";
 import { ConversationsModule } from "./conversations/conversations.module";
 
 @Module({
@@ -18,9 +17,9 @@ import { ConversationsModule } from "./conversations/conversations.module";
     AuthModule,
     CrmModule,
     StorageModule,
-    // TelephonyModule,  // Disabled - needs schema migration
-    // WhatsAppModule,   // Disabled - needs schema migration  
-    // TelegramModule,   // Disabled - needs schema migration
+    TelephonyModule,
+    WhatsAppModule,
+    TelegramModule,
     ConversationsModule,
     ThrottlerModule.forRoot([{
       ttl: 60000, // 60 seconds

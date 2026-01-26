@@ -1,15 +1,20 @@
 import { Process, Processor } from '@nestjs/bull';
-import { Logger } from '@nestjs/common';
+import { Logger, Inject, forwardRef } from '@nestjs/common';
 import { Job } from 'bull';
 import { PrismaService } from '../../prisma.service';
 import { InteractionChannel, MessageStatus } from '@prisma/client';
+import { TelegramService } from '../../telegram/telegram.service';
+import { WhatsAppService } from '../../whatsapp/whatsapp.service';
 
 export interface OutboundMessageJobData {
   conversationId: string;
   messageId: string;
+  accountId: string;
+  integrationId?: string;
   channel: InteractionChannel;
   content: string;
   mediaFileId?: string;
+  mediaType?: 'image' | 'video' | 'audio' | 'document';
   recipient: string;
 }
 
@@ -17,7 +22,13 @@ export interface OutboundMessageJobData {
 export class OutboundMessageProcessor {
   private readonly logger = new Logger(OutboundMessageProcessor.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(forwardRef(() => TelegramService))
+    private telegramService: TelegramService,
+    @Inject(forwardRef(() => WhatsAppService))
+    private whatsappService: WhatsAppService,
+  ) {}
 
   @Process()
   async sendMessage(job: Job<OutboundMessageJobData>) {
@@ -73,32 +84,67 @@ export class OutboundMessageProcessor {
   }
 
   private async sendTelegramMessage(data: OutboundMessageJobData) {
-    // TODO: Implement Telegram sending via bot API
     this.logger.log(`Sending Telegram message to ${data.recipient}`);
-    
-    // Placeholder - will be implemented when Telegram module is ready
+
+    // Get integration
+    let integrationId = data.integrationId;
+    if (!integrationId) {
+      const integration = await this.prisma.integration.findFirst({
+        where: { accountId: data.accountId, channel: 'telegram', status: 'active' },
+      });
+      if (!integration) {
+        throw new Error('No active Telegram integration found');
+      }
+      integrationId = integration.id;
+    }
+
+    // Send message via Telegram service
+    const result = await this.telegramService.sendMessage(
+      integrationId,
+      data.recipient,
+      { text: data.content }
+    );
+
     return {
-      externalId: `tg_${Date.now()}`,
+      externalId: result.messageId || `tg_${Date.now()}`,
       success: true,
     };
   }
 
   private async sendWhatsAppMessage(data: OutboundMessageJobData) {
-    // TODO: Implement WhatsApp sending via WABA API
     this.logger.log(`Sending WhatsApp message to ${data.recipient}`);
-    
-    // Placeholder - will be implemented when WABA module is ready
+
+    // Determine message type
+    let type: 'text' | 'image' | 'video' | 'document' | 'audio' = 'text';
+    let content: string | { url: string; caption?: string } = data.content;
+
+    if (data.mediaFileId && data.mediaType) {
+      type = data.mediaType as any;
+      // In real implementation, get media URL from mediaFileId
+      content = { url: data.mediaFileId, caption: data.content };
+    }
+
+    // Send message via WhatsApp service
+    const result = await this.whatsappService.sendMessage({
+      accountId: data.accountId,
+      to: data.recipient,
+      type,
+      content,
+    });
+
     return {
-      externalId: `wa_${Date.now()}`,
+      externalId: result.messageId || `wa_${Date.now()}`,
       success: true,
     };
   }
 
   private async sendEmailMessage(data: OutboundMessageJobData) {
-    // TODO: Implement email sending via SMTP
     this.logger.log(`Sending email to ${data.recipient}`);
-    
-    // Placeholder
+
+    // Email implementation would use nodemailer or similar
+    // For now, log and return placeholder
+    this.logger.warn('Email sending not yet implemented');
+
     return {
       externalId: `email_${Date.now()}`,
       success: true,

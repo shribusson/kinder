@@ -6,6 +6,7 @@ import { StorageService } from '../storage/storage.service';
 import { QUEUE_NAMES } from '../queue/queue.module';
 import { Telegraf, Context } from 'telegraf';
 import { Message } from 'telegraf/types';
+import { InteractionChannel, IntegrationStatus, ConversationStatus, MessageDirection, MessageStatus } from '@prisma/client';
 
 export interface SendMessageOptions {
   accountId: string;
@@ -15,14 +16,15 @@ export interface SendMessageOptions {
   video?: string;
   document?: string;
   audio?: string;
-  conversationId?: number;
+  conversationId?: string;
   replyToMessageId?: number;
 }
 
 @Injectable()
 export class TelegramService implements OnModuleInit {
   private readonly logger = new Logger(TelegramService.name);
-  private bots: Map<number, Telegraf> = new Map();
+  private bots: Map<string, Telegraf> = new Map();
+  private botTokens: Map<string, string> = new Map();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -34,13 +36,17 @@ export class TelegramService implements OnModuleInit {
     // Initialize bots for all active Telegram integrations
     const integrations = await this.prisma.integration.findMany({
       where: {
-        platform: 'TELEGRAM',
-        isActive: true,
+        channel: InteractionChannel.telegram,
+        status: IntegrationStatus.active,
       },
     });
 
     for (const integration of integrations) {
-      await this.initializeBot(integration.id, integration.accountId);
+      try {
+        await this.initializeBot(integration.id, integration.accountId);
+      } catch (error) {
+        this.logger.error(`Failed to initialize bot ${integration.id}:`, error);
+      }
     }
 
     this.logger.log(`Initialized ${integrations.length} Telegram bots`);
@@ -54,7 +60,7 @@ export class TelegramService implements OnModuleInit {
       where: { id: integrationId },
     });
 
-    if (!integration || integration.channel !== 'TELEGRAM') {
+    if (!integration || integration.channel !== InteractionChannel.telegram) {
       throw new Error(`Telegram integration ${integrationId} not found`);
     }
 
@@ -77,6 +83,7 @@ export class TelegramService implements OnModuleInit {
     }
 
     this.bots.set(integrationId, bot);
+    this.botTokens.set(integrationId, config.botToken);
   }
 
   /**
@@ -127,7 +134,7 @@ export class TelegramService implements OnModuleInit {
         await ctx.reply(
           `Статус вашей заявки:\n\n` +
           `ID: ${lead.id}\n` +
-          `Статус: ${lead.status}\n` +
+          `Статус: ${lead.stage}\n` +
           `Создана: ${lead.createdAt.toLocaleDateString('ru-RU')}`,
         );
       }
@@ -174,33 +181,40 @@ export class TelegramService implements OnModuleInit {
   ): Promise<void> {
     try {
       const message = ctx.message as Message;
+      if (!ctx.chat) {
+        this.logger.warn('No chat in context');
+        return;
+      }
       const chatId = ctx.chat.id.toString();
       const from = ctx.from;
 
       // Get or create conversation
-      const conversation = await this.prisma.conversation.upsert({
+      let conversation = await this.prisma.conversation.findFirst({
         where: {
-          accountId_integrationId_externalId: {
-            accountId,
-            integrationId,
-            externalId: chatId,
-          },
-        },
-        create: {
           accountId,
-          integrationId,
-          externalId: chatId,
-          channel: 'TELEGRAM',
+          channel: InteractionChannel.telegram,
           metadata: {
-            username: from?.username,
-            firstName: from?.first_name,
-            lastName: from?.last_name,
+            path: ['chatId'],
+            equals: chatId,
           },
-        },
-        update: {
-          updatedAt: new Date(),
         },
       });
+
+      if (!conversation) {
+        conversation = await this.prisma.conversation.create({
+          data: {
+            account: { connect: { id: accountId } },
+            channel: InteractionChannel.telegram,
+            status: ConversationStatus.open,
+            metadata: {
+              chatId,
+              username: from?.username,
+              firstName: from?.first_name,
+              lastName: from?.last_name,
+            },
+          },
+        });
+      }
 
       // Extract message content
       let content = '';
@@ -229,10 +243,10 @@ export class TelegramService implements OnModuleInit {
       // Create message record
       const msg = await this.prisma.message.create({
         data: {
-          conversationId: conversation.id,
+          conversation: { connect: { id: conversation.id } },
+          account: { connect: { id: accountId } },
           externalId: message.message_id.toString(),
-          direction: 'inbound',
-          channel: 'TELEGRAM',
+          direction: MessageDirection.inbound,
           content,
           metadata: {
             from: {
@@ -243,8 +257,7 @@ export class TelegramService implements OnModuleInit {
             },
             fileId: mediaUrl,
           },
-          status: 'received',
-          receivedAt: new Date(message.date * 1000),
+          status: MessageStatus.delivered,
         },
       });
 
@@ -283,7 +296,11 @@ export class TelegramService implements OnModuleInit {
 
       // Get file info
       const file = await bot.telegram.getFile(fileId);
-      const fileUrl = `https://api.telegram.org/file/bot${bot.token}/${file.file_path}`;
+      const botToken = this.botTokens.get(integrationId);
+      if (!botToken) {
+        throw new Error(`Bot token not found for integration ${integrationId}`);
+      }
+      const fileUrl = `https://api.telegram.org/file/bot${botToken}/${file.file_path}`;
 
       // Download file
       const response = await fetch(fileUrl);
@@ -321,9 +338,7 @@ export class TelegramService implements OnModuleInit {
       await this.prisma.message.update({
         where: { id: messageId },
         data: {
-          mediaFiles: {
-            connect: { id: mediaFile.id },
-          },
+          mediaFileId: mediaFile.id,
         },
       });
 
@@ -336,58 +351,59 @@ export class TelegramService implements OnModuleInit {
   /**
    * Send a Telegram message (queued)
    */
-  async sendMessage(options: SendMessageOptions): Promise<{ messageId: string }> {
-    // Get Telegram integration for this account
-    const integration = await this.prisma.integration.findFirst({
-      where: {
-        accountId: options.accountId,
-        platform: 'TELEGRAM',
-        isActive: true,
-      },
+  async sendMessage(
+    integrationId: string,
+    chatId: string | number,
+    options: { text?: string; photo?: string; video?: string; document?: string; audio?: string; replyToMessageId?: number }
+  ): Promise<{ messageId: string }> {
+    // Get Telegram integration
+    const integration = await this.prisma.integration.findUnique({
+      where: { id: integrationId },
     });
 
     if (!integration) {
-      throw new Error(`No active Telegram integration for account ${options.accountId}`);
+      throw new Error(`Telegram integration ${integrationId} not found`);
     }
 
-    // Create conversation if not exists
-    let conversationId = options.conversationId;
-    if (!conversationId) {
-      const conversation = await this.prisma.conversation.upsert({
-        where: {
-          accountId_integrationId_externalId: {
-            accountId: options.accountId,
-            integrationId: integration.id,
-            externalId: options.chatId.toString(),
-          },
+    // Find or create conversation
+    let conversation = await this.prisma.conversation.findFirst({
+      where: {
+        accountId: integration.accountId,
+        channel: InteractionChannel.telegram,
+        metadata: {
+          path: ['chatId'],
+          equals: chatId.toString(),
         },
-        create: {
-          accountId: options.accountId,
-          integrationId: integration.id,
-          externalId: options.chatId.toString(),
-          channel: 'TELEGRAM',
+      },
+    });
+
+    if (!conversation) {
+      conversation = await this.prisma.conversation.create({
+        data: {
+          account: { connect: { id: integration.accountId } },
+          channel: InteractionChannel.telegram,
+          status: ConversationStatus.open,
+          metadata: { chatId: chatId.toString() },
         },
-        update: {},
       });
-      conversationId = conversation.id;
     }
 
     // Create message record
     const message = await this.prisma.message.create({
       data: {
-        conversationId,
-        direction: 'outbound',
-        channel: 'TELEGRAM',
+        conversation: { connect: { id: conversation.id } },
+        account: { connect: { id: integration.accountId } },
+        direction: MessageDirection.outbound,
         content: options.text || '[Media]',
-        status: 'pending',
+        status: MessageStatus.pending,
       },
     });
 
     // Queue message sending
     await this.outboundQueue.add('send-telegram', {
       messageId: message.id,
-      integrationId: integration.id,
-      chatId: options.chatId,
+      integrationId,
+      chatId,
       text: options.text,
       photo: options.photo,
       video: options.video,
@@ -410,7 +426,18 @@ export class TelegramService implements OnModuleInit {
     chatId: string | number,
     options: any,
   ): Promise<void> {
-    const bot = this.bots.get(integrationId);
+    let bot = this.bots.get(integrationId);
+    if (!bot) {
+      // Try to initialize bot on the fly
+      const integration = await this.prisma.integration.findUnique({
+        where: { id: integrationId },
+      });
+      if (integration) {
+        await this.initializeBot(integrationId, integration.accountId);
+        bot = this.bots.get(integrationId);
+      }
+    }
+
     if (!bot) {
       throw new Error(`Bot ${integrationId} not found`);
     }
@@ -449,8 +476,7 @@ export class TelegramService implements OnModuleInit {
         where: { id: messageId },
         data: {
           externalId: result.message_id.toString(),
-          status: 'sent',
-          sentAt: new Date(),
+          status: MessageStatus.sent,
         },
       });
 
@@ -460,7 +486,7 @@ export class TelegramService implements OnModuleInit {
 
       await this.prisma.message.update({
         where: { id: messageId },
-        data: { status: 'failed' },
+        data: { status: MessageStatus.failed },
       });
 
       throw error;
@@ -471,7 +497,18 @@ export class TelegramService implements OnModuleInit {
    * Process webhook update
    */
   async processWebhook(integrationId: string, update: any): Promise<void> {
-    const bot = this.bots.get(integrationId);
+    let bot = this.bots.get(integrationId);
+    if (!bot) {
+      // Try to initialize bot on the fly
+      const integration = await this.prisma.integration.findUnique({
+        where: { id: integrationId },
+      });
+      if (integration) {
+        await this.initializeBot(integrationId, integration.accountId);
+        bot = this.bots.get(integrationId);
+      }
+    }
+
     if (!bot) {
       throw new Error(`Bot ${integrationId} not found`);
     }
@@ -488,40 +525,50 @@ export class TelegramService implements OnModuleInit {
    * Send notification to manager group
    */
   async notifyManagers(
-    accountId: string,
+    integrationId: string,
     message: string,
     options?: { parseMode?: 'Markdown' | 'HTML' },
   ): Promise<void> {
-    const integration = await this.prisma.integration.findFirst({
-      where: {
-        accountId,
-        platform: 'TELEGRAM',
-        isActive: true,
-      },
+    const integration = await this.prisma.integration.findUnique({
+      where: { id: integrationId },
     });
 
     if (!integration) {
-      this.logger.warn(`No Telegram integration for account ${accountId}`);
+      this.logger.warn(`Telegram integration ${integrationId} not found`);
       return;
     }
 
     const config = integration.settings as any;
-    if (!config.managerGroupId) {
-      this.logger.warn(`No manager group configured for account ${accountId}`);
+    const managerGroupId = config?.managerGroupId || process.env.TELEGRAM_MANAGER_CHAT_ID;
+
+    if (!managerGroupId) {
+      this.logger.warn(`No manager group configured for integration ${integrationId}`);
       return;
     }
 
-    const bot = this.bots.get(integration.id);
+    const bot = this.bots.get(integrationId);
     if (!bot) {
-      throw new Error(`Bot ${integration.id} not found`);
+      // Try to initialize bot on the fly
+      try {
+        await this.initializeBot(integrationId, integration.accountId);
+      } catch (error) {
+        this.logger.error(`Failed to initialize bot ${integrationId}:`, error);
+        return;
+      }
+    }
+
+    const activeBot = this.bots.get(integrationId);
+    if (!activeBot) {
+      this.logger.error(`Bot ${integrationId} still not available`);
+      return;
     }
 
     try {
-      await bot.telegram.sendMessage(config.managerGroupId, message, {
+      await activeBot.telegram.sendMessage(managerGroupId, message, {
         parse_mode: options?.parseMode,
       });
 
-      this.logger.log(`Manager notification sent to account ${accountId}`);
+      this.logger.log(`Manager notification sent via integration ${integrationId}`);
     } catch (error) {
       this.logger.error('Failed to send manager notification:', error);
     }

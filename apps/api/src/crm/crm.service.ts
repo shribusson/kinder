@@ -266,4 +266,24 @@ export class CrmService {
       }
     });
   }
+
+  async getIntegration(id: string) {
+    return this.prisma.integration.findUnique({
+      where: { id }
+    });
+  }
+
+  async getIntegrationByChannel(accountId: string, channel: InteractionChannel) {
+    return this.prisma.integration.findUnique({
+      where: {
+        accountId_channel: { accountId, channel }
+      }
+    });
+  }
+
+  async getDefaultAccount() {
+    return this.prisma.account.findFirst({
+      orderBy: { createdAt: 'asc' }
+    });
+  }
 }

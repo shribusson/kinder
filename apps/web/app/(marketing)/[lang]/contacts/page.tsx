@@ -1,26 +1,21 @@
-import type { Metadata } from "next";
-import Link from "next/link";
+'use client';
 
-export const metadata: Metadata = {
-  title: "Контакты - School Kids",
-  description: "Детский центр School Kids в Караганде. Телефон, адрес, режим работы. Запишитесь на консультацию или пробное занятие.",
-  openGraph: {
-    title: "Контакты School Kids - детский центр в Караганде",
-    description: "Свяжитесь с нами для записи на занятие"
-  }
-};
+import { useTranslations } from "next-intl";
 
 export default function ContactsPage({ params }: { params: { lang: string } }) {
+  const t = useTranslations();
+  const contactData = t.raw('contactsPage');
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Hero */}
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Контакты
+            {contactData.title}
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Свяжитесь с нами удобным способом. Мы ответим в течение 15 минут в рабочее время.
+            {contactData.subtitle}
           </p>
         </div>
 
@@ -28,7 +23,7 @@ export default function ContactsPage({ params }: { params: { lang: string } }) {
           {/* Контактная информация */}
           <div className="bg-white rounded-2xl shadow-sm p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Свяжитесь с нами
+              {contactData.contactInfo.title}
             </h2>
 
             <div className="space-y-6">
@@ -40,11 +35,16 @@ export default function ContactsPage({ params }: { params: { lang: string } }) {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Телефон</h3>
+                  <h3 className="font-semibold text-gray-900 mb-1">{contactData.contactInfo.phone}</h3>
                   <a href="tel:+77082050318" className="text-blue-600 hover:text-blue-700">
                     +7 (708) 205-03-18
                   </a>
-                  <p className="text-sm text-gray-500 mt-1">Пн-Пт: 9:00 - 19:00, Сб: 10:00 - 16:00</p>
+                  <span className="block text-gray-400 text-sm">ул. Язева, 9</span>
+                  <a href="tel:+77082812899" className="mt-2 inline-block text-blue-600 hover:text-blue-700">
+                    +7 (708) 281-28-99
+                  </a>
+                  <span className="block text-gray-400 text-sm">ул. Университетская, 17</span>
+                  <p className="text-sm text-gray-500 mt-1">{contactData.contactInfo.hours}</p>
                 </div>
               </div>
 
@@ -56,11 +56,11 @@ export default function ContactsPage({ params }: { params: { lang: string } }) {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">WhatsApp</h3>
+                  <h3 className="font-semibold text-gray-900 mb-1">{contactData.contactInfo.whatsapp}</h3>
                   <a href="https://wa.me/77786545258" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700">
-                    Написать в WhatsApp
+                    {contactData.contactInfo.whatsappButton}
                   </a>
-                  <p className="text-sm text-gray-500 mt-1">Быстрые ответы в мессенджере</p>
+                  <p className="text-sm text-gray-500 mt-1">{contactData.contactInfo.whatsappSubtitle}</p>
                 </div>
               </div>
 
@@ -72,11 +72,11 @@ export default function ContactsPage({ params }: { params: { lang: string } }) {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Email</h3>
+                  <h3 className="font-semibold text-gray-900 mb-1">{contactData.contactInfo.email}</h3>
                   <a href="mailto:info@schoolkids.kz" className="text-blue-600 hover:text-blue-700">
                     info@schoolkids.kz
                   </a>
-                  <p className="text-sm text-gray-500 mt-1">Ответим в течение суток</p>
+                  <p className="text-sm text-gray-500 mt-1">{contactData.contactInfo.answerSoon}</p>
                 </div>
               </div>
 
@@ -89,8 +89,10 @@ export default function ContactsPage({ params }: { params: { lang: string } }) {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Адрес</h3>
+                  <h3 className="font-semibold text-gray-900 mb-1">{contactData.contactInfo.address}</h3>
                   <p className="text-gray-700">г. Караганда, ул. Язева, 9</p>
+                  <p className="text-sm text-gray-500 mt-1">Казыбек Би район, Юго-Восточный м-н</p>
+                  <p className="mt-4 text-gray-700">г. Караганда, ул. Университетская, 17</p>
                   <p className="text-sm text-gray-500 mt-1">Казыбек Би район, Юго-Восточный м-н</p>
                 </div>
               </div>
@@ -98,7 +100,7 @@ export default function ContactsPage({ params }: { params: { lang: string } }) {
 
             {/* Социальные сети */}
             <div className="mt-8 pt-8 border-t border-gray-200">
-              <h3 className="font-semibold text-gray-900 mb-4">Мы в соцсетях</h3>
+              <h3 className="font-semibold text-gray-900 mb-4">{contactData.contactInfo.socialTitle}</h3>
               <div className="flex space-x-4">
                 <a href="https://instagram.com/schoolkids.krg" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-200 transition">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -117,16 +119,16 @@ export default function ContactsPage({ params }: { params: { lang: string } }) {
           {/* Форма */}
           <div className="bg-white rounded-2xl shadow-sm p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Оставьте заявку
+              {contactData.form.title}
             </h2>
             <p className="text-gray-600 mb-6">
-              Заполните форму, и мы свяжемся с вами в ближайшее время
+              {contactData.form.subtitle}
             </p>
 
             <form className="space-y-4" action="/api/website-lead" method="POST">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  Ваше имя
+                  {contactData.form.name}
                 </label>
                 <input
                   type="text"
@@ -134,13 +136,13 @@ export default function ContactsPage({ params }: { params: { lang: string } }) {
                   name="name"
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Как вас зовут?"
+                  placeholder={contactData.form.namePlaceholder}
                 />
               </div>
 
               <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                  Телефон
+                  {contactData.form.phone}
                 </label>
                 <input
                   type="tel"
@@ -148,38 +150,38 @@ export default function ContactsPage({ params }: { params: { lang: string } }) {
                   name="phone"
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="+7 (___) ___-__-__"
+                  placeholder={contactData.form.phonePlaceholder}
                 />
               </div>
 
               <div>
                 <label htmlFor="service" className="block text-sm font-medium text-gray-700 mb-2">
-                  Интересующая услуга
+                  {contactData.form.service}
                 </label>
                 <select
                   id="service"
                   name="service"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">Выберите услугу</option>
-                  <option value="logoped">Логопед</option>
-                  <option value="psycholog">Психолог</option>
-                  <option value="defektolog">Дефектолог</option>
-                  <option value="school-prep">Подготовка к школе</option>
-                  <option value="consultation">Консультация</option>
+                  <option value="">{contactData.form.serviceSelect}</option>
+                  <option value="logoped">{contactData.form.logoped}</option>
+                  <option value="psycholog">{contactData.form.psycholog}</option>
+                  <option value="defektolog">{contactData.form.defektolog}</option>
+                  <option value="school-prep">{contactData.form.schoolPrep}</option>
+                  <option value="consultation">{contactData.form.consultation}</option>
                 </select>
               </div>
 
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                  Комментарий (необязательно)
+                  {contactData.form.message}
                 </label>
                 <textarea
                   id="message"
                   name="message"
                   rows={4}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Расскажите о вашем запросе..."
+                  placeholder={contactData.form.messagePlaceholder}
                 />
               </div>
 
@@ -187,19 +189,14 @@ export default function ContactsPage({ params }: { params: { lang: string } }) {
                 type="submit"
                 className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
               >
-                Отправить заявку
+                {contactData.form.submitButton}
               </button>
 
               <p className="text-xs text-gray-500 text-center">
-                Нажимая кнопку, вы соглашаетесь с политикой конфиденциальности
+                {contactData.form.consent}
               </p>
             </form>
           </div>
-        </div>
-
-        {/* Карта (плейсхолдер) */}
-        <div className="bg-gray-300 rounded-2xl h-96 flex items-center justify-center">
-          <p className="text-gray-600">Здесь будет карта с местоположением</p>
         </div>
       </div>
     </div>

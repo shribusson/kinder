@@ -11,13 +11,13 @@ import {
   UnauthorizedException,
   HttpCode,
   HttpStatus,
-  ParseIntPipe,
   UseGuards,
 } from '@nestjs/common';
 import { WhatsAppService } from './whatsapp.service';
 import { PrismaService } from '../prisma.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { Public } from '../auth/decorators/public.decorator';
+import { Public } from '../common/public.decorator';
+import { InteractionChannel } from '@prisma/client';
 
 @Controller('whatsapp')
 export class WhatsAppController {
@@ -33,7 +33,7 @@ export class WhatsAppController {
   @Get('webhook/:integrationId')
   @Public()
   async verifyWebhook(
-    @Param('integrationId', ParseIntPipe) integrationId: string,
+    @Param('integrationId') integrationId: string,
     @Query('hub.mode') mode: string,
     @Query('hub.verify_token') verifyToken: string,
     @Query('hub.challenge') challenge: string,
@@ -42,7 +42,7 @@ export class WhatsAppController {
       where: { id: integrationId },
     });
 
-    if (!integration || integration.channel !== 'WHATSAPP') {
+    if (!integration || integration.channel !== InteractionChannel.whatsapp) {
       throw new BadRequestException('Invalid integration');
     }
 
@@ -63,7 +63,7 @@ export class WhatsAppController {
   @Public()
   @HttpCode(HttpStatus.OK)
   async receiveWebhook(
-    @Param('integrationId', ParseIntPipe) integrationId: string,
+    @Param('integrationId') integrationId: string,
     @Body() payload: any,
     @Headers('x-hub-signature-256') signature: string,
   ) {
@@ -71,7 +71,7 @@ export class WhatsAppController {
       where: { id: integrationId },
     });
 
-    if (!integration || integration.channel !== 'WHATSAPP') {
+    if (!integration || integration.channel !== InteractionChannel.whatsapp) {
       throw new BadRequestException('Invalid integration');
     }
 
@@ -104,7 +104,7 @@ export class WhatsAppController {
       to: string;
       type: string;
       content: any;
-      conversationId?: number;
+      conversationId?: string;
     },
     @Req() req: any,
   ) {

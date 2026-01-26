@@ -1,0 +1,312 @@
+{
+  "nav": {
+    "about": "About",
+    "services": "Services",
+    "contacts": "Contact",
+    "cta": "Enroll"
+  },
+  "hero": {
+    "title": "Your Child's Development is Our Mission",
+    "subtitle": "Speech therapy, psychology, special education, and school preparation. Experienced teachers, individual approach, visible results.",
+    "primaryCta": "Enroll",
+    "secondaryCta": "Contact Information"
+  },
+  "about": {
+    "sectionTitle": "About us",
+    "text": "School Kids is a place where every child reveals their potential. We work with children from age 2 and help them develop harmoniously through individual and group classes."
+  },
+  "services": {
+    "sectionTitle": "Our Services",
+    "items": [
+      {
+        "name": "Speech Therapy",
+        "desc": "Speech correction and articulation development"
+      },
+      {
+        "name": "Psychology",
+        "desc": "Emotional intelligence development"
+      },
+      {
+        "name": "Special Education",
+        "desc": "Support for children with special needs"
+      },
+      {
+        "name": "School Preparation",
+        "desc": "Preparing for school education"
+      },
+      {
+        "name": "Group Classes",
+        "desc": "Social skills development"
+      },
+      {
+        "name": "Online Consultations",
+        "desc": "Remote consultations"
+      }
+    ]
+  },
+  "why": {
+    "title": "Why Choose School Kids",
+    "items": [
+      {
+        "title": "Experienced Specialists",
+        "text": "Teachers with 5+ years experience"
+      },
+      {
+        "title": "Individual Approach",
+        "text": "Program tailored for each child"
+      },
+      {
+        "title": "Visible Results",
+        "text": "Assessment every 4-6 weeks"
+      },
+      {
+        "title": "Convenient Schedule",
+        "text": "Flexible hours from 9 AM to 7 PM"
+      }
+    ]
+  },
+  "process": {
+    "title": "How to Start",
+    "steps": [
+      {
+        "num": "1",
+        "title": "Leave a Request",
+        "text": "Or call us directly"
+      },
+      {
+        "num": "2",
+        "title": "Initial Consultation",
+        "text": "Discuss your child's needs"
+      },
+      {
+        "num": "3",
+        "title": "Begin Classes",
+        "text": "Individual or group"
+      }
+    ]
+  },
+  "testimonial": "Thank you for helping our son! In just a few months, his speech improved significantly.",
+  "contact": {
+    "title": "Contact Information",
+    "branchesTitle": "Branches",
+    "branchSelectLabel": "Select a branch",
+    "address": "Karaganda, Yazeva St., 9",
+    "phone": "+7 708 205 03 18",
+    "whatsapp": "+7 778 654 52 58",
+    "email": "info@schoolkids.kz",
+    "hours": "Mon-Fri: 9:00-19:00 | Sat: 10:00-16:00",
+    "branches": [
+      {
+        "label": "Branch 1",
+        "address": "Karaganda, Yazeva St., 9",
+        "phone": "+7 708 205 03 18",
+        "phoneHref": "+77082050318"
+      },
+      {
+        "label": "Branch 2",
+        "address": "Karaganda, Universitetskaya St., 17",
+        "phone": "+7 708 281 28 99",
+        "phoneHref": "+77082812899"
+      }
+    ]
+  },
+  "footer": {
+    "text": "Your child's development is an investment in their future"
+  },
+  "rating": "4.8/5 (35 reviews on 2GIS)",
+  "aboutPage": {
+    "title": "About School Kids",
+    "description": "School Kids - a modern child development center in Karaganda. Our mission is to help every child reveal their potential through professional approach and care.",
+    "hero": "We created a space where every child can develop in a comfortable atmosphere with the support of experienced specialists",
+    "mission": {
+      "title": "Our Mission",
+      "text": "Help children reveal their potential through professional approach, modern methods and individual care. We believe that every child is unique and deserves careful attention to their developmental characteristics."
+    },
+    "team": {
+      "title": "Our Team",
+      "logopeds": {
+        "title": "Speech Therapists",
+        "text": "Certified specialists with 5+ years of experience. Regularly take advanced training courses and implement modern speech correction techniques."
+      },
+      "psychologists": {
+        "title": "Psychologists",
+        "text": "Child psychologists specializing in work with preschool and early school-age children. Gentle approach and deep understanding of child psychology."
+      },
+      "defectologists": {
+        "title": "Special Educators",
+        "text": "Specialists in corrective pedagogy with medical background. Work with children with developmental needs using proven methods."
+      },
+      "teachers": {
+        "title": "Teachers",
+        "text": "Experienced school preparation instructors. Use game-based learning methods making the process engaging and effective for children."
+      }
+    },
+    "values": {
+      "title": "Our Values",
+      "items": [
+        {
+          "title": "Individual Approach",
+          "text": "Each child receives a personalized development program"
+        },
+        {
+          "title": "Professionalism",
+          "text": "We work only with qualified specialists"
+        },
+        {
+          "title": "Comfort and Safety",
+          "text": "We create a comfortable atmosphere for classes and development"
+        },
+        {
+          "title": "Results",
+          "text": "We monitor progress and adjust programs to achieve goals"
+        }
+      ]
+    },
+    "cta": {
+      "title": "Come for a Free Consultation",
+      "subtitle": "Meet our team, ask questions and get recommendations for your child's development",
+      "button": "Book a Consultation"
+    }
+  },
+  "servicesPage": {
+    "title": "Services and Programs",
+    "subtitle": "Professional help in your child's development. Individual approach and modern methods.",
+    "services": [
+      {
+        "id": "logoped",
+        "title": "Speech Therapy",
+        "description": "Sound correction and speech development",
+        "fullDescription": "Professional help in sound correction, speech development and overcoming speech disorders. We work with children from age 3.",
+        "features": [
+          "Speech development assessment",
+          "Sound establishment and automatization",
+          "Phonemic hearing development",
+          "Vocabulary expansion",
+          "Grammar and syntax work"
+        ],
+        "price": "from 5,000 ₸",
+        "duration": "45 minutes"
+      },
+      {
+        "id": "psycholog",
+        "title": "Child Psychologist",
+        "description": "Emotional development and adaptation",
+        "fullDescription": "Help children solve emotional and behavioral problems, develop social skills, work with fears and anxiety.",
+        "features": [
+          "Psychological assessment",
+          "Behavior correction",
+          "Working with fears and anxiety",
+          "Emotional intelligence development",
+          "Parent consultations"
+        ],
+        "price": "from 6,000 ₸",
+        "duration": "50 minutes"
+      },
+      {
+        "id": "defektolog",
+        "title": "Special Education",
+        "description": "Corrective pedagogy",
+        "fullDescription": "Comprehensive work with children who have developmental needs. Individual approach and modern corrective methods.",
+        "features": [
+          "Comprehensive development assessment",
+          "Cognitive development",
+          "Developmental delay correction",
+          "School readiness preparation",
+          "Parent collaboration"
+        ],
+        "price": "from 6,500 ₸",
+        "duration": "45-60 minutes"
+      },
+      {
+        "id": "school-prep",
+        "title": "School Preparation",
+        "description": "Comprehensive program for future first graders",
+        "fullDescription": "Comprehensive school preparation: reading, writing, math, logical thinking and attention development.",
+        "features": [
+          "Reading and writing instruction",
+          "Math and logic basics",
+          "Attention and memory development",
+          "Hand-writing preparation",
+          "Academic motivation formation"
+        ],
+        "price": "from 4,500 ₸",
+        "duration": "60 minutes"
+      },
+      {
+        "id": "group",
+        "title": "Group Classes",
+        "description": "Developmental programs in small groups",
+        "fullDescription": "Classes in small groups (up to 6 children) for social skills development, creative abilities and school preparation.",
+        "features": [
+          "Small groups (4-6 children)",
+          "Socialization and communication",
+          "Creative development",
+          "Developmental games",
+          "School preparation in groups"
+        ],
+        "price": "from 3,500 ₸",
+        "duration": "60 minutes"
+      }
+    ],
+    "benefits": {
+      "title": "Benefits of Classes at School Kids",
+      "items": [
+        {
+          "title": "Experienced Specialists",
+          "description": "Certified teachers with 5+ years of experience"
+        },
+        {
+          "title": "Individual Plan",
+          "description": "Personalized program for each child"
+        },
+        {
+          "title": "Visible Results",
+          "description": "Regular feedback on progress"
+        }
+      ]
+    },
+    "consultation": {
+      "title": "Not Sure Where to Start?",
+      "subtitle": "Come for a free consultation. Our specialists will conduct an assessment and recommend the optimal class program.",
+      "button": "Book a Free Consultation"
+    },
+    "whatIncluded": "What's Included:",
+    "enrollButton": "Enroll in Class"
+  },
+  "contactsPage": {
+    "title": "Contact",
+    "subtitle": "Get in touch with us in a convenient way. We will respond within 15 minutes during business hours.",
+    "contactInfo": {
+      "title": "Contact Us",
+      "phone": "Phone",
+      "whatsapp": "WhatsApp",
+      "whatsappButton": "Message on WhatsApp",
+      "whatsappSubtitle": "Quick replies in messenger",
+      "email": "Email",
+      "address": "Address",
+      "socialTitle": "Follow Us",
+      "hours": "Mon-Fri: 9:00 - 19:00, Sat: 10:00 - 16:00",
+      "quickAnswer": "We respond within 15 minutes during business hours",
+      "answerSoon": "We respond within one day"
+    },
+    "form": {
+      "title": "Leave a Request",
+      "subtitle": "Fill out the form and we will contact you soon",
+      "name": "Your Name",
+      "namePlaceholder": "What is your name?",
+      "phone": "Phone",
+      "phonePlaceholder": "+7 (___) ___-__-__",
+      "service": "Service of Interest",
+      "serviceSelect": "Select a service",
+      "logoped": "Speech Therapy",
+      "psycholog": "Psychology",
+      "defektolog": "Special Education",
+      "schoolPrep": "School Preparation",
+      "consultation": "Consultation",
+      "message": "Comment (optional)",
+      "messagePlaceholder": "Tell us about your request...",
+      "submitButton": "Submit Request",
+      "consent": "I agree to the processing of personal data"
+    }
+  }
+}

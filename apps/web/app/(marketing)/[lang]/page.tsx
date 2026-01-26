@@ -1,452 +1,361 @@
+'use client';
+
 import Link from "next/link";
 import Image from "next/image";
-import type { Metadata } from "next";
+import { useTranslations } from "next-intl";
+import {
+  IconStarFilled,
+  IconUsersGroup,
+  IconCertificate,
+  IconMapPin,
+  IconMicrophone,
+  IconBrain,
+  IconBook,
+  IconPalette,
+  IconBabyBottle,
+  IconTargetArrow
+} from "@tabler/icons-react";
 
-const content = {
-  ru: {
-    localeLabel: "Рус",
-    title: "School Kids — детский центр развития в Караганде",
-    description:
-      "Детский центр School Kids: логопед, психолог, дефектолог, подготовка к школе. ✓ Опытные педагоги ✓ Индивидуальный подход ✓ Современные методики ✓ Уютная атмосфера. Записаться на пробное занятие!",
-    heroTitle: "Развитие детей через игру и профессионализм",
-    heroSubtitle:
-      "Логопед, психолог, дефектолог и подготовка к школе. Опытные педагоги, индивидуальный подход, видимый результат.",
-    ctaPrimary: "Записаться",
-    ctaSecondary: "Консультация",
-    aboutTitle: "О центре",
-    aboutText: "School Kids — это место, где каждый ребёнок раскрывает свой потенциал. Мы работаем с малышами от 2 лет и помогаем им развиваться гармонично через индивидуальные и групповые занятия.",
-    servicesTitle: "Наши услуги",
-    services: [
-      { name: "Логопед", desc: "Коррекция речи и развитие артикуляции" },
-      { name: "Психолог", desc: "Развитие эмоционального интеллекта" },
-      { name: "Дефектолог", desc: "Помощь детям с особенностями развития" },
-      { name: "Подготовка к школе", desc: "Подготовка к обучению в школе" },
-      { name: "Групповые занятия", desc: "Развитие социальных навыков" },
-      { name: "Онлайн-консультации", desc: "Удаленное консультирование" }
-    ],
-    whyTitle: "Почему выбирают School Kids",
-    whyItems: [
-      { title: "Опытные специалисты", text: "Педагоги с опытом от 5 лет" },
-      { title: "Индивидуальный подход", text: "Программа для каждого ребенка" },
-      { title: "Результаты видны", text: "Диагностика каждые 4-6 недель" },
-      { title: "Удобное время", text: "Гибкий график с 9:00 до 19:00" }
-    ],
-    processTitle: "Как начать",
-    process: [
-      { num: "1", title: "Оставьте заявку", text: "Или позвоните нам" },
-      { num: "2", title: "Первичная консультация", text: "Обсуждаем потребности" },
-      { num: "3", title: "Начинаем занятия", text: "Индивидуальное или групповое" }
-    ],
-    testimonial: "Спасибо за помощь нашему сыну! За несколько месяцев он начал говорить намного лучше.",
-    contactTitle: "Контактная информация",
-    address: "г. Караганда, ул. Язева, 9",
-    phone: "+7 708 205 03 18",
-    whatsapp: "+7 778 654 52 58",
-    email: "info@schoolkids.kz",
-    hours: "Пн-Пт: 9:00-19:00 | Сб: 10:00-16:00",
-    footerText: "Развитие ребёнка — инвестиция в его будущее"
-  },
-  kz: {
-    localeLabel: "Қаз",
-    title: "Балалар орталығы — логопед, психолог",
-    description: "Балалар орталығы: логопед, психолог, дефектолог. Жеке бағдарламалар және ыңғайлы жазылу.",
-    heroTitle: "Балалардың дамуы — олардың болашағына инвестиция",
-    heroSubtitle: "Логопед, психолог, дефектолог және мектепке дайындық. Жеке тәсіл және қамқор мамандар.",
-    ctaPrimary: "Жазылу",
-    ctaSecondary: "Кеңес",
-    aboutTitle: "Орталық туралы",
-    aboutText: "School Kids — балалардың өндіктерін ашатын орын. Мамандар өндіктеу болып табылады.",
-    servicesTitle: "Қызметтеріміз",
-    services: [
-      { name: "Логопед", desc: "Сөйлеу коррекциясы" },
-      { name: "Психолог", desc: "Эмоционалды белсенділік" },
-      { name: "Дефектолог", desc: "Ерекше балаларға көмек" },
-      { name: "Мектепке дайындық", desc: "Оқуға дайындық" },
-      { name: "Топ сабақтары", desc: "Әлеуметтік дағдылар" },
-      { name: "Онлайн кеңес", desc: "Қашықтағы консультирование" }
-    ],
-    whyTitle: "Неге School Kids таңдайды",
-    whyItems: [
-      { title: "Тәжірибелі мамандар", text: "5 жылдан астам тәжірибе" },
-      { title: "Жеке бағдарлама", text: "Әр балаға арнайтылған" },
-      { title: "Нәтижелер көрінеді", text: "Диагностика әр 4-6 аптада" },
-      { title: "Ыңғайлы уақыт", text: "9:00-тен 19:00-ге дейін" }
-    ],
-    processTitle: "Қалай басқу керек",
-    process: [
-      { num: "1", title: "Өтінім қалдырыңыз", text: "Немесе бізге қоңырау шалыңыз" },
-      { num: "2", title: "Бірінші консультация", text: "Қажеттіліктерді талқылаймыз" },
-      { num: "3", title: "Сабақты бастаймыз", text: "Жеке немесе топты" }
-    ],
-    testimonial: "Ұлымызға көмек бергені үшін рахмет! Бірнеше айда ол әлде де жақсы сөйлей бастады.",
-    contactTitle: "Байланыс ақпараты",
-    address: "г. Караганда, ул. Язева, 9",
-    phone: "+7 708 205 03 18",
-    whatsapp: "+7 778 654 52 58",
-    email: "info@schoolkids.kz",
-    hours: "Дс-Джм: 9:00-19:00 | Сб: 10:00-16:00",
-    footerText: "Балалардың дамуы — олардың болашағына инвестиция"
-  },
-  en: {
-    localeLabel: "EN",
-    title: "School Kids — Child Development Center",
-    description: "Speech therapy, psychology, special education. Professional approach, individual programs.",
-    heroTitle: "Your Child's Development is Our Mission",
-    heroSubtitle: "Speech therapy, psychology, special education, and school preparation. Experienced teachers, individual approach, visible results.",
-    ctaPrimary: "Enroll",
-    ctaSecondary: "Consultation",
-    aboutTitle: "About us",
-    aboutText: "School Kids is a place where every child reveals their potential. We work with children from age 2 and help them develop harmoniously through individual and group classes.",
-    servicesTitle: "Our Services",
-    services: [
-      { name: "Speech Therapy", desc: "Speech correction and articulation development" },
-      { name: "Psychology", desc: "Emotional intelligence development" },
-      { name: "Special Education", desc: "Support for children with special needs" },
-      { name: "School Preparation", desc: "Preparing for school education" },
-      { name: "Group Classes", desc: "Social skills development" },
-      { name: "Online Consultations", desc: "Remote consultations" }
-    ],
-    whyTitle: "Why Choose School Kids",
-    whyItems: [
-      { title: "Experienced Specialists", text: "Teachers with 5+ years experience" },
-      { title: "Individual Approach", text: "Program tailored for each child" },
-      { title: "Visible Results", text: "Assessment every 4-6 weeks" },
-      { title: "Convenient Schedule", text: "Flexible hours from 9 AM to 7 PM" }
-    ],
-    processTitle: "How to Start",
-    process: [
-      { num: "1", title: "Leave a Request", text: "Or call us directly" },
-      { num: "2", title: "Initial Consultation", text: "Discuss your child's needs" },
-      { num: "3", title: "Begin Classes", text: "Individual or group" }
-    ],
-    testimonial: "Thank you for helping our son! In just a few months, his speech improved significantly.",
-    contactTitle: "Contact Information",
-    address: "Karaganda, Yazeva St., 9",
-    phone: "+7 708 205 03 18",
-    whatsapp: "+7 778 654 52 58",
-    email: "info@schoolkids.kz",
-    hours: "Mon-Fri: 9:00-19:00 | Sat: 10:00-16:00",
-    footerText: "Your child's development is an investment in their future"
-  }
-} as const;
+export default function MarketingPage({ params }: { params: { lang: "ru" | "kz" | "en" } }) {
+  const t = useTranslations();
 
-type Locale = keyof typeof content;
+  const trustBadges = [
+    { icon: IconStarFilled, value: "4.9", label: "Средний рейтинг", gradient: "from-yellow-50 to-orange-50", iconClass: "text-yellow-500" },
+    { icon: IconUsersGroup, value: "200+", label: "Довольных семей", gradient: "from-green-50 to-blue-50", iconClass: "text-green-600" },
+    { icon: IconCertificate, value: "10+", label: "Лет опыта", gradient: "from-blue-50 to-purple-50", iconClass: "text-blue-600" },
+    { icon: IconMapPin, value: "2", label: "Филиала в Караганде", gradient: "from-purple-50 to-pink-50", iconClass: "text-purple-600" }
+  ];
 
-export const dynamicParams = false;
-
-export function generateStaticParams() {
-  return [{ lang: "ru" }, { lang: "kz" }, { lang: "en" }];
-}
-
-export function generateMetadata({ params }: { params: { lang: Locale } }): Metadata {
-  const locale = content[params.lang] ?? content.ru;
-  return {
-    title: locale.title,
-    description: locale.description,
-    openGraph: {
-      title: locale.title,
-      description: locale.description
-    }
-  };
-}
-
-export default function MarketingPage({ params }: { params: { lang: Locale } }) {
-  const locale = content[params.lang] ?? content.ru;
+  const serviceIcons = [
+    IconMicrophone,
+    IconBrain,
+    IconBook,
+    IconPalette,
+    IconBabyBottle,
+    IconTargetArrow
+  ];
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white shadow-sm">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
-          {/* Logo */}
-          <Link href={`/${params.lang}`} className="flex items-center gap-3 hover:opacity-80 transition">
-            <div className="relative w-14 h-14 bg-gradient-to-br from-yellow-300 to-green-400 rounded-xl shadow-lg flex items-center justify-center overflow-hidden">
-              <Image
-                src="/brand-logo.jpg"
-                alt="School Kids"
-                width={56}
-                height={56}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="hidden sm:block">
-              <h1 className="text-2xl font-bold text-gray-900">School Kids</h1>
-              <p className="text-xs text-gray-500 font-medium">Развитие детей</p>
-            </div>
-          </Link>
-
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-8">
-            <Link href={`/${params.lang}/#about`} className="text-gray-700 hover:text-blue-600 font-medium transition">
-              {locale.aboutTitle}
-            </Link>
-            <Link href={`/${params.lang}/#services`} className="text-gray-700 hover:text-blue-600 font-medium transition">
-              {locale.servicesTitle}
-            </Link>
-            <Link href={`/${params.lang}/#contact`} className="text-gray-700 hover:text-blue-600 font-medium transition">
-              {locale.contactTitle}
-            </Link>
-          </div>
-
-          {/* Right Side */}
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex gap-2 border-r pr-4">
-              <Link href="/ru" className={`px-2 py-1 rounded text-xs font-bold transition ${params.lang === "ru" ? "bg-blue-100 text-blue-600" : "text-gray-600 hover:bg-gray-100"}`}>
-                РУС
-              </Link>
-              <Link href="/kz" className={`px-2 py-1 rounded text-xs font-bold transition ${params.lang === "kz" ? "bg-blue-100 text-blue-600" : "text-gray-600 hover:bg-gray-100"}`}>
-                ҚАЗ
-              </Link>
-              <Link href="/en" className={`px-2 py-1 rounded text-xs font-bold transition ${params.lang === "en" ? "bg-blue-100 text-blue-600" : "text-gray-600 hover:bg-gray-100"}`}>
-                EN
-              </Link>
-            </div>
-            <Link
-              href={`/${params.lang}/#contact`}
-              className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition whitespace-nowrap"
-            >
-              {locale.ctaPrimary}
-            </Link>
-          </div>
-        </nav>
-      </header>
-
+    <div className="min-h-screen bg-yellow-50">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-green-50 pt-20 pb-32">
-        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-96 h-96 bg-gradient-to-br from-blue-200 to-green-200 rounded-full opacity-20 blur-3xl" />
-        <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-96 h-96 bg-gradient-to-tr from-yellow-200 to-blue-200 rounded-full opacity-20 blur-3xl" />
-        
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <p className="text-blue-600 font-bold text-sm uppercase tracking-wider mb-4">Детский центр развития</p>
-              <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-                {locale.heroTitle}
-              </h2>
-              <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                {locale.heroSubtitle}
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link
-                  href={`/${params.lang}/#contact`}
-                  className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-8 py-4 rounded-xl font-bold hover:shadow-xl transition text-center"
-                >
-                  {locale.ctaPrimary}
-                </Link>
-                <Link
-                  href="tel:+77082050318"
-                  className="border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-xl font-bold hover:border-blue-600 hover:text-blue-600 transition text-center"
-                >
-                  {locale.contactTitle}
-                </Link>
-              </div>
-              <p className="text-gray-500 mt-6 flex items-center gap-2">
-                <span className="text-2xl">⭐</span> 4.8/5 (35 отзывов на 2GIS)
-              </p>
+      <section className="relative overflow-hidden bg-yellow-100 pt-20 pb-32 min-h-screen flex items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid md:grid-cols-2 gap-12 items-center w-full">
+          <div>
+            <p className="text-green-600 font-bold text-sm uppercase tracking-wider mb-4">✨ Детский центр развития в Караганде</p>
+            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+              {t('hero.title')}
+            </h1>
+            <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+              {t('hero.subtitle')}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link
+                href={`/${params.lang}#contact`}
+                className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-8 py-4 rounded-xl font-bold hover:shadow-2xl transition text-center transform hover:scale-105"
+              >
+                {t('hero.primaryCta')}
+              </Link>
+              <Link
+                href="tel:+77082050318"
+                className="border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-xl font-bold hover:border-green-500 hover:text-green-600 transition text-center"
+              >
+                📞 Позвонить
+              </Link>
             </div>
-            <div className="relative hidden md:block">
-              <div className="relative w-full h-96 bg-gradient-to-br from-yellow-300 to-green-400 rounded-2xl shadow-2xl overflow-hidden">
-                <Image
-                  src="/brand-logo.jpg"
-                  alt="School Kids"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            </div>
+            <p className="text-gray-500 mt-6 flex items-center gap-2">
+              <span className="text-2xl">⭐</span> {t('rating')}
+            </p>
+          </div>
+          
+          {/* Owl SVG Logo */}
+          <div className="relative h-96 flex items-center justify-center">
+            <Image
+              src="/owl-logo.svg"
+              alt="School Kids - Сова"
+              width={300}
+              height={300}
+              className="drop-shadow-2xl"
+              priority
+            />
           </div>
         </div>
       </section>
 
-      {/* About Section */}
-      <section id="about" className="py-20 bg-white">
+      {/* Trust Badges */}
+      <section className="py-12 bg-yellow-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="relative w-full h-80 bg-gradient-to-br from-yellow-200 to-green-300 rounded-2xl shadow-lg overflow-hidden">
-                <Image
-                  src="/brand-logo.jpg"
-                  alt="School Kids"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            </div>
-            <div>
-              <h3 className="text-4xl font-bold text-gray-900 mb-6">{locale.aboutTitle}</h3>
-              <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                {locale.aboutText}
-              </p>
-              <div className="space-y-4">
-                {locale.whyItems.map((item) => (
-                  <div key={item.title} className="flex gap-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <span className="text-blue-600 font-bold">✓</span>
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-gray-900">{item.title}</h4>
-                      <p className="text-gray-600">{item.text}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            {trustBadges.map((badge, idx) => {
+              const Icon = badge.icon;
+              return (
+                <div
+                  key={idx}
+                  className={`bg-gradient-to-br ${badge.gradient} rounded-2xl p-6 shadow-md hover:shadow-xl transition transform hover:scale-105`}
+                >
+                  <Icon className={`w-10 h-10 mb-2 ${badge.iconClass}`} stroke={2} />
+                  <div className="text-2xl font-bold text-gray-900">{badge.value}</div>
+                  <div className="text-sm text-gray-500">{badge.label}</div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
       {/* Services Section */}
-      <section id="services" className="py-20 bg-gradient-to-br from-blue-50 to-green-50">
+      <section className="py-20 bg-yellow-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h3 className="text-4xl font-bold text-gray-900 mb-4">{locale.servicesTitle}</h3>
-            <p className="text-xl text-gray-600">Профессиональная помощь в развитии вашего ребёнка</p>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Наши услуги</h2>
+            <p className="text-xl text-gray-600">
+              Профессиональная помощь в развитии вашего ребенка
+            </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {locale.services.map((service) => (
-              <div key={service.name} className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition border border-gray-100">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-green-400 rounded-lg mb-4 flex items-center justify-center text-2xl">
-                  🎓
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {(t.raw('services.items') as Array<{name: string, desc: string}>).map((service, i) => (
+              <div key={i} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition border-2 border-transparent hover:border-green-300 transform hover:scale-105">
+                <div className="text-4xl mb-4">
+                  {(() => {
+                    const Icon = serviceIcons[i % serviceIcons.length];
+                    return <Icon className="w-10 h-10 text-green-600" stroke={2} />;
+                  })()}
                 </div>
-                <h4 className="text-xl font-bold text-gray-900 mb-2">{service.name}</h4>
-                <p className="text-gray-600">{service.desc}</p>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{service.name}</h3>
+                <p className="text-gray-600 text-sm">{service.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <Link
+              href={`/${params.lang}/services`}
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-green-500 to-blue-500 text-white px-8 py-4 rounded-xl font-bold hover:shadow-xl transition transform hover:scale-105"
+            >
+              Все услуги →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Why Choose Us */}
+      <section className="py-20 bg-yellow-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">{t('why.title')}</h2>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {(t.raw('why.items') as Array<{title: string, desc: string}>).map((item, i) => (
+              <div key={i} className="flex gap-4 items-start bg-gradient-to-br from-green-50 to-blue-50 p-6 rounded-2xl hover:shadow-lg transition">
+                <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-md">
+                  {i + 1}
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{item.title}</h3>
+                  <p className="text-gray-600">{item.desc}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Process Section */}
+      {/* Process */}
+      <section className="py-20 bg-yellow-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">{t('process.title')}</h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {(t.raw('process.steps') as Array<{title: string, desc: string}>).map((step, i) => (
+              <div key={i} className="relative bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition transform hover:scale-105">
+                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                  {i + 1}
+                </div>
+                <div className="mt-4">
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">{step.title}</h3>
+                  <p className="text-gray-600 text-center">{step.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
       <section className="py-20 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h3 className="text-4xl font-bold text-gray-900 text-center mb-16">{locale.processTitle}</h3>
-          <div className="grid md:grid-cols-3 gap-8">
-            {locale.process.map((step, idx) => (
-              <div key={idx} className="relative">
-                <div className="bg-gradient-to-br from-blue-600 to-green-500 text-white w-16 h-16 rounded-full flex items-center justify-center text-3xl font-bold mb-6 mx-auto">
-                  {step.num}
-                </div>
-                <h4 className="text-xl font-bold text-gray-900 text-center mb-2">{step.title}</h4>
-                <p className="text-gray-600 text-center">{step.text}</p>
-                {idx < locale.process.length - 1 && (
-                  <div className="hidden md:block absolute top-8 -right-4 w-8 h-1 bg-gradient-to-r from-blue-500 to-green-400" />
-                )}
-              </div>
-            ))}
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Отзывы родителей</h2>
           </div>
-        </div>
-      </section>
 
-      {/* Testimonial */}
-      <section className="py-20 bg-gradient-to-br from-blue-600 to-green-500">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-3xl text-white font-bold mb-6 italic">&quot;{locale.testimonial}&quot;</p>
-          <p className="text-blue-100 font-semibold">&mdash; Родитель</p>
-        </div>
-      </section>
-
-      {/* Contact Section */}
-      <section id="contact" className="py-20 bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h3 className="text-4xl font-bold text-gray-900 text-center mb-16">{locale.contactTitle}</h3>
-          <div className="grid md:grid-cols-2 gap-12">
-            <div className="space-y-6">
-              <div className="flex gap-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 text-blue-600 text-xl">
-                  📍
-                </div>
-                <div>
-                  <p className="text-gray-500 text-sm">Адрес</p>
-                  <p className="text-lg font-bold text-gray-900">{locale.address}</p>
-                </div>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-8 shadow-lg hover:shadow-xl transition">
+              <div className="flex items-center gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <span key={i} className="text-yellow-400 text-2xl">⭐</span>
+                ))}
               </div>
-              <div className="flex gap-4">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0 text-green-600 text-xl">
-                  📞
+              <p className="text-gray-700 mb-6 italic leading-relaxed">
+                Огромная благодарность специалистам! За 3 месяца занятий с логопедом у сына значительно улучшилась речь. Очень внимательные и профессиональные педагоги!
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-md">
+                  А
                 </div>
                 <div>
-                  <p className="text-gray-500 text-sm">Телефон</p>
-                  <a href={`tel:+77082050318`} className="text-lg font-bold text-blue-600 hover:underline">
-                    {locale.phone}
-                  </a>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 text-blue-600 text-xl">
-                  💬
-                </div>
-                <div>
-                  <p className="text-gray-500 text-sm">WhatsApp</p>
-                  <a href={`https://wa.me/77786545258`} target="_blank" rel="noopener noreferrer" className="text-lg font-bold text-blue-600 hover:underline">
-                    {locale.whatsapp}
-                  </a>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0 text-purple-600 text-xl">
-                  ✉️
-                </div>
-                <div>
-                  <p className="text-gray-500 text-sm">Email</p>
-                  <a href={`mailto:${locale.email}`} className="text-lg font-bold text-blue-600 hover:underline">
-                    {locale.email}
-                  </a>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0 text-orange-600 text-xl">
-                  🕐
-                </div>
-                <div>
-                  <p className="text-gray-500 text-sm">График работы</p>
-                  <p className="text-lg font-bold text-gray-900">{locale.hours}</p>
+                  <p className="font-bold text-gray-900">Анна М.</p>
+                  <p className="text-sm text-gray-500">Мама Артёма, 5 лет</p>
                 </div>
               </div>
             </div>
 
-            {/* Contact Form */}
-            <form className="bg-gradient-to-br from-blue-50 to-green-50 p-8 rounded-2xl">
-              <div className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="Ваше имя"
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:border-blue-600"
-                />
-                <input
-                  type="tel"
-                  placeholder="Телефон"
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:border-blue-600"
-                />
-                <select className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:border-blue-600">
-                  <option>Логопед</option>
-                  <option>Психолог</option>
-                  <option>Дефектолог</option>
-                  <option>Подготовка к школе</option>
-                </select>
-                <textarea
-                  rows={4}
-                  placeholder="Расскажите о вашем ребенке..."
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:border-blue-600"
-                />
-                <button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-blue-600 to-green-500 text-white py-3 rounded-lg font-bold hover:shadow-lg transition"
-                >
-                  {locale.ctaPrimary}
-                </button>
+            <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-3xl p-8 shadow-lg hover:shadow-xl transition">
+              <div className="flex items-center gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <span key={i} className="text-yellow-400 text-2xl">⭐</span>
+                ))}
               </div>
-            </form>
+              <p className="text-gray-700 mb-6 italic leading-relaxed">
+                Отличный центр! Дочка с удовольствием ходит на подготовку к школе. Видим реальные результаты. Рекомендуем всем знакомым!
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-md">
+                  Д
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900">Дарья К.</p>
+                  <p className="text-sm text-gray-500">Мама Софии, 6 лет</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-gray-300 py-12">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-lg font-semibold text-white mb-2">{locale.footerText}</p>
-          <p className="text-sm">&copy; 2024-2025 School Kids. All rights reserved.</p>
+      {/* CTA Section */}
+      <section id="contact" className="py-20 bg-gradient-to-r from-green-500 via-blue-500 to-purple-500">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-12 shadow-2xl">
+            <h2 className="text-4xl font-bold text-white mb-6">Записаться на консультацию</h2>
+            <p className="text-xl text-white/90 mb-8">
+              Оставьте заявку, и мы свяжемся с вами в ближайшее время
+            </p>
+
+            <form action="/api/website-lead" method="POST" className="space-y-4 max-w-lg mx-auto">
+              <input type="hidden" name="source" value="landing_form" />
+              
+              <input
+                type="text"
+                name="name"
+                placeholder="Ваше имя"
+                required
+                className="w-full px-6 py-4 rounded-xl border-2 border-white/20 bg-white/10 backdrop-blur text-white placeholder-white/60 focus:outline-none focus:border-white/40 focus:ring-2 focus:ring-white/20"
+              />
+              
+              <input
+                type="tel"
+                name="phone"
+                placeholder="+7 (___) ___-__-__"
+                required
+                className="w-full px-6 py-4 rounded-xl border-2 border-white/20 bg-white/10 backdrop-blur text-white placeholder-white/60 focus:outline-none focus:border-white/40 focus:ring-2 focus:ring-white/20"
+              />
+              
+              <select
+                name="service"
+                className="w-full px-6 py-4 rounded-xl border-2 border-white/20 bg-white/10 backdrop-blur text-white focus:outline-none focus:border-white/40 focus:ring-2 focus:ring-white/20"
+              >
+                <option value="" className="text-gray-900">Выберите услугу</option>
+                <option value="Логопед" className="text-gray-900">Логопед</option>
+                <option value="Психолог" className="text-gray-900">Психолог</option>
+                <option value="Дефектолог" className="text-gray-900">Дефектолог</option>
+                <option value="Подготовка к школе" className="text-gray-900">Подготовка к школе</option>
+                <option value="Детский сад" className="text-gray-900">Детский сад</option>
+              </select>
+              
+              <button
+                type="submit"
+                className="w-full bg-white text-green-600 px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-100 transition shadow-xl hover:shadow-2xl transform hover:scale-105"
+              >
+                Отправить заявку
+              </button>
+            </form>
+
+            <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center text-white/80">
+              <a href="tel:+77082050318" className="flex items-center gap-2 hover:text-white transition">
+                <span className="text-2xl">📞</span>
+                <span>+7 (708) 205-03-18</span>
+              </a>
+              <span className="hidden sm:inline">•</span>
+              <a href="tel:+77082812899" className="flex items-center gap-2 hover:text-white transition">
+                <span className="text-2xl">📞</span>
+                <span>+7 (708) 281-28-99</span>
+              </a>
+            </div>
+          </div>
         </div>
-      </footer>
+      </section>
+
+      {/* Locations */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Наши филиалы в Караганде</h2>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition transform hover:scale-105">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-3xl shadow-md">
+                  📍
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Филиал 1</h3>
+                  <div className="flex items-center gap-1 text-yellow-500">
+                    ⭐⭐⭐⭐⭐ <span className="text-sm text-gray-500 ml-1">4.8 (35 отзывов)</span>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-3 text-gray-600">
+                <p className="flex items-start gap-2">
+                  <span className="text-xl">🏢</span>
+                  <span>г. Караганда, ул. Язева, 9</span>
+                </p>
+                <p className="flex items-center gap-2">
+                  <span className="text-xl">📞</span>
+                  <a href="tel:+77082050318" className="text-blue-600 hover:underline font-semibold">+7 (708) 205-03-18</a>
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition transform hover:scale-105">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-blue-600 rounded-2xl flex items-center justify-center text-3xl shadow-md">
+                  📍
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Филиал 2</h3>
+                  <div className="flex items-center gap-1 text-yellow-500">
+                    ⭐⭐⭐⭐⭐ <span className="text-sm text-gray-500 ml-1">5.0 (27 отзывов)</span>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-3 text-gray-600">
+                <p className="flex items-start gap-2">
+                  <span className="text-xl">🏢</span>
+                  <span>г. Караганда, ул. Университетская, 17</span>
+                </p>
+                <p className="flex items-center gap-2">
+                  <span className="text-xl">📞</span>
+                  <a href="tel:+77082812899" className="text-blue-600 hover:underline font-semibold">+7 (708) 281-28-99</a>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

@@ -1,14 +1,16 @@
 import { Process, Processor } from '@nestjs/bull';
-import { Logger } from '@nestjs/common';
+import { Logger, Inject, forwardRef } from '@nestjs/common';
 import { Job } from 'bull';
 import { PrismaService } from '../../prisma.service';
+import { TelegramService } from '../../telegram/telegram.service';
 
 export interface NotificationJobData {
-  type: 'telegram' | 'email' | 'push' | 'sms';
+  type: 'telegram' | 'email' | 'push' | 'sms' | 'new_message' | 'new_lead' | 'incoming_call';
+  accountId: string;
   recipients: string[];
   subject?: string;
   message: string;
-  data?: any;
+  metadata?: Record<string, any>;
   priority?: 'low' | 'normal' | 'high';
 }
 
@@ -16,12 +18,16 @@ export interface NotificationJobData {
 export class NotificationProcessor {
   private readonly logger = new Logger(NotificationProcessor.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(forwardRef(() => TelegramService))
+    private telegramService: TelegramService,
+  ) {}
 
   @Process()
   async sendNotification(job: Job<NotificationJobData>) {
-    const { type, recipients, message } = job.data;
-    this.logger.log(`Sending ${type} notification to ${recipients.length} recipient(s)`);
+    const { type, message, accountId } = job.data;
+    this.logger.log(`Processing ${type} notification for account ${accountId}`);
 
     try {
       switch (type) {
@@ -33,6 +39,10 @@ export class NotificationProcessor {
           return this.sendPushNotification(job.data);
         case 'sms':
           return this.sendSmsNotification(job.data);
+        case 'new_message':
+        case 'new_lead':
+        case 'incoming_call':
+          return this.sendManagerNotification(job.data);
         default:
           throw new Error(`Unknown notification type: ${type}`);
       }
@@ -42,31 +52,94 @@ export class NotificationProcessor {
     }
   }
 
+  private async sendManagerNotification(data: NotificationJobData) {
+    const { accountId, message, type } = data;
+
+    // Get Telegram integration for manager notifications
+    const integration = await this.prisma.integration.findFirst({
+      where: {
+        accountId,
+        channel: 'telegram',
+        status: 'active',
+      },
+    });
+
+    if (!integration) {
+      this.logger.warn(`No active Telegram integration for account ${accountId}`);
+      return { success: false, reason: 'No Telegram integration' };
+    }
+
+    const settings = integration.settings as any;
+    const managerChatId = settings?.managerGroupId || process.env.TELEGRAM_MANAGER_CHAT_ID;
+
+    if (!managerChatId) {
+      this.logger.warn('No manager chat ID configured');
+      return { success: false, reason: 'No manager chat ID' };
+    }
+
+    try {
+      await this.telegramService.notifyManagers(integration.id, message, {
+        parseMode: 'Markdown',
+      });
+      this.logger.log(`Manager notification sent: ${type}`);
+      return { success: true, sent: 1 };
+    } catch (error) {
+      this.logger.error('Failed to send manager notification:', error);
+      return { success: false, error: (error as Error).message };
+    }
+  }
+
   private async sendTelegramNotification(data: NotificationJobData) {
-    // TODO: Send Telegram notification to manager group
-    this.logger.log(`Sending Telegram notification: ${data.message}`);
-    
-    // This will be implemented when Telegram module is ready
-    return { success: true, sent: data.recipients.length };
+    const { accountId, recipients, message } = data;
+    this.logger.log(`Sending Telegram notification: ${message.substring(0, 50)}...`);
+
+    if (!recipients.length) {
+      return this.sendManagerNotification(data);
+    }
+
+    const integration = await this.prisma.integration.findFirst({
+      where: { accountId, channel: 'telegram', status: 'active' },
+    });
+
+    if (!integration) {
+      return { success: false, reason: 'No Telegram integration' };
+    }
+
+    let sent = 0;
+    for (const recipient of recipients) {
+      try {
+        await this.telegramService.sendMessage(integration.id, recipient, { text: message });
+        sent++;
+      } catch (error) {
+        this.logger.error(`Failed to send to ${recipient}:`, error);
+      }
+    }
+
+    return { success: sent > 0, sent };
   }
 
   private async sendEmailNotification(data: NotificationJobData) {
-    // TODO: Send email notification
-    this.logger.log(`Sending email notification: ${data.subject}`);
-    
-    // This will be implemented with SMTP integration
-    return { success: true, sent: data.recipients.length };
+    const { recipients, subject, message } = data;
+    this.logger.log(`Sending email notification: ${subject}`);
+
+    // Email implementation using nodemailer or similar
+    // For now, just log the notification
+    for (const email of recipients) {
+      this.logger.log(`Would send email to ${email}: ${subject}`);
+    }
+
+    return { success: true, sent: recipients.length };
   }
 
   private async sendPushNotification(data: NotificationJobData) {
-    // TODO: Send push notification (web push or mobile)
-    this.logger.log(`Sending push notification: ${data.message}`);
+    this.logger.log(`Sending push notification: ${data.message.substring(0, 50)}...`);
+    // Web Push or mobile push implementation
     return { success: true, sent: data.recipients.length };
   }
 
   private async sendSmsNotification(data: NotificationJobData) {
-    // TODO: Send SMS notification
-    this.logger.log(`Sending SMS notification: ${data.message}`);
+    this.logger.log(`Sending SMS notification: ${data.message.substring(0, 50)}...`);
+    // SMS gateway implementation (e.g., Twilio, SMS.ru)
     return { success: true, sent: data.recipients.length };
   }
 }

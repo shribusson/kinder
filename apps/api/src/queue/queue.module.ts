@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 import { PrismaModule } from '../prisma.module';
-// TODO: Re-enable after schema migration
-// import { TelephonyModule } from '../telephony/telephony.module';
+import { TelegramModule } from '../telegram/telegram.module';
+import { WhatsAppModule } from '../whatsapp/whatsapp.module';
 import { WebhookProcessor } from './processors/webhook.processor';
 import { OutboundMessageProcessor } from './processors/outbound-message.processor';
 import { CallProcessor } from './processors/call.processor';
@@ -36,7 +36,8 @@ export const QUEUE_NAMES = {
       { name: QUEUE_NAMES.NOTIFICATIONS },
     ),
     PrismaModule,
-    // TelephonyModule,  // Disabled - needs schema migration
+    forwardRef(() => TelegramModule),
+    forwardRef(() => WhatsAppModule),
   ],
   providers: [
     WebhookProcessor,

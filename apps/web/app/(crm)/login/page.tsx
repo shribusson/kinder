@@ -100,10 +100,11 @@ export default function LoginPage() {
       <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-lg border border-slate-200">
         <div className="flex flex-col items-center mb-8">
           <Image
-            src="/brand-logo.jpg"
+            src="/brand-logo.png"
             alt="School Kids"
             width={80}
             height={80}
+            priority
             className="rounded-full mb-4"
           />
           <h1 className="text-2xl font-bold text-slate-900">School Kids CRM</h1>

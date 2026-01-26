@@ -17,9 +17,6 @@
   "include": ["src/**/*.ts"],
   "exclude": [
     "node_modules",
-    "dist",
-    "src/telephony",
-    "src/whatsapp",
-    "src/telegram"
+    "dist"
   ]
 }

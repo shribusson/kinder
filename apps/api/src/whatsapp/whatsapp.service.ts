@@ -4,21 +4,26 @@ import { Queue } from 'bull';
 import { PrismaService } from '../prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { QUEUE_NAMES } from '../queue/queue.module';
-import { MessageStatus } from '@prisma/client';
-import axios from 'axios';
+import { MessageStatus, MessageDirection, InteractionChannel, ConversationStatus } from '@prisma/client';
 
 export interface SendMessageOptions {
   accountId: string;
   to: string;
   type: 'text' | 'image' | 'video' | 'document' | 'audio' | 'template';
   content: string | { url: string; caption?: string } | { templateName: string; language: string; components?: any[] };
-  conversationId?: number;
+  conversationId?: string;
+}
+
+interface WhatsAppClientConfig {
+  accessToken: string;
+  phoneNumberId: string;
+  businessAccountId?: string;
 }
 
 @Injectable()
 export class WhatsAppService {
   private readonly logger = new Logger(WhatsAppService.name);
-  private whatsappClients: Map<number, WhatsApp> = new Map();
+  private clientConfigs: Map<string, WhatsAppClientConfig> = new Map();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -27,32 +32,32 @@ export class WhatsAppService {
   ) {}
 
   /**
-   * Get or create WhatsApp client for an integration
+   * Get client config for an integration
    */
-  private async getClient(integrationId: string): Promise<WhatsApp> {
-    if (this.whatsappClients.has(integrationId)) {
-      return this.whatsappClients.get(integrationId)!;
+  private async getClientConfig(integrationId: string): Promise<WhatsAppClientConfig> {
+    if (this.clientConfigs.has(integrationId)) {
+      return this.clientConfigs.get(integrationId)!;
     }
 
     const integration = await this.prisma.integration.findUnique({
       where: { id: integrationId },
     });
 
-    if (!integration || integration.channel !== 'WHATSAPP') {
+    if (!integration || integration.channel !== InteractionChannel.whatsapp) {
       throw new Error(`WhatsApp integration ${integrationId} not found`);
     }
 
-    const config = integration.settings as any;
-    const client = new WhatsApp({
-      token: config.accessToken,
-      phoneNumberId: config.phoneNumberId,
-      businessAccountId: config.businessAccountId,
-    });
+    const settings = integration.settings as any;
+    const config: WhatsAppClientConfig = {
+      accessToken: settings.accessToken,
+      phoneNumberId: settings.phoneNumberId,
+      businessAccountId: settings.businessAccountId,
+    };
 
-    this.whatsappClients.set(integrationId, client);
-    this.logger.log(`WhatsApp client created for integration ${integrationId}`);
+    this.clientConfigs.set(integrationId, config);
+    this.logger.log(`WhatsApp client config loaded for integration ${integrationId}`);
 
-    return client;
+    return config;
   }
 
   /**
@@ -63,8 +68,8 @@ export class WhatsAppService {
     const integration = await this.prisma.integration.findFirst({
       where: {
         accountId: options.accountId,
-        platform: 'WHATSAPP',
-        isActive: true,
+        channel: InteractionChannel.whatsapp,
+        status: 'active',
       },
     });
 
@@ -72,36 +77,41 @@ export class WhatsAppService {
       throw new Error(`No active WhatsApp integration for account ${options.accountId}`);
     }
 
-    // Create conversation if not exists
+    // Find or create conversation
     let conversationId = options.conversationId;
     if (!conversationId) {
-      const conversation = await this.prisma.conversation.upsert({
+      let conversation = await this.prisma.conversation.findFirst({
         where: {
-          accountId_integrationId_externalId: {
-            accountId: options.accountId,
-            integrationId: integration.id,
-            externalId: options.to,
+          accountId: options.accountId,
+          channel: InteractionChannel.whatsapp,
+          metadata: {
+            path: ['phone'],
+            equals: options.to,
           },
         },
-        create: {
-          accountId: options.accountId,
-          integrationId: integration.id,
-          externalId: options.to,
-          channel: 'WHATSAPP',
-        },
-        update: {},
       });
+
+      if (!conversation) {
+        conversation = await this.prisma.conversation.create({
+          data: {
+            account: { connect: { id: options.accountId } },
+            channel: InteractionChannel.whatsapp,
+            status: ConversationStatus.open,
+            metadata: { phone: options.to },
+          },
+        });
+      }
       conversationId = conversation.id;
     }
 
     // Create message record
     const message = await this.prisma.message.create({
       data: {
-        conversationId,
-        direction: 'outbound',
-        channel: 'WHATSAPP',
+        conversation: { connect: { id: conversationId } },
+        account: { connect: { id: options.accountId } },
+        direction: MessageDirection.outbound,
         content: typeof options.content === 'string' ? options.content : JSON.stringify(options.content),
-        status: 'pending',
+        status: MessageStatus.pending,
       },
     });
 
@@ -120,7 +130,7 @@ export class WhatsAppService {
   }
 
   /**
-   * Actually send the WhatsApp message (called by queue processor)
+   * Actually send the WhatsApp message via API (called by queue processor)
    */
   async sendMessageNow(
     integrationId: string,
@@ -129,51 +139,100 @@ export class WhatsAppService {
     type: string,
     content: any,
   ): Promise<void> {
-    const client = await this.getClient(integrationId);
+    const config = await this.getClientConfig(integrationId);
 
     try {
-      let result: any;
+      let messagePayload: any;
 
       switch (type) {
         case 'text':
-          result = await client.sendText(to, content);
+          messagePayload = {
+            messaging_product: 'whatsapp',
+            to,
+            type: 'text',
+            text: { body: content },
+          };
           break;
 
         case 'image':
-          result = await client.sendImage(to, content.url, content.caption);
+          messagePayload = {
+            messaging_product: 'whatsapp',
+            to,
+            type: 'image',
+            image: { link: content.url, caption: content.caption },
+          };
           break;
 
         case 'video':
-          result = await client.sendVideo(to, content.url, content.caption);
+          messagePayload = {
+            messaging_product: 'whatsapp',
+            to,
+            type: 'video',
+            video: { link: content.url, caption: content.caption },
+          };
           break;
 
         case 'document':
-          result = await client.sendDocument(to, content.url, content.caption);
+          messagePayload = {
+            messaging_product: 'whatsapp',
+            to,
+            type: 'document',
+            document: { link: content.url, caption: content.caption },
+          };
           break;
 
         case 'audio':
-          result = await client.sendAudio(to, content.url);
+          messagePayload = {
+            messaging_product: 'whatsapp',
+            to,
+            type: 'audio',
+            audio: { link: content.url },
+          };
           break;
 
         case 'template':
-          result = await client.sendTemplate(
+          messagePayload = {
+            messaging_product: 'whatsapp',
             to,
-            content.templateName,
-            content.language,
-            content.components,
-          );
+            type: 'template',
+            template: {
+              name: content.templateName,
+              language: { code: content.language },
+              components: content.components,
+            },
+          };
           break;
 
         default:
           throw new Error(`Unsupported message type: ${type}`);
       }
 
+      // Send via WhatsApp Cloud API
+      const response = await fetch(
+        `https://graph.facebook.com/v17.0/${config.phoneNumberId}/messages`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${config.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(messagePayload),
+        },
+      );
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`WhatsApp API error: ${error}`);
+      }
+
+      const result = await response.json();
+
       // Update message with external ID
       await this.prisma.message.update({
         where: { id: messageId },
         data: {
           externalId: result.messages?.[0]?.id,
-          status: 'sent',
+          status: MessageStatus.sent,
           sentAt: new Date(),
         },
       });
@@ -184,7 +243,7 @@ export class WhatsAppService {
 
       await this.prisma.message.update({
         where: { id: messageId },
-        data: { status: 'failed' },
+        data: { status: MessageStatus.failed },
       });
 
       throw error;
@@ -238,16 +297,20 @@ export class WhatsAppService {
     for (const status of statuses) {
       const { id, status: messageStatus, timestamp } = status;
 
+      const updateData: any = {
+        status: this.mapWhatsAppStatus(messageStatus),
+      };
+
+      if (messageStatus === 'delivered') {
+        updateData.deliveredAt = new Date(parseInt(timestamp) * 1000);
+      }
+      if (messageStatus === 'read') {
+        updateData.readAt = new Date(parseInt(timestamp) * 1000);
+      }
+
       await this.prisma.message.updateMany({
-        where: {
-          externalId: id,
-          conversation: { accountId },
-        },
-        data: {
-          status: this.mapWhatsAppStatus(messageStatus),
-          deliveredAt: messageStatus === 'delivered' ? new Date(parseInt(timestamp) * 1000) : undefined,
-          readAt: messageStatus === 'read' ? new Date(parseInt(timestamp) * 1000) : undefined,
-        },
+        where: { externalId: id },
+        data: updateData,
       });
 
       this.logger.debug(`WhatsApp status update: ${id} -> ${messageStatus}`);
@@ -267,52 +330,55 @@ export class WhatsAppService {
     for (const msg of messages) {
       const { from, id, timestamp, type } = msg;
 
-      // Get or create conversation
-      const conversation = await this.prisma.conversation.upsert({
+      // Find or create conversation
+      let conversation = await this.prisma.conversation.findFirst({
         where: {
-          accountId_integrationId_externalId: {
-            accountId,
-            integrationId,
-            externalId: from,
-          },
-        },
-        create: {
           accountId,
-          integrationId,
-          externalId: from,
-          channel: 'WHATSAPP',
+          channel: InteractionChannel.whatsapp,
           metadata: {
-            contact: contacts?.[0],
+            path: ['phone'],
+            equals: from,
           },
-        },
-        update: {
-          updatedAt: new Date(),
         },
       });
 
+      if (!conversation) {
+        conversation = await this.prisma.conversation.create({
+          data: {
+            account: { connect: { id: accountId } },
+            channel: InteractionChannel.whatsapp,
+            status: ConversationStatus.open,
+            metadata: {
+              phone: from,
+              contact: contacts?.[0],
+            },
+          },
+        });
+      }
+
       // Extract message content
       let content = '';
-      let mediaUrl: string | null = null;
+      let mediaId: string | null = null;
 
       switch (type) {
         case 'text':
-          content = msg.text.body;
+          content = msg.text?.body || '';
           break;
         case 'image':
-          content = msg.image.caption || '[Image]';
-          mediaUrl = msg.image.id;
+          content = msg.image?.caption || '[Image]';
+          mediaId = msg.image?.id;
           break;
         case 'video':
-          content = msg.video.caption || '[Video]';
-          mediaUrl = msg.video.id;
+          content = msg.video?.caption || '[Video]';
+          mediaId = msg.video?.id;
           break;
         case 'document':
-          content = msg.document.filename || '[Document]';
-          mediaUrl = msg.document.id;
+          content = msg.document?.filename || '[Document]';
+          mediaId = msg.document?.id;
           break;
         case 'audio':
           content = '[Audio]';
-          mediaUrl = msg.audio.id;
+          mediaId = msg.audio?.id;
           break;
         default:
           content = `[${type}]`;
@@ -321,24 +387,24 @@ export class WhatsAppService {
       // Create message record
       const message = await this.prisma.message.create({
         data: {
-          conversationId: conversation.id,
+          conversation: { connect: { id: conversation.id } },
+          account: { connect: { id: accountId } },
           externalId: id,
-          direction: 'inbound',
-          channel: 'WHATSAPP',
+          direction: MessageDirection.inbound,
           content,
           metadata: {
             type,
             from: contacts?.[0],
-            mediaId: mediaUrl,
+            mediaId,
+            timestamp: parseInt(timestamp),
           },
-          status: 'received',
-          receivedAt: new Date(parseInt(timestamp) * 1000),
+          status: MessageStatus.delivered,
         },
       });
 
       // Download media if present
-      if (mediaUrl) {
-        await this.downloadMedia(accountId, integrationId, mediaUrl, message.id);
+      if (mediaId) {
+        await this.downloadMedia(accountId, integrationId, mediaId, message.id);
       }
 
       this.logger.log(`WhatsApp message received: ${id} from ${from}`);
@@ -355,15 +421,28 @@ export class WhatsAppService {
     messageId: string,
   ): Promise<void> {
     try {
-      const client = await this.getClient(integrationId);
-      
-      // Get media URL
-      const mediaInfo = await client.getMedia(mediaId);
-      
+      const config = await this.getClientConfig(integrationId);
+
+      // Get media URL from WhatsApp API
+      const mediaInfoResponse = await fetch(
+        `https://graph.facebook.com/v17.0/${mediaId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${config.accessToken}`,
+          },
+        },
+      );
+
+      if (!mediaInfoResponse.ok) {
+        throw new Error(`Failed to get media info: ${mediaInfoResponse.statusText}`);
+      }
+
+      const mediaInfo = await mediaInfoResponse.json();
+
       // Download media
       const response = await fetch(mediaInfo.url, {
         headers: {
-          Authorization: `Bearer ${(await this.getClient(integrationId)) as any}`,
+          Authorization: `Bearer ${config.accessToken}`,
         },
       });
 
@@ -374,10 +453,11 @@ export class WhatsAppService {
       const buffer = Buffer.from(await response.arrayBuffer());
 
       // Upload to S3
+      const extension = mediaInfo.mime_type?.split('/')[1] || 'bin';
       const storageKey = this.storageService.generateKey(
         accountId,
         'whatsapp-media',
-        `${mediaId}.${mediaInfo.mime_type?.split('/')[1] || 'bin'}`,
+        `${mediaId}.${extension}`,
       );
 
       const { url } = await this.storageService.upload({
@@ -390,7 +470,7 @@ export class WhatsAppService {
       const mediaFile = await this.prisma.mediaFile.create({
         data: {
           accountId,
-          name: `${mediaId}.${mediaInfo.mime_type?.split('/')[1]}`,
+          name: `${mediaId}.${extension}`,
           mimeType: mediaInfo.mime_type,
           fileSize: buffer.length,
           storageKey,
@@ -402,9 +482,7 @@ export class WhatsAppService {
       await this.prisma.message.update({
         where: { id: messageId },
         data: {
-          mediaFiles: {
-            connect: { id: mediaFile.id },
-          },
+          mediaFileId: mediaFile.id,
         },
       });
 
@@ -418,14 +496,18 @@ export class WhatsAppService {
    * Map WhatsApp status to our MessageStatus enum
    */
   private mapWhatsAppStatus(status: string): MessageStatus {
-    const mapping: Record<string, MessageStatus> = {
-      sent: 'sent',
-      delivered: 'delivered',
-      read: 'read',
-      failed: 'failed',
-    };
-
-    return mapping[status] || 'sent';
+    switch (status) {
+      case 'sent':
+        return MessageStatus.sent;
+      case 'delivered':
+        return MessageStatus.delivered;
+      case 'read':
+        return MessageStatus.read;
+      case 'failed':
+        return MessageStatus.failed;
+      default:
+        return MessageStatus.sent;
+    }
   }
 
   /**

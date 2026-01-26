@@ -55,7 +55,12 @@ export class TelephonyService implements OnModuleInit, OnModuleDestroy {
     const password = process.env.ASTERISK_ARI_PASSWORD || 'asterisk';
 
     try {
-      this.ariClient = await AriClient.connect(url, username, password);
+      this.ariClient = await new Promise((resolve, reject) => {
+        AriClient.connect(url, username, password, (err: Error | null, client: any) => {
+          if (err) reject(err);
+          else resolve(client);
+        });
+      });
       this.connected = true;
       this.logger.log(`Connected to Asterisk ARI: ${url}`);
 
@@ -101,17 +106,25 @@ export class TelephonyService implements OnModuleInit, OnModuleDestroy {
 
     try {
       // Extract account from channel variables
-      const accountId = parseInt(channel.channelvars?.ACCOUNT_ID || '1', 10);
+      const accountId = channel.channelvars?.ACCOUNT_ID || '1';
+      const callerNumber = channel.caller.number;
+      const calleeNumber = channel.connected?.number || '';
+      const direction = event.args[0] === 'inbound' ? 'inbound' : 'outbound';
+      const phoneNumber = direction === 'inbound' ? callerNumber : calleeNumber;
 
       // Create Call record
       const call = await this.prisma.call.create({
         data: {
           accountId,
-          externalId: channel.id,
-          from: channel.caller.number,
-          to: channel.connected?.number || '',
-          direction: event.args[0] === 'inbound' ? 'inbound' : 'outbound',
+          phoneNumber: phoneNumber || 'unknown',
+          direction,
           status: 'ringing',
+          startedAt: new Date(),
+          metadata: {
+            externalId: channel.id,
+            callerNumber,
+            calleeNumber,
+          },
         },
       });
 
@@ -121,7 +134,6 @@ export class TelephonyService implements OnModuleInit, OnModuleDestroy {
       await channel.answer();
 
       // Start recording
-      const recording = this.ariClient.LiveRecording();
       await channel.record({
         name: `call-${call.id}`,
         format: 'wav',
@@ -135,7 +147,7 @@ export class TelephonyService implements OnModuleInit, OnModuleDestroy {
       // Update call with recording started
       await this.prisma.call.update({
         where: { id: call.id },
-        data: { status: 'in_progress' },
+        data: { status: 'answered' },
       });
     } catch (error) {
       this.logger.error('Error handling StasisStart:', error);
@@ -150,7 +162,12 @@ export class TelephonyService implements OnModuleInit, OnModuleDestroy {
 
     try {
       const call = await this.prisma.call.findFirst({
-        where: { channelId: channel.id },
+        where: {
+          metadata: {
+            path: ['externalId'],
+            equals: channel.id,
+          },
+        },
         orderBy: { createdAt: 'desc' },
       });
 
@@ -159,13 +176,16 @@ export class TelephonyService implements OnModuleInit, OnModuleDestroy {
         return;
       }
 
-      const duration = Math.floor((Date.now() - call.createdAt.getTime()) / 1000);
+      const duration = call.startedAt
+        ? Math.floor((Date.now() - call.startedAt.getTime()) / 1000)
+        : 0;
 
       await this.prisma.call.update({
         where: { id: call.id },
         data: {
           status: 'completed',
           duration,
+          endedAt: new Date(),
         },
       });
 
@@ -189,15 +209,20 @@ export class TelephonyService implements OnModuleInit, OnModuleDestroy {
 
     try {
       const call = await this.prisma.call.findFirst({
-        where: { externalId: event.channel.id },
+        where: {
+          metadata: {
+            path: ['externalId'],
+            equals: event.channel.id,
+          },
+        },
         orderBy: { createdAt: 'desc' },
       });
 
       if (!call) return;
 
-      let status: string | null = null;
+      let status: 'answered' | 'completed' | null = null;
       if (event.channel.state === 'Up') {
-        status = 'in_progress';
+        status = 'answered';
       } else if (event.channel.state === 'Down') {
         status = 'completed';
       }
@@ -205,7 +230,7 @@ export class TelephonyService implements OnModuleInit, OnModuleDestroy {
       if (status) {
         await this.prisma.call.update({
           where: { id: call.id },
-          data: { status: status as any },
+          data: { status },
         });
       }
     } catch (error) {
@@ -236,10 +261,14 @@ export class TelephonyService implements OnModuleInit, OnModuleDestroy {
       const call = await this.prisma.call.create({
         data: {
           accountId: options.accountId,
-          from: options.from,
-          to: options.to,
+          phoneNumber: options.to,
           direction: 'outbound',
           status: 'initiated',
+          startedAt: new Date(),
+          metadata: {
+            callerNumber: options.from,
+            calleeNumber: options.to,
+          },
         },
       });
 
@@ -274,14 +303,7 @@ export class TelephonyService implements OnModuleInit, OnModuleDestroy {
       },
       include: {
         recording: true,
-        conversation: {
-          include: {
-            messages: {
-              orderBy: { createdAt: 'asc' },
-              take: 50,
-            },
-          },
-        },
+        lead: true,
       },
     });
 
@@ -370,8 +392,8 @@ export class TelephonyService implements OnModuleInit, OnModuleDestroy {
           callId: call.id,
           url: url,
           duration: storedRecording.duration || 0,
-          format: 'wav',
           mediaFileId: mediaFile.id,
+          metadata: { format: 'wav' },
         },
       });
 

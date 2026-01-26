@@ -39,7 +39,7 @@ export class StorageController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(
     @UploadedFile() file: Express.Multer.File,
-    @Query('accountId', ParseIntPipe) accountId: string,
+    @Query('accountId') accountId: string,
     @Query('category') category: string,
     @Req() req: any,
   ) {
@@ -86,19 +86,20 @@ export class StorageController {
       data: {
         accountId,
         bucket: 'default',
-        key: storageKey,
+        storageKey,
         mimeType: file.mimetype,
-        size: file.size,
+        fileSize: file.size,
         url,
+        name: file.originalname,
       },
     });
 
     return {
       id: mediaFile.id,
       url: mediaFile.url,
-      name: mediaFile.key.split('/').pop(),
+      name: mediaFile.storageKey?.split('/').pop(),
       mimeType: mediaFile.mimeType,
-      fileSize: mediaFile.size,
+      fileSize: mediaFile.fileSize,
       uploadedAt: mediaFile.uploadedAt,
     };
   }
@@ -133,7 +134,7 @@ export class StorageController {
     }
 
     const signedUrl = await this.storageService.getSignedUrl(
-      mediaFile.key,
+      mediaFile.storageKey || mediaFile.url,
       expiresIn,
     );
 
@@ -171,7 +172,9 @@ export class StorageController {
     }
 
     // Delete from storage
-    await this.storageService.delete(mediaFile.key);
+    if (mediaFile.storageKey) {
+      await this.storageService.delete(mediaFile.storageKey);
+    }
 
     // Delete from database
     await this.prisma.mediaFile.delete({
@@ -185,7 +188,7 @@ export class StorageController {
   @Get('list')
   async listFiles(
     @Req() req: any,
-    @Query('accountId', ParseIntPipe) accountId: string,
+    @Query('accountId') accountId: string,
     @Query('category') category?: string,
   ) {
     // Verify user has access to this account
@@ -203,15 +206,16 @@ export class StorageController {
     const files = await this.prisma.mediaFile.findMany({
       where: {
         accountId,
-        key: category ? { startsWith: `accounts/${accountId}/${category}/` } : undefined,
+        storageKey: category ? { startsWith: `accounts/${accountId}/${category}/` } : undefined,
       },
       orderBy: { uploadedAt: 'desc' },
       take: 100,
       select: {
         id: true,
-        key: true,
+        name: true,
+        storageKey: true,
         mimeType: true,
-        size: true,
+        fileSize: true,
         url: true,
         uploadedAt: true,
       },

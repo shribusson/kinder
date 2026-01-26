@@ -1,11 +1,11 @@
-import { Controller, Get, Req, Res } from '@nestjs/common';
+import { Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
 import { createBullBoard } from '@bull-board/api';
 import { BullAdapter } from '@bull-board/api/bullAdapter';
 import { ExpressAdapter } from '@bull-board/express';
 import { Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
 import { QUEUE_NAMES } from '../queue/queue.module';
-import { Public } from '../auth/decorators/public.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('admin/queues')
 export class QueuesController {
@@ -36,7 +36,7 @@ export class QueuesController {
   }
 
   @Get('*')
-  @Public() // TODO: Add admin authentication
+  @UseGuards(JwtAuthGuard)
   async bullBoard(@Req() req: any, @Res() res: any) {
     const handler = this.serverAdapter.getRouter();
     return handler(req, res);

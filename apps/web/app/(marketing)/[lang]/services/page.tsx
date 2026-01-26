@@ -1,15 +1,9 @@
+'use client';
+
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-
-export const metadata: Metadata = {
-  title: "Услуги и программы - School Kids",
-  description: "Логопед, психолог, дефектолог, подготовка к школе в School Kids. Индивидуальные и групповые занятия. Современные методики развития детей в Караганде.",
-  openGraph: {
-    title: "Услуги School Kids - логопед, психолог, подготовка к школе",
-    description: "Полный спектр услуг для развития вашего ребенка"
-  }
-};
+import { useTranslations } from "next-intl";
 
 const services = [
   {
@@ -90,16 +84,19 @@ const services = [
 ];
 
 export default function ServicesPage({ params }: { params: { lang: string } }) {
+  const t = useTranslations();
+  const servicesData = t.raw('servicesPage');
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Hero */}
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Наши услуги и программы
+            {servicesData.title}
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Профессиональная помощь в развитии вашего ребёнка. Индивидуальный подход и современные методики.
+            {servicesData.subtitle}
           </p>
         </div>
 
@@ -131,7 +128,7 @@ export default function ServicesPage({ params }: { params: { lang: string } }) {
               </p>
 
               <div className="mb-6">
-                <h3 className="font-semibold text-gray-900 mb-3">Что включено:</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">{servicesData.whatIncluded}</h3>
                 <ul className="grid md:grid-cols-2 gap-2">
                   {service.features.map((feature, idx) => (
                     <li key={idx} className="flex items-start">
@@ -148,7 +145,7 @@ export default function ServicesPage({ params }: { params: { lang: string } }) {
                 href={`/${params.lang}#contact`}
                 className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
               >
-                Записаться на занятие
+                {servicesData.enrollButton}
               </Link>
             </div>
           ))}
@@ -157,52 +154,36 @@ export default function ServicesPage({ params }: { params: { lang: string } }) {
         {/* Benefits */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl shadow-lg p-8 mb-12">
           <h2 className="text-3xl font-bold text-white mb-6 text-center">
-            Преимущества занятий в School Kids
+            {servicesData.benefits.title}
           </h2>
           <div className="grid md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="bg-white/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <span className="text-3xl">👨‍🏫</span>
+            {servicesData.benefits.items.map((item: any) => (
+              <div key={item.title} className="text-center">
+                <div className="bg-white/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-3xl">👨‍🏫</span>
+                </div>
+                <h3 className="text-white font-semibold mb-2">{item.title}</h3>
+                <p className="text-blue-100 text-sm">
+                  {item.description}
+                </p>
               </div>
-              <h3 className="text-white font-semibold mb-2">Опытные специалисты</h3>
-              <p className="text-blue-100 text-sm">
-                Дипломированные педагоги с опытом от 5 лет
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="bg-white/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <span className="text-3xl">🎯</span>
-              </div>
-              <h3 className="text-white font-semibold mb-2">Индивидуальный план</h3>
-              <p className="text-blue-100 text-sm">
-                Персональная программа для каждого ребёнка
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="bg-white/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <span className="text-3xl">📈</span>
-              </div>
-              <h3 className="text-white font-semibold mb-2">Видимый результат</h3>
-              <p className="text-blue-100 text-sm">
-                Регулярная обратная связь о прогрессе
-              </p>
-            </div>
+            ))}
           </div>
         </div>
 
         {/* Пробное занятие */}
         <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Не уверены, с чего начать?
+            {servicesData.consultation.title}
           </h2>
           <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
-            Приходите на бесплатную консультацию. Наши специалисты проведут диагностику и порекомендуют оптимальную программу занятий.
+            {servicesData.consultation.subtitle}
           </p>
           <Link
             href={`/${params.lang}#contact`}
             className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
           >
-            Записаться на бесплатную консультацию
+            {servicesData.consultation.button}
           </Link>
         </div>
       </div>

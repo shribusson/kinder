@@ -512,6 +512,7 @@ model Message {
   @@index([status])
   @@index([createdAt])
   @@index([externalId])
+  @@index([conversationId, direction, readAt])
 }
 
 model Call {
@@ -519,9 +520,12 @@ model Call {
   accountId   String
   leadId      String?
   direction   CallDirection
+  from        String?       // Caller phone number
+  to          String?       // Recipient phone number
   phoneNumber String
   status      CallStatus
   duration    Int?
+  externalId  String?       // External system call ID (e.g., Asterisk uniqueid)
   recordingId String?
   metadata    Json?
   startedAt   DateTime
@@ -542,13 +546,14 @@ model Call {
 model CallRecording {
   id          String   @id @default(uuid())
   callId      String   @unique
-  mediaFileId String
-  duration    Int
+  mediaFileId String?
+  url         String?
+  duration    Int      @default(0)
   metadata    Json?
   createdAt   DateTime @default(now())
 
-  call      Call      @relation(fields: [callId], references: [id], onDelete: Cascade)
-  mediaFile MediaFile @relation(fields: [mediaFileId], references: [id], onDelete: Cascade)
+  call      Call       @relation(fields: [callId], references: [id], onDelete: Cascade)
+  mediaFile MediaFile? @relation(fields: [mediaFileId], references: [id], onDelete: SetNull)
 
   @@index([callId])
 }
@@ -573,14 +578,15 @@ model ChatSession {
 }
 
 model MediaFile {
-  id        String   @id @default(uuid())
-  accountId String
-  url       String
-  bucket    String
-  key       String
-  mimeType  String
-  size      Int
-  metadata  Json?
+  id         String   @id @default(uuid())
+  accountId  String
+  name       String?
+  url        String
+  storageKey String?
+  bucket     String?
+  mimeType   String?
+  fileSize   Int?
+  metadata   Json?
   uploadedAt DateTime @default(now())
 
   account        Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
@@ -589,8 +595,7 @@ model MediaFile {
   contentItems   ContentItem[]
 
   @@index([accountId])
-  @@index([bucket])
-  @@index([key])
+  @@index([storageKey])
 }
 
 // ============================================

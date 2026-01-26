@@ -19,6 +19,35 @@ export class ConversationsService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
+   * Get unread message count for a conversation
+   */
+  async getUnreadCount(conversationId: string): Promise<number> {
+    return this.prisma.message.count({
+      where: {
+        conversationId,
+        direction: 'inbound',
+        readAt: null,
+      },
+    });
+  }
+
+  /**
+   * Get total unread message count for an account
+   */
+  async getTotalUnreadCount(accountId: string): Promise<number> {
+    return this.prisma.message.count({
+      where: {
+        conversation: {
+          accountId,
+          status: 'open',
+        },
+        direction: 'inbound',
+        readAt: null,
+      },
+    });
+  }
+
+  /**
    * Get paginated conversations with filters
    */
   async getConversations(options: GetConversationsOptions) {
@@ -205,10 +234,11 @@ export class ConversationsService {
    * Get conversation statistics
    */
   async getStats(accountId: string) {
-    const [total, byChannel] = await Promise.all([
+    const [total, unread, byChannel] = await Promise.all([
       this.prisma.conversation.count({
         where: { accountId, status: { not: 'archived' } },
       }),
+      this.getTotalUnreadCount(accountId),
       this.prisma.conversation.groupBy({
         by: ['channel'],
         where: { accountId, status: { not: 'archived' } },
@@ -218,7 +248,7 @@ export class ConversationsService {
 
     return {
       total,
-      unread: 0, // TODO: implement unread tracking
+      unread,
       byChannel: byChannel.reduce((acc, item) => {
         acc[item.channel] = item._count.id;
         return acc;

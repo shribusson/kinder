@@ -5,6 +5,7 @@ import { clsx } from "clsx";
 
 const navItems = [
   { label: "Дашборд", href: "/crm" },
+  { label: "Входящие", href: "/crm/inbox" },
   { label: "Лиды", href: "/crm/leads" },
   { label: "Сделки", href: "/crm/deals" },
   { label: "Записи", href: "/crm/bookings" },
@@ -16,8 +17,8 @@ export default function Sidebar() {
   return (
     <aside className="flex h-full w-64 flex-col gap-6 border-r border-slate-200 bg-white p-6">
       <div className="flex items-center gap-3">
-        <img
-          src="/brand-logo.jpg"
+          <img
+            src="/brand-logo.png"
           alt="School Kids"
           className="h-10 w-10 rounded-xl object-cover"
         />
