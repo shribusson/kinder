@@ -12,6 +12,9 @@
     "build": "npm run -w @kinder/web build && npm run -w @kinder/api build",
     "build:web": "npm run -w @kinder/web build",
     "build:api": "cd apps/api && npx prisma generate && npm run build",
-    "lint": "npm run -w @kinder/web lint"
+    "lint": "npm run -w @kinder/web lint",
+    "docker:rebuild": "bash scripts/rebuild.sh",
+    "docker:down": "docker compose -f docker-compose.yml -f docker-compose.prod.yml down",
+    "docker:up": "docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d"
   }
 }
