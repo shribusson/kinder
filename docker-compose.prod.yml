@@ -129,13 +129,14 @@ services:
         max-file: "5"
 
   web:
-    image: shribusson/kinder-web:latest
+    build:
+      args:
+        NEXT_PUBLIC_API_BASE_URL: https://api.schoolkids.kz
     env_file:
       - .env.production
     ports: []  # Remove port exposure - access via Caddy only
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_API_URL: https://api.schoolkids.kz
     deploy:
       resources:
         limits:

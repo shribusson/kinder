@@ -14,6 +14,10 @@ WORKDIR /app
 # Use absolute path so next-intl resolves correctly when workspace scripts run with cwd=/app/apps/web
 ENV NEXT_INTL_CONFIG_PATH=/app/apps/web/next-intl.config.ts
 
+# Build-time args for NEXT_PUBLIC_* variables (required for client-side code)
+ARG NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
+ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps ./apps
 COPY --from=deps /app/packages ./packages
