@@ -108,7 +108,7 @@ services:
   # APPLICATION - Internal only, via Caddy
   # ===========================================
   api:
-    image: shribusson/kinder-api:latest
+    # Build from source instead of using pre-built image
     env_file:
       - .env.production
     ports: []  # Remove port exposure - access via Caddy only
