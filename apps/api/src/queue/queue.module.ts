@@ -16,10 +16,24 @@ export { QUEUE_NAMES };
 @Module({
   imports: [
     BullModule.forRoot({
-      redis: {
-        host: process.env.REDIS_URL?.replace('redis://', '').split(':')[0] || 'localhost',
-        port: parseInt(process.env.REDIS_URL?.split(':')[2] || '6379'),
-      },
+      redis: (() => {
+        const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+        try {
+          const url = new URL(redisUrl);
+          return {
+            host: url.hostname || 'localhost',
+            port: parseInt(url.port || '6379', 10),
+            password: url.password || undefined,
+          };
+        } catch {
+          // Fallback for simple host:port format
+          const [host, port] = redisUrl.split(':');
+          return {
+            host: host || 'localhost',
+            port: parseInt(port || '6379', 10),
+          };
+        }
+      })(),
     }),
     BullModule.registerQueue(
       { name: QUEUE_NAMES.WEBHOOKS },
