@@ -4,7 +4,7 @@ import { BullAdapter } from '@bull-board/api/bullAdapter';
 import { ExpressAdapter } from '@bull-board/express';
 import { Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
-import { QUEUE_NAMES } from './queue.module';
+import { QUEUE_NAMES } from './queue.constants';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('admin/queues')

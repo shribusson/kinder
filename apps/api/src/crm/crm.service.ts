@@ -3,7 +3,7 @@ import { InjectQueue } from "@nestjs/bull";
 import { Queue } from "bull";
 import { Prisma, DealStage, InteractionChannel, LeadStage } from "@prisma/client";
 import { PrismaService } from "../prisma.service";
-import { QUEUE_NAMES } from '../queue/queue.module';
+import { QUEUE_NAMES } from '../queue/queue.constants';
 import { WebhookJobData } from "../queue/processors/webhook.processor";
 
 @Injectable()

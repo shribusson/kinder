@@ -4,7 +4,7 @@ import { Logger } from '@nestjs/common';
 import { Job, Queue } from 'bull';
 import { PrismaService } from '../../prisma.service';
 import { InteractionChannel, WebhookStatus, MessageDirection, MessageStatus, CallDirection, CallStatus, ConversationStatus } from '@prisma/client';
-import { QUEUE_NAMES } from '../queue.module';
+import { QUEUE_NAMES } from '../queue.constants';
 import { NotificationJobData } from './notification.processor';
 
 export interface WebhookJobData {

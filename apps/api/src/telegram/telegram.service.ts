@@ -3,7 +3,7 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { PrismaService } from '../prisma.service';
 import { StorageService } from '../storage/storage.service';
-import { QUEUE_NAMES } from '../queue/queue.module';
+import { QUEUE_NAMES } from '../queue/queue.constants';
 import { Telegraf, Context } from 'telegraf';
 import { Message } from 'telegraf/types';
 import { InteractionChannel, IntegrationStatus, ConversationStatus, MessageDirection, MessageStatus } from '@prisma/client';

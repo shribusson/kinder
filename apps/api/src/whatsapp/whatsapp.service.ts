@@ -3,7 +3,7 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { PrismaService } from '../prisma.service';
 import { StorageService } from '../storage/storage.service';
-import { QUEUE_NAMES } from '../queue/queue.module';
+import { QUEUE_NAMES } from '../queue/queue.constants';
 import { MessageStatus, MessageDirection, InteractionChannel, ConversationStatus } from '@prisma/client';
 
 export interface SendMessageOptions {
