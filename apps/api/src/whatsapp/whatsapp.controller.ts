@@ -18,6 +18,7 @@ import { PrismaService } from '../prisma.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Public } from '../common/public.decorator';
 import { InteractionChannel } from '@prisma/client';
+import { AuthenticatedRequest, WhatsAppWebhookPayload } from '../common/types/request.types';
 
 @Controller('whatsapp')
 export class WhatsAppController {
@@ -46,7 +47,7 @@ export class WhatsAppController {
       throw new BadRequestException('Invalid integration');
     }
 
-    const config = integration.settings as any;
+    const config = integration.settings as Record<string, string>;
 
     if (mode === 'subscribe' && verifyToken === config.webhookVerifyToken) {
       return challenge;
@@ -64,7 +65,7 @@ export class WhatsAppController {
   @HttpCode(HttpStatus.OK)
   async receiveWebhook(
     @Param('integrationId') integrationId: string,
-    @Body() payload: any,
+    @Body() payload: WhatsAppWebhookPayload,
     @Headers('x-hub-signature-256') signature: string,
   ) {
     const integration = await this.prisma.integration.findUnique({
@@ -76,7 +77,7 @@ export class WhatsAppController {
     }
 
     // Verify signature
-    const config = integration.settings as any;
+    const config = integration.settings as Record<string, string>;
     const isValid = this.whatsappService.verifySignature(
       JSON.stringify(payload),
       signature,
@@ -102,16 +103,16 @@ export class WhatsAppController {
     @Body() body: {
       accountId: string;
       to: string;
-      type: string;
-      content: any;
+      type: 'text' | 'image' | 'video' | 'document' | 'audio' | 'template';
+      content: string | { url: string; caption?: string } | { templateName: string; language: string; components?: unknown[] };
       conversationId?: string;
     },
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     // Verify user has access to this account
     const membership = await this.prisma.membership.findFirst({
       where: {
-        userId: req.user.id,
+        userId: req.user.sub,
         accountId: body.accountId,
       },
     });
@@ -123,8 +124,8 @@ export class WhatsAppController {
     const result = await this.whatsappService.sendMessage({
       accountId: body.accountId,
       to: body.to,
-      type: body.type as any,
-      content: body.content,
+      type: body.type,
+      content: body.content as string | { url: string; caption?: string } | { templateName: string; language: string; components?: any[] },
       conversationId: body.conversationId,
     });
 

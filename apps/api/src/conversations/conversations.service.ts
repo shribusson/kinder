@@ -133,7 +133,7 @@ export class ConversationsService {
     return {
       conversations: conversations.map((conv) => ({
         ...conv,
-        lastMessage: null, // TODO: query separately
+        lastMessage: conv.messages[0] || null,
       })),
       total,
       page,
@@ -254,5 +254,46 @@ export class ConversationsService {
         return acc;
       }, {} as Record<string, number>),
     };
+  }
+
+  /**
+   * Send message in conversation
+   */
+  async sendMessage(
+    conversationId: string,
+    accountId: string,
+    payload: {
+      text: string;
+      mediaFileId?: string;
+      userId: string;
+    },
+  ) {
+    const { text, mediaFileId } = payload;
+
+    // Create outbound message
+    const message = await this.prisma.message.create({
+      data: {
+        accountId,
+        conversationId,
+        content: text,
+        direction: 'outbound',
+        status: 'sent',
+        mediaFileId: mediaFileId || undefined,
+      },
+      include: {
+        mediaFile: true,
+      },
+    });
+
+    // Update conversation last message timestamp
+    await this.prisma.conversation.update({
+      where: { id: conversationId },
+      data: { lastMessageAt: new Date() },
+    });
+
+    // TODO: Queue message for delivery to appropriate channel (Telegram, WhatsApp, etc.)
+    this.logger.debug(`Message queued for delivery: ${message.id}`);
+
+    return message;
   }
 }

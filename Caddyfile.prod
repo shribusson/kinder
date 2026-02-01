@@ -1,0 +1,163 @@
+# ===========================================
+# Kinder CRM - Production Caddyfile
+# Domain: schoolkids.kz
+# Security-first configuration
+# ===========================================
+
+# Global options
+{
+    email admin@schoolkids.kz
+    admin off
+
+    servers {
+        protocols h1 h2 h3
+        timeouts {
+            read_body   10s
+            read_header 5s
+            write       30s
+            idle        120s
+        }
+    }
+}
+
+# ===========================================
+# MAIN WEBSITE
+# ===========================================
+schoolkids.kz, www.schoolkids.kz {
+    reverse_proxy web:3000 {
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+
+        # health_uri /api/health  # Disabled - Next.js doesn't have this route
+        # health_interval 30s
+        # health_timeout 5s
+    }
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.schoolkids.kz wss://api.schoolkids.kz; frame-ancestors 'self';"
+        -Server
+    }
+
+    encode gzip
+
+    log {
+        output file /var/log/caddy/schoolkids.log {
+            roll_size 100mb
+            roll_keep 5
+            roll_keep_for 720h
+        }
+        format json
+        level INFO
+    }
+}
+
+# ===========================================
+# API SUBDOMAIN
+# ===========================================
+api.schoolkids.kz {
+    reverse_proxy api:3001 {
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+
+        health_uri /health
+        health_interval 30s
+        health_timeout 5s
+    }
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "no-referrer"
+        -Server
+
+        Access-Control-Allow-Origin "https://schoolkids.kz"
+        Access-Control-Allow-Credentials "true"
+        Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+        Access-Control-Allow-Headers "Content-Type, Authorization"
+    }
+
+    encode gzip
+
+    log {
+        output file /var/log/caddy/api.log {
+            roll_size 100mb
+            roll_keep 5
+            roll_keep_for 720h
+        }
+        format json
+        level INFO
+    }
+}
+
+# ===========================================
+# CRM SUBDOMAIN - Redirect to main site
+# ===========================================
+crm.schoolkids.kz {
+    redir https://schoolkids.kz/crm{uri} permanent
+}
+
+# ===========================================
+# CLIENT PORTAL - Redirect to main site
+# ===========================================
+client.schoolkids.kz {
+    redir https://schoolkids.kz/client{uri} permanent
+}
+
+# ===========================================
+# GRAFANA MONITORING
+# ===========================================
+grafana.schoolkids.kz {
+    reverse_proxy grafana:3000 {
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    log {
+        output file /var/log/caddy/grafana.log {
+            roll_size 50mb
+            roll_keep 3
+        }
+        format json
+        level INFO
+    }
+}
+
+# ===========================================
+# MINIO CONSOLE (Optional admin access)
+# ===========================================
+minio.schoolkids.kz {
+    reverse_proxy minio:9001 {
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    log {
+        output file /var/log/caddy/minio.log
+        format json
+        level INFO
+    }
+}

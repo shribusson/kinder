@@ -1,11 +1,11 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { WhatsAppService } from './whatsapp.service';
 import { WhatsAppController } from './whatsapp.controller';
 import { QueueModule } from '../queue/queue.module';
 import { StorageModule } from '../storage/storage.module';
 
 @Module({
-  imports: [QueueModule, StorageModule],
+  imports: [forwardRef(() => QueueModule), StorageModule],
   controllers: [WhatsAppController],
   providers: [WhatsAppService],
   exports: [WhatsAppService],

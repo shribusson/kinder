@@ -3,7 +3,7 @@ import { InjectQueue } from "@nestjs/bull";
 import { Queue } from "bull";
 import { Prisma, DealStage, InteractionChannel, LeadStage } from "@prisma/client";
 import { PrismaService } from "../prisma.service";
-import { QUEUE_NAMES } from "../queue/queue.module";
+import { QUEUE_NAMES } from '../queue/queue.module';
 import { WebhookJobData } from "../queue/processors/webhook.processor";
 
 @Injectable()
@@ -285,5 +285,323 @@ export class CrmService {
     return this.prisma.account.findFirst({
       orderBy: { createdAt: 'asc' }
     });
+  }
+
+  // ============================================
+  // LEAD OPERATIONS
+  // ============================================
+
+  async getLead(id: string) {
+    return this.prisma.lead.findUnique({
+      where: { id },
+      include: {
+        deals: true,
+        bookings: true
+      }
+    });
+  }
+
+  async updateLead(
+    id: string,
+    data: {
+      name?: string;
+      phone?: string;
+      email?: string;
+      source?: string;
+      stage?: LeadStage;
+      utm?: Record<string, string | undefined>;
+    }
+  ) {
+    const lead = await this.prisma.lead.update({
+      where: { id },
+      data: {
+        name: data.name,
+        phone: data.phone,
+        email: data.email,
+        source: data.source,
+        stage: data.stage,
+        utmSource: data.utm?.utm_source,
+        utmMedium: data.utm?.utm_medium,
+        utmCampaign: data.utm?.utm_campaign,
+        utmContent: data.utm?.utm_content,
+        utmTerm: data.utm?.utm_term
+      }
+    });
+    await this.prisma.auditLog.create({
+      data: {
+        account: { connect: { id: lead.accountId } },
+        action: "update",
+        entity: "Lead",
+        entityId: lead.id,
+        meta: { changes: data }
+      }
+    });
+    return lead;
+  }
+
+  async deleteLead(id: string) {
+    const lead = await this.prisma.lead.delete({
+      where: { id }
+    });
+    await this.prisma.auditLog.create({
+      data: {
+        account: { connect: { id: lead.accountId } },
+        action: "delete",
+        entity: "Lead",
+        entityId: lead.id,
+        meta: { name: lead.name }
+      }
+    });
+    return lead;
+  }
+
+  async updateLeadStage(id: string, stage: LeadStage) {
+    return this.prisma.lead.update({
+      where: { id },
+      data: { stage }
+    });
+  }
+
+  // ============================================
+  // DEAL OPERATIONS
+  // ============================================
+
+  async getDeal(id: string) {
+    return this.prisma.deal.findUnique({
+      where: { id },
+      include: {
+        lead: true
+      }
+    });
+  }
+
+  async updateDeal(
+    id: string,
+    data: {
+      title?: string;
+      stage?: DealStage;
+      amount?: number;
+      revenue?: number;
+    }
+  ) {
+    const deal = await this.prisma.deal.update({
+      where: { id },
+      data
+    });
+    await this.prisma.auditLog.create({
+      data: {
+        account: { connect: { id: deal.accountId } },
+        action: "update",
+        entity: "Deal",
+        entityId: deal.id,
+        meta: { changes: data }
+      }
+    });
+    return deal;
+  }
+
+  async deleteDeal(id: string) {
+    const deal = await this.prisma.deal.delete({
+      where: { id }
+    });
+    await this.prisma.auditLog.create({
+      data: {
+        account: { connect: { id: deal.accountId } },
+        action: "delete",
+        entity: "Deal",
+        entityId: deal.id,
+        meta: { title: deal.title }
+      }
+    });
+    return deal;
+  }
+
+  async updateDealStage(id: string, stage: DealStage) {
+    return this.prisma.deal.update({
+      where: { id },
+      data: { stage }
+    });
+  }
+
+  // ============================================
+  // BOOKING OPERATIONS
+  // ============================================
+
+  async getBooking(id: string) {
+    return this.prisma.booking.findUnique({
+      where: { id },
+      include: {
+        lead: true
+      }
+    });
+  }
+
+  async updateBooking(
+    id: string,
+    data: {
+      specialist?: string;
+      scheduledAt?: string;
+      status?: string;
+    }
+  ) {
+    const updateData: any = { ...data };
+    if (data.scheduledAt) {
+      updateData.scheduledAt = new Date(data.scheduledAt);
+    }
+    const booking = await this.prisma.booking.update({
+      where: { id },
+      data: updateData
+    });
+    await this.prisma.auditLog.create({
+      data: {
+        account: { connect: { id: booking.accountId } },
+        action: "update",
+        entity: "Booking",
+        entityId: booking.id,
+        meta: { changes: data }
+      }
+    });
+    return booking;
+  }
+
+  async cancelBooking(id: string) {
+    return this.prisma.booking.update({
+      where: { id },
+      data: { status: "CANCELLED" }
+    });
+  }
+
+  async updateBookingStatus(id: string, status: string) {
+    return this.prisma.booking.update({
+      where: { id },
+      data: { status }
+    });
+  }
+
+  // ============================================
+  // CAMPAIGN OPERATIONS
+  // ============================================
+
+  async getCampaign(id: string) {
+    return this.prisma.campaign.findUnique({
+      where: { id }
+    });
+  }
+
+  async updateCampaign(
+    id: string,
+    data: {
+      name?: string;
+      source?: string;
+      spend?: number;
+      leads?: number;
+    }
+  ) {
+    const campaign = await this.prisma.campaign.update({
+      where: { id },
+      data
+    });
+    await this.prisma.auditLog.create({
+      data: {
+        account: { connect: { id: campaign.accountId } },
+        action: "update",
+        entity: "Campaign",
+        entityId: campaign.id,
+        meta: { changes: data }
+      }
+    });
+    return campaign;
+  }
+
+  async deleteCampaign(id: string) {
+    const campaign = await this.prisma.campaign.delete({
+      where: { id }
+    });
+    await this.prisma.auditLog.create({
+      data: {
+        account: { connect: { id: campaign.accountId } },
+        action: "delete",
+        entity: "Campaign",
+        entityId: campaign.id,
+        meta: { name: campaign.name }
+      }
+    });
+    return campaign;
+  }
+
+  // ============================================
+  // SALES PLAN OPERATIONS
+  // ============================================
+
+  async getSalesPlans(accountId: string) {
+    return this.prisma.salesPlan.findMany({
+      where: { accountId },
+      orderBy: { period: "desc" }
+    });
+  }
+
+  async getSalesPlan(id: string) {
+    return this.prisma.salesPlan.findUnique({
+      where: { id }
+    });
+  }
+
+  async createSalesPlan(data: {
+    accountId: string;
+    period: string;
+    target: number;
+  }) {
+    const plan = await this.prisma.salesPlan.create({
+      data
+    });
+    await this.prisma.auditLog.create({
+      data: {
+        account: { connect: { id: data.accountId } },
+        action: "create",
+        entity: "SalesPlan",
+        entityId: plan.id,
+        meta: { period: plan.period, target: plan.target }
+      }
+    });
+    return plan;
+  }
+
+  async updateSalesPlan(
+    id: string,
+    data: {
+      period?: string;
+      target?: number;
+    }
+  ) {
+    const plan = await this.prisma.salesPlan.update({
+      where: { id },
+      data
+    });
+    await this.prisma.auditLog.create({
+      data: {
+        account: { connect: { id: plan.accountId } },
+        action: "update",
+        entity: "SalesPlan",
+        entityId: plan.id,
+        meta: { changes: data }
+      }
+    });
+    return plan;
+  }
+
+  async deleteSalesPlan(id: string) {
+    const plan = await this.prisma.salesPlan.delete({
+      where: { id }
+    });
+    await this.prisma.auditLog.create({
+      data: {
+        account: { connect: { id: plan.accountId } },
+        action: "delete",
+        entity: "SalesPlan",
+        entityId: plan.id,
+        meta: { period: plan.period }
+      }
+    });
+    return plan;
   }
 }

@@ -14,6 +14,7 @@ import { PrismaService } from '../prisma.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Public } from '../common/public.decorator';
 import { InteractionChannel } from '@prisma/client';
+import { AuthenticatedRequest, TelegramUpdate } from '../common/types/request.types';
 
 @Controller('telegram')
 export class TelegramController {
@@ -30,7 +31,7 @@ export class TelegramController {
   @HttpCode(HttpStatus.OK)
   async receiveWebhook(
     @Param('integrationId') integrationId: string,
-    @Body() update: any,
+    @Body() update: TelegramUpdate,
   ) {
     const integration = await this.prisma.integration.findUnique({
       where: { id: integrationId },
@@ -62,7 +63,7 @@ export class TelegramController {
       audio?: string;
       replyToMessageId?: number;
     },
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     // Get integration and verify access
     const integration = await this.prisma.integration.findUnique({
@@ -75,7 +76,7 @@ export class TelegramController {
 
     const membership = await this.prisma.membership.findFirst({
       where: {
-        userId: req.user.id,
+        userId: req.user.sub,
         accountId: integration.accountId,
       },
     });
@@ -111,7 +112,7 @@ export class TelegramController {
       message: string;
       parseMode?: 'Markdown' | 'HTML';
     },
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     // Get integration and verify access
     const integration = await this.prisma.integration.findUnique({
@@ -124,7 +125,7 @@ export class TelegramController {
 
     const membership = await this.prisma.membership.findFirst({
       where: {
-        userId: req.user.id,
+        userId: req.user.sub,
         accountId: integration.accountId,
       },
     });

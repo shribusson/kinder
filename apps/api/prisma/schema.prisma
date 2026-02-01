@@ -164,6 +164,12 @@ enum ContentType {
   live_stream
 }
 
+enum ResourceType {
+  specialist
+  room
+  equipment
+}
+
 // ============================================
 // AUTHENTICATION & TENANCY
 // ============================================
@@ -201,6 +207,7 @@ model Account {
   serviceHistory ServiceHistory[]
   auditLogs     AuditLog[]
   salesPlans    SalesPlan[]
+  resources     Resource[]
 
   @@index([domain])
 }
@@ -337,18 +344,21 @@ model Booking {
   id          String   @id @default(uuid())
   accountId   String
   leadId      String
-  specialist  String
+  specialist  String    // kept for backward compatibility
+  resourceId  String?
   scheduledAt DateTime
   status      String
   metadata    Json?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  lead    Lead    @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  account  Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  lead     Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  resource Resource? @relation(fields: [resourceId], references: [id], onDelete: SetNull)
 
   @@index([accountId])
   @@index([leadId])
+  @@index([resourceId])
   @@index([scheduledAt])
 }
 
@@ -368,6 +378,27 @@ model Campaign {
   @@index([accountId])
   @@index([source])
   @@index([createdAt])
+}
+
+model Resource {
+  id          String       @id @default(uuid())
+  accountId   String
+  name        String
+  type        ResourceType
+  email       String?
+  phone       String?
+  isActive    Boolean      @default(true)
+  workingHours Json?
+  metadata    Json?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  account  Account    @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@index([accountId])
+  @@index([isActive])
+  @@index([type])
 }
 
 model Interaction {

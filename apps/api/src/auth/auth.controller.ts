@@ -3,7 +3,7 @@ import {
   Post,
   Body,
   UseGuards,
-  Request,
+  Req,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -11,24 +11,8 @@ import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { UserRole } from '@prisma/client';
-
-class LoginDto {
-  email!: string;
-  password!: string;
-}
-
-class RegisterDto {
-  email!: string;
-  password!: string;
-  firstName!: string;
-  lastName!: string;
-  phone?: string;
-  locale?: string;
-}
-
-class RefreshTokenDto {
-  refreshToken!: string;
-}
+import { AuthenticatedRequest, LocalAuthRequest } from '../common/types/request.types';
+import { LoginDto, RegisterDto, RefreshTokenDto } from './dto';
 
 @Controller('auth')
 export class AuthController {
@@ -37,7 +21,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(@Request() req: any, @Body() loginDto: LoginDto) {
+  async login(@Req() req: LocalAuthRequest, @Body() loginDto: LoginDto) {
     return this.authService.login(req.user);
   }
 
@@ -58,14 +42,14 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async logout(@Request() req: any, @Body() body: { refreshToken?: string }) {
-    await this.authService.logout(req.user.id, body.refreshToken);
+  async logout(@Req() req: AuthenticatedRequest, @Body() body: { refreshToken?: string }) {
+    await this.authService.logout(req.user.sub, body.refreshToken);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('me')
   @HttpCode(HttpStatus.OK)
-  async getProfile(@Request() req: any) {
+  async getProfile(@Req() req: AuthenticatedRequest) {
     return req.user;
   }
 }

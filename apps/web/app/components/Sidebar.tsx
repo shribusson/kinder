@@ -13,6 +13,12 @@ const navItems = [
   { label: "Аналитика", href: "/crm/analytics" }
 ];
 
+const settingsItems = [
+  { label: "Интеграции", href: "/crm/settings/integrations" },
+  { label: "План по выручке", href: "/crm/settings/revenue-plan" },
+  { label: "Ресурсы", href: "/crm/settings/resources" }
+];
+
 export default function Sidebar() {
   return (
     <aside className="flex h-full w-64 flex-col gap-6 border-r border-slate-200 bg-white p-6">
@@ -33,6 +39,26 @@ export default function Sidebar() {
       </div>
       <nav className="flex flex-col gap-2 text-sm">
         {navItems.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={clsx(
+              "rounded-xl px-3 py-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+            )}
+          >
+            {item.label}
+          </Link>
+        ))}
+
+        {/* Settings Section */}
+        <div className="mt-6 mb-2">
+          <div className="px-3 py-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              Настройки
+            </h3>
+          </div>
+        </div>
+        {settingsItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}

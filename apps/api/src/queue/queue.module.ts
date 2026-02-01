@@ -9,15 +9,9 @@ import { CallProcessor } from './processors/call.processor';
 import { MediaProcessor } from './processors/media.processor';
 import { AnalyticsProcessor } from './processors/analytics.processor';
 import { NotificationProcessor } from './processors/notification.processor';
+import { QUEUE_NAMES } from './queue.constants';
 
-export const QUEUE_NAMES = {
-  WEBHOOKS: 'webhooks',
-  OUTBOUND_MESSAGES: 'outbound-messages',
-  CALLS: 'calls',
-  MEDIA_PROCESSING: 'media-processing',
-  ANALYTICS: 'analytics',
-  NOTIFICATIONS: 'notifications',
-} as const;
+export { QUEUE_NAMES };
 
 @Module({
   imports: [

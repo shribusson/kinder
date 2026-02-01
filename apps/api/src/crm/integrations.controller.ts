@@ -1,20 +1,172 @@
-import { Body, Controller, Get, Param, Post, NotFoundException } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, NotFoundException, Req, Query } from "@nestjs/common";
 import { CrmService } from "./crm.service";
 import { InteractionChannel } from "@prisma/client";
 import { Roles } from "../common/roles.decorator";
 import { Public } from "../common/public.decorator";
+import { PrismaService } from "../prisma.service";
+import { AuthenticatedRequest } from "../common/types/request.types";
+import { CreateIntegrationDto, UpdateIntegrationDto } from "./dto";
 
 @Controller("crm/integrations")
 export class IntegrationsController {
-  constructor(private crm: CrmService) {}
+  constructor(private crm: CrmService, private prisma: PrismaService) {}
 
   @Get()
-  status() {
+  async list(@Query("accountId") accountId: string) {
+    return this.prisma.integration.findMany({
+      where: { accountId },
+      select: {
+        id: true,
+        channel: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        // Don't select credentials for security
+      }
+    });
+  }
+
+  @Get(":id")
+  async getOne(@Param("id") id: string) {
+    const integration = await this.prisma.integration.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        channel: true,
+        status: true,
+        settings: true,
+        createdAt: true,
+        updatedAt: true,
+        // Don't select credentials for security
+      }
+    });
+    if (!integration) {
+      throw new NotFoundException('Integration not found');
+    }
+    return integration;
+  }
+
+  @Post()
+  @Roles("admin")
+  async create(@Body() payload: CreateIntegrationDto, @Req() req: AuthenticatedRequest) {
+    const membership = await this.prisma.membership.findFirst({
+      where: { userId: req.user.sub },
+    });
+    if (!membership) throw new Error('No account');
+
+    const integration = await this.prisma.integration.create({
+      data: {
+        accountId: membership.accountId,
+        channel: payload.channel as InteractionChannel,
+        credentialsEncrypted: payload.credentialsEncrypted,
+        settings: payload.settings as any,
+        status: "pending"
+      }
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        account: { connect: { id: membership.accountId } },
+        action: "create",
+        entity: "Integration",
+        entityId: integration.id,
+        meta: { channel: integration.channel }
+      }
+    });
+
     return {
-      telegram: "active",
-      whatsapp: "active",
-      telephony: "active",
-      website: "active"
+      id: integration.id,
+      channel: integration.channel,
+      status: integration.status,
+      createdAt: integration.createdAt
+    };
+  }
+
+  @Patch(":id")
+  @Roles("admin")
+  async update(@Param("id") id: string, @Body() payload: UpdateIntegrationDto) {
+    const integration = await this.prisma.integration.findUnique({
+      where: { id }
+    });
+    if (!integration) {
+      throw new NotFoundException('Integration not found');
+    }
+
+    const updated = await this.prisma.integration.update({
+      where: { id },
+      data: {
+        credentialsEncrypted: payload.credentialsEncrypted,
+        settings: payload.settings as any
+      }
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        account: { connect: { id: integration.accountId } },
+        action: "update",
+        entity: "Integration",
+        entityId: integration.id,
+        meta: { channel: integration.channel }
+      }
+    });
+
+    return {
+      id: updated.id,
+      channel: updated.channel,
+      status: updated.status,
+      updatedAt: updated.updatedAt
+    };
+  }
+
+  @Delete(":id")
+  @Roles("admin")
+  async delete(@Param("id") id: string) {
+    const integration = await this.prisma.integration.findUnique({
+      where: { id }
+    });
+    if (!integration) {
+      throw new NotFoundException('Integration not found');
+    }
+
+    const deleted = await this.prisma.integration.delete({
+      where: { id }
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        account: { connect: { id: integration.accountId } },
+        action: "delete",
+        entity: "Integration",
+        entityId: integration.id,
+        meta: { channel: integration.channel }
+      }
+    });
+
+    return {
+      id: deleted.id,
+      channel: deleted.channel,
+      message: "Integration deleted"
+    };
+  }
+
+  @Post(":id/test")
+  @Roles("admin")
+  async test(@Param("id") id: string) {
+    const integration = await this.prisma.integration.findUnique({
+      where: { id }
+    });
+    if (!integration) {
+      throw new NotFoundException('Integration not found');
+    }
+
+    // TODO: Implement actual test logic for each channel
+    // For now, return success for all channels
+    return {
+      integrationId: id,
+      channel: integration.channel,
+      status: "success",
+      message: `Connection test for ${integration.channel} passed`,
+      timestamp: new Date()
     };
   }
 

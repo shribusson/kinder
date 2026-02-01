@@ -22,6 +22,7 @@ import { Roles } from '../common/roles.decorator';
 import { UserRole } from '@prisma/client';
 import { StorageService } from './storage.service';
 import { PrismaService } from '../prisma.service';
+import { AuthenticatedRequest } from '../common/types/request.types';
 
 @Controller('storage')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -41,7 +42,7 @@ export class StorageController {
     @UploadedFile() file: Express.Multer.File,
     @Query('accountId') accountId: string,
     @Query('category') category: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     if (!file) {
       throw new BadRequestException('No file provided');
@@ -54,7 +55,7 @@ export class StorageController {
     // Verify user has access to this account
     const membership = await this.prisma.membership.findFirst({
       where: {
-        userId: req.user.id,
+        userId: req.user.sub,
         accountId,
       },
     });
@@ -77,7 +78,7 @@ export class StorageController {
       contentType: file.mimetype,
       metadata: {
         originalName: file.originalname,
-        uploadedBy: req.user.id.toString(),
+        uploadedBy: req.user.sub,
       },
     });
 
@@ -111,7 +112,7 @@ export class StorageController {
   async getSignedUrl(
     @Param('id') id: string,
     @Query('expiresIn') expiresIn: number = 3600,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     const mediaFile = await this.prisma.mediaFile.findUnique({
       where: { id },
@@ -124,7 +125,7 @@ export class StorageController {
     // Verify user has access to this account
     const membership = await this.prisma.membership.findFirst({
       where: {
-        userId: req.user.id,
+        userId: req.user.sub,
         accountId: mediaFile.accountId,
       },
     });
@@ -150,7 +151,7 @@ export class StorageController {
   @Delete(':id')
   @Roles(UserRole.admin, UserRole.manager)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteFile(@Param('id') id: string, @Req() req: any) {
+  async deleteFile(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     const mediaFile = await this.prisma.mediaFile.findUnique({
       where: { id },
     });
@@ -162,7 +163,7 @@ export class StorageController {
     // Verify user has access to this account
     const membership = await this.prisma.membership.findFirst({
       where: {
-        userId: req.user.id,
+        userId: req.user.sub,
         accountId: mediaFile.accountId,
       },
     });
@@ -187,14 +188,14 @@ export class StorageController {
    */
   @Get('list')
   async listFiles(
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Query('accountId') accountId: string,
     @Query('category') category?: string,
   ) {
     // Verify user has access to this account
     const membership = await this.prisma.membership.findFirst({
       where: {
-        userId: req.user.id,
+        userId: req.user.sub,
         accountId,
       },
     });

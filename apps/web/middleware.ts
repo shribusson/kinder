@@ -17,20 +17,15 @@ export function middleware(request: NextRequest) {
     if (pathname !== '/crm/login') {
       // Проверяем наличие токена
       const token = request.cookies.get('auth_token')?.value;
-      
+
       if (!token) {
         // Редирект на логин с возвратом на исходную страницу
-        const url = new URL('/login', request.url);
+        const url = new URL('/crm/login', request.url);
         url.searchParams.set('redirect', pathname);
         return NextResponse.redirect(url);
       }
     }
     // CRM маршруты не обрабатываем next-intl middleware
-    return NextResponse.next();
-  }
-
-  // Логин доступен без локализации
-  if (pathname === '/login' || pathname.startsWith('/login/')) {
     return NextResponse.next();
   }
 

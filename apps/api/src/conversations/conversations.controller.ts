@@ -9,13 +9,13 @@ import {
   UseGuards,
   Req,
   NotFoundException,
-  ParseIntPipe,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/roles.guard';
 import { ConversationsService } from './conversations.service';
 import { PrismaService } from '../prisma.service';
 import { InteractionChannel } from '@prisma/client';
+import { AuthenticatedRequest } from '../common/types/request.types';
 
 @Controller('conversations')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -30,7 +30,7 @@ export class ConversationsController {
    */
   @Get()
   async getConversations(
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Query('accountId') accountId: string,
     @Query('channel') channel?: InteractionChannel,
     @Query('search') search?: string,
@@ -42,7 +42,7 @@ export class ConversationsController {
     // Verify user has access to this account
     const membership = await this.prisma.membership.findFirst({
       where: {
-        userId: req.user.id,
+        userId: req.user.sub,
         accountId,
       },
     });
@@ -63,18 +63,38 @@ export class ConversationsController {
   }
 
   /**
+   * Get conversation stats
+   */
+  @Get('stats')
+  async getStats(@Query('accountId') accountId: string, @Req() req: any) {
+    // Verify user has access to this account
+    const membership = await this.prisma.membership.findFirst({
+      where: {
+        userId: req.user.sub,
+        accountId,
+      },
+    });
+
+    if (!membership) {
+      throw new NotFoundException('Account not found');
+    }
+
+    return this.conversationsService.getStats(accountId);
+  }
+
+  /**
    * Get single conversation
    */
   @Get(':id')
   async getConversation(
     @Param('id') id: string,
     @Query('accountId') accountId: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     // Verify user has access to this account
     const membership = await this.prisma.membership.findFirst({
       where: {
-        userId: req.user.id,
+        userId: req.user.sub,
         accountId,
       },
     });
@@ -102,12 +122,12 @@ export class ConversationsController {
   async markAsRead(
     @Param('id') id: string,
     @Body('accountId') accountId: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     // Verify user has access to this account
     const membership = await this.prisma.membership.findFirst({
       where: {
-        userId: req.user.id,
+        userId: req.user.sub,
         accountId,
       },
     });
@@ -129,12 +149,12 @@ export class ConversationsController {
     @Param('id') id: string,
     @Body('accountId') accountId: string,
     @Body('userId') userId: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     // Verify user has access to this account
     const membership = await this.prisma.membership.findFirst({
       where: {
-        userId: req.user.id,
+        userId: req.user.sub,
         accountId,
       },
     });
@@ -153,12 +173,12 @@ export class ConversationsController {
   async archiveConversation(
     @Param('id') id: string,
     @Body('accountId') accountId: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     // Verify user has access to this account
     const membership = await this.prisma.membership.findFirst({
       where: {
-        userId: req.user.id,
+        userId: req.user.sub,
         accountId,
       },
     });
@@ -171,14 +191,20 @@ export class ConversationsController {
   }
 
   /**
-   * Get conversation stats
+   * Send message in conversation
    */
-  @Get('stats')
-  async getStats(@Query('accountId') accountId: string, @Req() req: any) {
+  @Post(':id/send')
+  async sendMessage(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') conversationId: string,
+    @Body('accountId') accountId: string,
+    @Body('text') text: string,
+    @Body('mediaFileId') mediaFileId?: string,
+  ) {
     // Verify user has access to this account
     const membership = await this.prisma.membership.findFirst({
       where: {
-        userId: req.user.id,
+        userId: req.user.sub,
         accountId,
       },
     });
@@ -187,6 +213,10 @@ export class ConversationsController {
       throw new NotFoundException('Account not found');
     }
 
-    return this.conversationsService.getStats(accountId);
+    return this.conversationsService.sendMessage(conversationId, accountId, {
+      text,
+      mediaFileId,
+      userId: req.user.sub,
+    });
   }
 }

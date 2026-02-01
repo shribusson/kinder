@@ -17,6 +17,7 @@ import { Roles } from '../common/roles.decorator';
 import { UserRole } from '@prisma/client';
 import { TelephonyService } from './telephony.service';
 import { PrismaService } from '../prisma.service';
+import { AuthenticatedRequest } from '../common/types/request.types';
 
 class InitiateCallDto {
   accountId!: string;
@@ -38,11 +39,11 @@ export class TelephonyController {
    */
   @Post('calls')
   @Roles(UserRole.admin, UserRole.manager)
-  async initiateCall(@Body() dto: InitiateCallDto, @Req() req: any) {
+  async initiateCall(@Body() dto: InitiateCallDto, @Req() req: AuthenticatedRequest) {
     // Verify user has access to this account
     const membership = await this.prisma.membership.findFirst({
       where: {
-        userId: req.user.id,
+        userId: req.user.sub,
         accountId: dto.accountId,
       },
     });
@@ -72,12 +73,12 @@ export class TelephonyController {
   async getCall(
     @Param('id') id: string,
     @Query('accountId') accountId: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     // Verify user has access to this account
     const membership = await this.prisma.membership.findFirst({
       where: {
-        userId: req.user.id,
+        userId: req.user.sub,
         accountId,
       },
     });
@@ -102,12 +103,12 @@ export class TelephonyController {
   async getRecordings(
     @Param('id') id: string,
     @Query('accountId') accountId: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     // Verify user has access to this account
     const membership = await this.prisma.membership.findFirst({
       where: {
-        userId: req.user.id,
+        userId: req.user.sub,
         accountId,
       },
     });
@@ -129,12 +130,12 @@ export class TelephonyController {
     @Query('accountId') accountId: string,
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     // Verify user has access to this account
     const membership = await this.prisma.membership.findFirst({
       where: {
-        userId: req.user.id,
+        userId: req.user.sub,
         accountId,
       },
     });
