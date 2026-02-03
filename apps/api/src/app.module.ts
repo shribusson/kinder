@@ -10,6 +10,7 @@ import { TelephonyModule } from "./telephony/telephony.module";
 import { WhatsAppModule } from "./whatsapp/whatsapp.module";
 import { TelegramModule } from "./telegram/telegram.module";
 import { ConversationsModule } from "./conversations/conversations.module";
+import { ServicesModule } from "./services/services.module";
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ConversationsModule } from "./conversations/conversations.module";
     WhatsAppModule,
     TelegramModule,
     ConversationsModule,
+    ServicesModule,
     ThrottlerModule.forRoot([{
       ttl: 60000, // 60 seconds
       limit: 60, // 60 requests per minute

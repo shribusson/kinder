@@ -155,6 +155,116 @@ async function main() {
   });
   console.log('✅ Created sample product:', product.name);
 
+  // Create service categories and services
+  const category1 = await prisma.serviceCategory.upsert({
+    where: { accountId_slug: { accountId: account.id, slug: 'tormozna-sistema' } },
+    update: {},
+    create: {
+      accountId: account.id,
+      name: 'Тормозная система',
+      slug: 'tormozna-sistema',
+      icon: 'brake',
+      sortOrder: 0,
+    },
+  });
+
+  const category2 = await prisma.serviceCategory.upsert({
+    where: { accountId_slug: { accountId: account.id, slug: 'sistema-ohlazhdenia' } },
+    update: {},
+    create: {
+      accountId: account.id,
+      name: 'Система охлаждения',
+      slug: 'sistema-ohlazhdenia',
+      icon: 'coolant',
+      sortOrder: 1,
+    },
+  });
+
+  const category3 = await prisma.serviceCategory.upsert({
+    where: { accountId_slug: { accountId: account.id, slug: 'sistema-otopleniya' } },
+    update: {},
+    create: {
+      accountId: account.id,
+      name: 'Система отопления',
+      slug: 'sistema-otopleniya',
+      icon: 'heater',
+      sortOrder: 2,
+    },
+  });
+
+  console.log('✅ Created 3 service categories');
+
+  // Brake system services
+  const brakeServices = [
+    { name: 'Проточка дисков', price: 16000, unit: 'ось', priceNote: 'руб./ось' },
+    { name: 'Замена ГТЦ', price: 15000 },
+    { name: 'Замена тормозной жидкости', price: 5000 },
+    { name: 'Замена колодок', price: 4000 },
+    { name: 'Замена задних колодок с эл ручником', price: 6000 },
+    { name: 'Замена барабанных колодок', price: 7000 },
+    { name: 'Ремонт супортов: 1 поршневой', price: 6000, description: '1 поршневой суппорт' },
+    { name: 'Ремонт супортов: 2 поршневой', price: 7000 },
+    { name: 'Ремонт супортов: 4 поршневой', price: 9000 },
+  ];
+
+  for (let i = 0; i < brakeServices.length; i++) {
+    await prisma.service.upsert({
+      where: { categoryId_name: { categoryId: category1.id, name: brakeServices[i].name } },
+      update: {},
+      create: {
+        categoryId: category1.id,
+        accountId: account.id,
+        ...brakeServices[i],
+        sortOrder: i,
+      },
+    });
+  }
+
+  // Cooling system services
+  const coolingServices = [
+    { name: 'Замена антифриза', price: 5000 },
+    { name: 'Замена антифриза с продувкой', price: 7000, description: 'С продувкой системы' },
+    { name: 'Замена термостата', price: 5000, description: 'Сложность варьируется в зависимости от марки' },
+    { name: 'Промывка системы охлаждения: блок', price: 10000 },
+    { name: 'Промывка системы охлаждения: основной радиатор', price: 10000 },
+    { name: 'Промывка системы охлаждения: радиатор отопителя', price: 12000 },
+    { name: 'Замена основного радиатора', price: 15000 },
+  ];
+
+  for (let i = 0; i < coolingServices.length; i++) {
+    await prisma.service.upsert({
+      where: { categoryId_name: { categoryId: category2.id, name: coolingServices[i].name } },
+      update: {},
+      create: {
+        categoryId: category2.id,
+        accountId: account.id,
+        ...coolingServices[i],
+        sortOrder: i,
+      },
+    });
+  }
+
+  // Heating system services
+  const heatingServices = [
+    { name: 'Замена радиатора отопителя', price: null, priceNote: '25 000 – 40 000 руб.', description: 'Цена зависит от марки и модели автомобиля' },
+    { name: 'Промывка радиатора отопителя', price: null, priceNote: 'по запросу' },
+  ];
+
+  for (let i = 0; i < heatingServices.length; i++) {
+    await prisma.service.upsert({
+      where: { categoryId_name: { categoryId: category3.id, name: heatingServices[i].name } },
+      update: {},
+      create: {
+        categoryId: category3.id,
+        accountId: account.id,
+        ...heatingServices[i],
+        sortOrder: i,
+      },
+    });
+  }
+
+  console.log('✅ Created 18 services across 3 categories');
+
   console.log('\n🎉 Seed completed successfully!');
   console.log('\n📝 Default credentials:');
   console.log('   Admin: admin@kinder.kz / admin123');

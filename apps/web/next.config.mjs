@@ -1,12 +1,6 @@
-import createNextIntlPlugin from 'next-intl/plugin';
-
-const withNextIntl = createNextIntlPlugin('./i18n.ts');
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Speed up production builds by skipping type checking and linting
-  // (These should be done in CI/CD before deployment)
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -15,4 +9,4 @@ const nextConfig = {
   },
 };
 
-export default withNextIntl(nextConfig);
+export default nextConfig;

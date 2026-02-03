@@ -1,31 +1,32 @@
 import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://schoolkids.kz'
-  const languages = ['ru', 'kz', 'en']
-  const pages = ['', '/about', '/services', '/contacts']
-  
-  const urls: MetadataRoute.Sitemap = []
-  
-  // Home page
-  urls.push({
-    url: baseUrl,
-    lastModified: new Date(),
-    changeFrequency: 'monthly',
-    priority: 1,
-  })
-  
-  // Language-specific pages
-  languages.forEach(lang => {
-    pages.forEach(page => {
-      urls.push({
-        url: `${baseUrl}/${lang}${page}`,
-        lastModified: new Date(),
-        changeFrequency: 'monthly',
-        priority: page === '' ? 0.9 : 0.8,
-      })
-    })
-  })
-  
-  return urls
+  const baseUrl = 'https://schoolkids.kz' // TODO: change domain
+
+  return [
+    {
+      url: baseUrl,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 1,
+    },
+    {
+      url: `${baseUrl}/about`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/services`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/contacts`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+  ]
 }

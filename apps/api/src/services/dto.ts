@@ -1,0 +1,62 @@
+import {
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsNotEmpty,
+  MaxLength,
+  Min,
+} from "class-validator";
+
+export class CreateServiceCategoryDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  name!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  slug!: string;
+
+  @IsOptional()
+  @IsString()
+  icon?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  sortOrder?: number;
+}
+
+export class CreateServiceDto {
+  @IsString()
+  @IsNotEmpty()
+  categoryId!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
+  name!: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  price?: number;
+
+  @IsOptional()
+  @IsString()
+  priceNote?: string;
+
+  @IsOptional()
+  @IsString()
+  unit?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  sortOrder?: number;
+}

@@ -208,6 +208,8 @@ model Account {
   auditLogs     AuditLog[]
   salesPlans    SalesPlan[]
   resources     Resource[]
+  serviceCategories ServiceCategory[]
+  services      Service[]
 
   @@index([domain])
 }
@@ -834,6 +836,45 @@ model ServiceHistory {
   @@index([userId])
   @@index([serviceType])
   @@index([completedAt])
+}
+
+model ServiceCategory {
+  id        String    @id @default(uuid())
+  accountId String
+  name      String
+  slug      String
+  icon      String?
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  account  Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  services Service[]
+
+  @@unique([accountId, slug])
+  @@index([accountId])
+}
+
+model Service {
+  id          String   @id @default(uuid())
+  categoryId  String
+  accountId   String
+  name        String
+  description String?
+  price       Float?
+  priceNote   String?
+  unit        String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category ServiceCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  account  Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, name])
+  @@index([categoryId])
+  @@index([accountId])
 }
 
 // ============================================
