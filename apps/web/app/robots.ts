@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/crm/', '/api/'],
     },
-    sitemap: 'https://schoolkids.kz/sitemap.xml',
+    sitemap: 'http://localhost:3002/sitemap.xml',
   }
 }

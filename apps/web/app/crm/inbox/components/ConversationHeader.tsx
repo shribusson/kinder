@@ -28,7 +28,7 @@ interface ConversationHeaderProps {
 const getChannelIcon = (channel: string) => {
   switch (channel) {
     case "telegram":
-      return <IconBrandTelegram className="w-5 h-5 text-blue-500" />;
+      return <IconBrandTelegram className="w-5 h-5 text-orange-500" />;
     case "whatsapp":
       return <IconBrandWhatsapp className="w-5 h-5 text-green-500" />;
     case "telephony":

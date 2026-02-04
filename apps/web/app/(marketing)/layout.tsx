@@ -1,177 +1,159 @@
 'use client';
 
-import Link from "next/link";
-import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { IconBrandInstagram, IconBrandFacebook } from "@tabler/icons-react";
+import Link from 'next/link';
+import { useState } from 'react';
+import { IconMenu2, IconX } from '@tabler/icons-react';
 
-export default function MarketingLayout({
-  children
-}: {
-  children: React.ReactNode;
-}) {
-  const pathname = usePathname();
-  const lang = pathname.split('/')[1] || 'ru';
+export default function MarketingLayout({ children }: { children: React.ReactNode }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Navigation labels
-  const navLabels: Record<string, any> = {
-    ru: {
-      about: "О нас",
-      services: "Услуги",
-      contacts: "Контакты",
-      cta: "Записаться"
-    },
-    kz: {
-      about: "Біз туралы",
-      services: "Қызметтер",
-      contacts: "Байланыс",
-      cta: "Жазылу"
-    },
-    en: {
-      about: "About",
-      services: "Services",
-      contacts: "Contacts",
-      cta: "Book Now"
-    }
-  };
-
-  const t = navLabels[lang] || navLabels.ru;
+  const navItems = [
+    { label: 'Главная', href: '/' },
+    { label: 'Услуги', href: '/services' },
+    { label: 'О нас', href: '/about' },
+    { label: 'Контакты', href: '/contacts' },
+  ];
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-gray-100">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
-          <Link href={`/${lang}`} className="flex items-center gap-3 hover:opacity-80 transition">
-            <div className="relative w-14 h-14 rounded-full overflow-hidden shadow-md bg-gradient-to-br from-yellow-300 to-green-400 p-1">
-              <Image
-                src="/owl-logo.svg"
-                alt="School Kids"
-                width={56}
-                height={56}
-                className="object-contain"
-              />
-            </div>
-            <div className="hidden sm:block">
-              <p className="text-base font-bold text-gray-900">School Kids</p>
-              <p className="text-xs text-gray-500">Детский центр развития</p>
-            </div>
-          </Link>
+    <div className="flex min-h-screen flex-col bg-white">
+      {/* Header */}
+      <header className="sticky top-0 z-40 border-b border-gray-200 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between">
+            {/* Logo / Brand */}
+            <Link href="/" className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded bg-orange-500"></div>
+              <span className="hidden text-lg font-bold text-gray-900 sm:inline">
+                Автомастерская
+              </span>
+            </Link>
 
-          <div className="hidden md:flex items-center gap-8">
-            <Link href={`/${lang}/about`} className="text-gray-700 hover:text-blue-600 font-medium transition">
-              {t.about}
-            </Link>
-            <Link href={`/${lang}/services`} className="text-gray-700 hover:text-blue-600 font-medium transition">
-              {t.services}
-            </Link>
-            <Link href={`/${lang}/contacts`} className="text-gray-700 hover:text-blue-600 font-medium transition">
-              {t.contacts}
-            </Link>
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center gap-8">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="text-sm font-medium text-gray-700 hover:text-orange-600 transition-colors"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+
+            {/* CTA Button (Desktop) */}
+            <div className="hidden md:block">
+              <Link
+                href="/contacts"
+                className="bg-orange-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-orange-600 transition-colors"
+              >
+                Записаться
+              </Link>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 text-gray-700"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? (
+                <IconX className="w-6 h-6" />
+              ) : (
+                <IconMenu2 className="w-6 h-6" />
+              )}
+            </button>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Link
-              href={pathname.replace(/^\/(ru|kz|en)/, '/ru')}
-              className={`px-2 py-1 rounded text-xs font-semibold transition ${lang === "ru" ? "bg-blue-100 text-blue-600" : "text-gray-500 hover:bg-gray-100"}`}
-            >
-              РУС
-            </Link>
-            <Link
-              href={pathname.replace(/^\/(ru|kz|en)/, '/kz')}
-              className={`px-2 py-1 rounded text-xs font-semibold transition ${lang === "kz" ? "bg-blue-100 text-blue-600" : "text-gray-500 hover:bg-gray-100"}`}
-            >
-              ҚАЗ
-            </Link>
-            <Link
-              href={pathname.replace(/^\/(ru|kz|en)/, '/en')}
-              className={`px-2 py-1 rounded text-xs font-semibold transition ${lang === "en" ? "bg-blue-100 text-blue-600" : "text-gray-500 hover:bg-gray-100"}`}
-            >
-              EN
-            </Link>
-            <Link
-              href={`/${lang}/contacts`}
-              className="ml-2 hidden sm:inline-flex items-center rounded-lg bg-gradient-to-r from-green-500 to-blue-500 px-4 py-2 text-xs font-bold text-white hover:shadow-lg transition"
-            >
-              {t.cta}
-            </Link>
-          </div>
-        </nav>
-      </header>
-      <main>{children}</main>
-      
-      <footer className="bg-yellow-50 text-gray-900 pt-16 pb-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8 mb-12">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="relative w-12 h-12 rounded-full overflow-hidden shadow-md bg-gradient-to-br from-yellow-300 to-green-400 p-1">
-                  <Image
-                    src="/owl-logo.svg"
-                    alt="School Kids"
-                    width={48}
-                    height={48}
-                    className="object-contain"
-                  />
-                </div>
-                <div>
-                  <p className="text-lg font-bold text-gray-900">School Kids</p>
-                  <p className="text-xs text-gray-600">Караганда</p>
-                </div>
+          {/* Mobile Navigation */}
+          {mobileMenuOpen && (
+            <div className="mt-4 border-t border-gray-200 pt-4 md:hidden space-y-3">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="block text-sm font-medium text-gray-700 hover:text-orange-600 transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ))}
+              <div className="pt-3 border-t border-gray-200">
+                <Link
+                  href="/contacts"
+                  className="block w-full bg-orange-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-orange-600 transition-colors text-center"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Записаться
+                </Link>
               </div>
-              <p className="text-sm text-gray-700 leading-relaxed">
-                Детский центр развития с логопедом, психологом и дефектологом
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1">{children}</main>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-200 bg-gray-50">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-3 mb-8">
+            {/* Column 1: About */}
+            <div>
+              <h3 className="font-bold text-gray-900 mb-3">Автомастерская</h3>
+              <p className="text-sm text-gray-600">
+                Профессиональный ремонт и обслуживание автомобилей. Гарантия на все виды работ,
+                оригинальные запчасти и опытные специалисты.
               </p>
             </div>
 
+            {/* Column 2: Navigation */}
             <div>
-              <h3 className="text-sm font-bold mb-4 text-green-700">Наши филиалы</h3>
-              <ul className="space-y-3 text-sm text-gray-700">
-                <li>
-                  <p className="font-semibold text-gray-900">Филиал 1</p>
-                  <p>г. Караганда, ул. Язева, 9</p>
-                  <a href="tel:+77082050318" className="text-blue-600 hover:text-blue-700">+7 (708) 205-03-18</a>
-                </li>
-                <li>
-                  <p className="font-semibold text-gray-900">Филиал 2</p>
-                  <p>г. Караганда, ул. Университетская, 17</p>
-                  <a href="tel:+77082812899" className="text-blue-400 hover:text-blue-300">+7 (708) 281-28-99</a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="text-sm font-bold mb-4 text-green-700">Навигация</h3>
+              <h3 className="font-bold text-gray-900 mb-3">Навигация</h3>
               <ul className="space-y-2 text-sm">
-                <li><Link href={`/${lang}/about`} className="text-gray-700 hover:text-gray-900 transition">{t.about}</Link></li>
-                <li><Link href={`/${lang}/services`} className="text-gray-700 hover:text-gray-900 transition">{t.services}</Link></li>
-                <li><Link href={`/${lang}/contacts`} className="text-gray-700 hover:text-gray-900 transition">{t.contacts}</Link></li>
+                {navItems.map((item) => (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      className="text-gray-600 hover:text-orange-600 transition-colors"
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
 
+            {/* Column 3: Contact Info */}
             <div>
-              <h3 className="text-sm font-bold mb-4 text-green-700">Контакты</h3>
-              <ul className="space-y-2 text-sm text-gray-700">
+              <h3 className="font-bold text-gray-900 mb-3">Контакты</h3>
+              <ul className="space-y-2 text-sm">
                 <li>
-                  <a href="mailto:info@schoolkids.kz" className="hover:text-gray-900 transition">info@schoolkids.kz</a>
-                </li>
-                <li>
-                  <a href="https://wa.me/77786545258" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 transition">WhatsApp</a>
-                </li>
-                <li className="flex gap-3 mt-4">
-                  <a href="https://instagram.com/schoolkids.kz" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-white rounded-lg border border-gray-200 flex items-center justify-center hover:shadow-md transition">
-                    <IconBrandInstagram className="w-5 h-5 text-pink-500" stroke={2} />
-                  </a>
-                  <a href="https://facebook.com/schoolkids.kz" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-white rounded-lg border border-gray-200 flex items-center justify-center hover:shadow-md transition">
-                    <IconBrandFacebook className="w-5 h-5 text-blue-600" stroke={2} />
+                  <a
+                    href="tel:+7"
+                    className="text-gray-600 hover:text-orange-600 transition-colors"
+                  >
+                    +7 (___) ___-__-__
                   </a>
                 </li>
+                <li>
+                  <a
+                    href="mailto:info@auto-repair.kz"
+                    className="text-gray-600 hover:text-orange-600 transition-colors"
+                  >
+                    info@auto-repair.kz
+                  </a>
+                </li>
+                <li className="text-gray-600">г. Караганда</li>
               </ul>
             </div>
           </div>
 
-          <div className="border-t border-yellow-200 pt-8 text-center">
-            <p className="text-sm text-gray-700">
-              © {new Date().getFullYear()} School Kids. Детский центр развития в Караганде
+          {/* Footer Bottom */}
+          <div className="border-t border-gray-200 pt-8">
+            <p className="text-center text-sm text-gray-500">
+              © 2026 Автомастерская. Все права защищены.
             </p>
           </div>
         </div>

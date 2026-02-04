@@ -115,7 +115,7 @@ export default function LeadsTable({ initialLeads }: LeadsTableProps) {
           </div>
           <button
             onClick={handleCreateClick}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+            className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors"
           >
             + Создать лида
           </button>
@@ -144,7 +144,7 @@ export default function LeadsTable({ initialLeads }: LeadsTableProps) {
                   <td className="py-3">
                     <Link
                       href={`/crm/leads/${lead.id}`}
-                      className="font-medium text-slate-900 hover:text-blue-600 transition-colors"
+                      className="font-medium text-slate-900 hover:text-orange-600 transition-colors"
                     >
                       {lead.name}
                     </Link>
@@ -159,7 +159,7 @@ export default function LeadsTable({ initialLeads }: LeadsTableProps) {
                         : lead.stage === 'lost'
                         ? 'bg-red-100 text-red-700'
                         : lead.stage === 'new'
-                        ? 'bg-blue-100 text-blue-700'
+                        ? 'bg-orange-100 text-orange-700'
                         : 'bg-slate-100 text-slate-700'
                     }`}>
                       {STAGE_LABELS[lead.stage] || lead.stage}
@@ -172,7 +172,7 @@ export default function LeadsTable({ initialLeads }: LeadsTableProps) {
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => handleEditClick(lead)}
-                        className="rounded p-1 text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                        className="rounded p-1 text-slate-400 hover:bg-orange-50 hover:text-orange-600 transition-colors"
                         title="Редактировать"
                       >
                         <IconEdit size={18} />

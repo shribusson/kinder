@@ -117,7 +117,7 @@ export default function CampaignModal({ campaign, isOpen, onClose, onSuccess }: 
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
             placeholder="Летняя акция Instagram"
           />
         </div>
@@ -131,7 +131,7 @@ export default function CampaignModal({ campaign, isOpen, onClose, onSuccess }: 
             id="source"
             value={formData.source}
             onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
           >
             {CAMPAIGN_SOURCES.map((source) => (
               <option key={source.value} value={source.value}>
@@ -155,7 +155,7 @@ export default function CampaignModal({ campaign, isOpen, onClose, onSuccess }: 
               value={formData.spend}
               onChange={(e) => setFormData({ ...formData, spend: e.target.value })}
               required
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
               placeholder="50000"
             />
           </div>
@@ -173,7 +173,7 @@ export default function CampaignModal({ campaign, isOpen, onClose, onSuccess }: 
               value={formData.leads}
               onChange={(e) => setFormData({ ...formData, leads: e.target.value })}
               required
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
               placeholder="25"
             />
           </div>
@@ -181,12 +181,12 @@ export default function CampaignModal({ campaign, isOpen, onClose, onSuccess }: 
 
         {/* CPL Calculation */}
         {cpl > 0 && (
-          <div className="rounded-lg bg-blue-50 border border-blue-200 px-4 py-3">
+          <div className="rounded-lg bg-orange-50 border border-orange-200 px-4 py-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-blue-900">
+              <span className="text-sm font-medium text-orange-900">
                 Стоимость лида (CPL):
               </span>
-              <span className="text-lg font-bold text-blue-600">
+              <span className="text-lg font-bold text-orange-600">
                 {cpl.toLocaleString()} ₸
               </span>
             </div>
@@ -205,7 +205,7 @@ export default function CampaignModal({ campaign, isOpen, onClose, onSuccess }: 
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Сохранение...' : 'Сохранить'}
           </button>

@@ -182,7 +182,7 @@ export default function BookingsCalendarPage() {
               setSelectedSlot(undefined);
               setIsModalOpen(true);
             }}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+            className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors"
           >
             + Создать запись
           </button>
@@ -193,7 +193,7 @@ export default function BookingsCalendarPage() {
           <div className="flex items-center gap-6 text-sm">
             <span className="font-medium text-slate-600">Статусы:</span>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-blue-500"></div>
+              <div className="w-3 h-3 rounded bg-orange-500"></div>
               <span>Запланировано</span>
             </div>
             <div className="flex items-center gap-2">

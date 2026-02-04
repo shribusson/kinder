@@ -79,13 +79,13 @@ export default function MessageInput({
       )}
 
       {attachedFile && (
-        <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <IconPaperclip className="w-4 h-4 text-blue-600" />
-          <span className="flex-1 text-sm text-blue-900">{attachedFile.name}</span>
+        <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+          <IconPaperclip className="w-4 h-4 text-orange-600" />
+          <span className="flex-1 text-sm text-orange-900">{attachedFile.name}</span>
           <button
             type="button"
             onClick={() => setAttachedFile(null)}
-            className="text-blue-600 hover:text-blue-700"
+            className="text-orange-600 hover:text-orange-700"
           >
             <IconX className="w-4 h-4" />
           </button>

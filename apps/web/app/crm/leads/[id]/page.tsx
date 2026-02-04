@@ -94,7 +94,7 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
                     Телефон
                   </dt>
                   <dd className="font-medium text-slate-900">
-                    <a href={`tel:${lead.phone}`} className="hover:text-blue-600">
+                    <a href={`tel:${lead.phone}`} className="hover:text-orange-600">
                       {lead.phone}
                     </a>
                   </dd>
@@ -107,7 +107,7 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
                     Email
                   </dt>
                   <dd className="font-medium text-slate-900">
-                    <a href={`mailto:${lead.email}`} className="hover:text-blue-600">
+                    <a href={`mailto:${lead.email}`} className="hover:text-orange-600">
                       {lead.email}
                     </a>
                   </dd>
@@ -164,7 +164,7 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
                   <Link
                     key={deal.id}
                     href={`/crm/deals/${deal.id}`}
-                    className="block p-3 rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                    className="block p-3 rounded-lg border border-slate-200 hover:border-orange-300 hover:bg-orange-50 transition-colors"
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -204,7 +204,7 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
                           ? 'bg-green-100 text-green-700'
                           : booking.status === 'CANCELLED'
                           ? 'bg-red-100 text-red-700'
-                          : 'bg-blue-100 text-blue-700'
+                          : 'bg-orange-100 text-orange-700'
                       }`}>
                         {booking.status}
                       </span>
@@ -237,7 +237,7 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
                       : lead.stage === 'lost'
                       ? 'bg-red-100 text-red-700'
                       : lead.stage === 'new'
-                      ? 'bg-blue-100 text-blue-700'
+                      ? 'bg-orange-100 text-orange-700'
                       : 'bg-slate-100 text-slate-700'
                   }`}>
                     {STAGE_LABELS[lead.stage] || lead.stage}

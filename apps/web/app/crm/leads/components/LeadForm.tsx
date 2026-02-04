@@ -137,7 +137,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           required
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
           placeholder="Иван Иванов"
         />
       </div>
@@ -152,7 +152,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
           type="tel"
           value={formData.phone}
           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
           placeholder="+7 (XXX) XXX-XX-XX"
         />
       </div>
@@ -167,7 +167,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
           type="email"
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
           placeholder="example@mail.com"
         />
       </div>
@@ -182,7 +182,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
           value={formData.source}
           onChange={(e) => setFormData({ ...formData, source: e.target.value })}
           required
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
         >
           <option value="">Выберите источник</option>
           {LEAD_SOURCES.map((source) => (
@@ -202,7 +202,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
           id="stage"
           value={formData.stage}
           onChange={(e) => setFormData({ ...formData, stage: e.target.value })}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
         >
           {LEAD_STAGES.map((stage) => (
             <option key={stage.value} value={stage.value}>
@@ -233,7 +233,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
                 type="text"
                 value={formData.utmSource}
                 onChange={(e) => setFormData({ ...formData, utmSource: e.target.value })}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                 placeholder="google, instagram, direct"
               />
             </div>
@@ -246,7 +246,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
                 type="text"
                 value={formData.utmMedium}
                 onChange={(e) => setFormData({ ...formData, utmMedium: e.target.value })}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                 placeholder="cpc, social, email"
               />
             </div>
@@ -259,7 +259,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
                 type="text"
                 value={formData.utmCampaign}
                 onChange={(e) => setFormData({ ...formData, utmCampaign: e.target.value })}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                 placeholder="spring_promo"
               />
             </div>
@@ -272,7 +272,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
                 type="text"
                 value={formData.utmContent}
                 onChange={(e) => setFormData({ ...formData, utmContent: e.target.value })}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                 placeholder="banner_1"
               />
             </div>
@@ -285,7 +285,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
                 type="text"
                 value={formData.utmTerm}
                 onChange={(e) => setFormData({ ...formData, utmTerm: e.target.value })}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                 placeholder="логопед караганда"
               />
             </div>
@@ -305,7 +305,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
         <button
           type="submit"
           disabled={loading}
-          className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
+          className="flex-1 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? 'Сохранение...' : 'Сохранить'}
         </button>

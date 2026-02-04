@@ -28,13 +28,12 @@ interface DealFormProps {
 }
 
 const DEAL_STAGES = [
-  { value: 'new', label: 'Новая' },
-  { value: 'contacted', label: 'Контакт установлен' },
-  { value: 'qualified', label: 'Квалифицирована' },
-  { value: 'trial_booked', label: 'Записан на пробное' },
-  { value: 'attended', label: 'Посетил' },
-  { value: 'won', label: 'Выиграна' },
-  { value: 'lost', label: 'Проиграна' },
+  { value: 'на_диагностике', label: 'На диагностике' },
+  { value: 'запланирована', label: 'Запланирована' },
+  { value: 'в_работе', label: 'В работе' },
+  { value: 'готова', label: 'Готова' },
+  { value: 'закрыта', label: 'Закрыта' },
+  { value: 'отменена', label: 'Отменена' },
 ];
 
 export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
@@ -140,7 +139,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
             onChange={(e) => setFormData({ ...formData, leadId: e.target.value })}
             required
             disabled={!!deal} // Can't change lead after creation
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-100"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:bg-slate-100"
           >
             <option value="">Выберите лида</option>
             {leads.map((lead) => (
@@ -168,7 +167,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           required
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
           placeholder="Курс логопедии 10 занятий"
         />
       </div>
@@ -182,7 +181,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
           id="stage"
           value={formData.stage}
           onChange={(e) => setFormData({ ...formData, stage: e.target.value })}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
         >
           {DEAL_STAGES.map((stage) => (
             <option key={stage.value} value={stage.value}>
@@ -205,7 +204,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
           required
           min="0"
           step="1"
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
           placeholder="50000"
         />
       </div>
@@ -222,7 +221,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
           onChange={(e) => setFormData({ ...formData, revenue: Number(e.target.value) })}
           min="0"
           step="1"
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
           placeholder="45000"
         />
         <p className="mt-1 text-xs text-slate-500">
@@ -242,7 +241,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
         <button
           type="submit"
           disabled={loading || loadingLeads}
-          className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
+          className="flex-1 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? 'Сохранение...' : 'Сохранить'}
         </button>

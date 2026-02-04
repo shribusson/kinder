@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://schoolkids.kz' // TODO: change domain
+  const baseUrl = 'http://localhost:3002' // TODO: change domain for production
 
   return [
     {

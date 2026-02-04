@@ -23,24 +23,7 @@ export class ServicesController {
         services: {
           where: { isActive: true },
           orderBy: { sortOrder: "asc" },
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            price: true,
-            priceNote: true,
-            unit: true,
-            sortOrder: true,
-          },
         },
-      },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        icon: true,
-        sortOrder: true,
-        services: true,
       },
     });
   }

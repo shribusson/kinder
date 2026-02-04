@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://schoolkids.kz'), // TODO: change to auto shop domain
+  metadataBase: new URL('http://localhost:3002'), // TODO: change to auto shop domain
   title: {
     default: "Автомастерская — профессиональный ремонт автомобилей | Гарантия качества",
     template: "%s | Автомастерская"
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "ru_RU",
-    url: "https://schoolkids.kz",
+    url: "http://localhost:3002",
     siteName: "Автомастерская",
     title: "Автомастерская — профессиональный ремонт автомобилей",
     description: "Профессиональный ремонт и техническое обслуживание автомобилей. Гарантия на все виды работ.",
@@ -68,7 +68,7 @@ export default function RootLayout({
               "@type": "AutoRepair",
               "name": "Автомастерская",
               "description": "Профессиональный ремонт и техническое обслуживание автомобилей",
-              "url": "https://schoolkids.kz",
+              "url": "http://localhost:3002",
               "areaServed": {
                 "@type": "City",
                 "name": "Караганда"

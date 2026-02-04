@@ -30,13 +30,12 @@ enum LeadStage {
 }
 
 enum DealStage {
-  new
-  contacted
-  qualified
-  trial_booked
-  attended
-  won
-  lost
+  на_диагностике
+  запланирована
+  в_работе
+  готова
+  закрыта
+  отменена
 }
 
 enum InteractionChannel {

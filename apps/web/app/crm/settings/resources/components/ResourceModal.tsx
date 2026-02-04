@@ -110,7 +110,7 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
             placeholder="Логопед Айгуль"
           />
         </div>
@@ -124,7 +124,7 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
             id="type"
             value={formData.type}
             onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
           >
             {RESOURCE_TYPES.map((type) => (
               <option key={type.value} value={type.value}>
@@ -145,7 +145,7 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
               placeholder="specialist@example.com"
             />
           </div>
@@ -162,7 +162,7 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
               placeholder="+7 (XXX) XXX-XX-XX"
             />
           </div>
@@ -175,7 +175,7 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
             type="checkbox"
             checked={formData.isActive}
             onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-            className="w-4 h-4 text-blue-600 bg-slate-100 border-slate-300 rounded focus:ring-blue-500 focus:ring-2"
+            className="w-4 h-4 text-orange-600 bg-slate-100 border-slate-300 rounded focus:ring-orange-500 focus:ring-2"
           />
           <label htmlFor="isActive" className="text-sm font-medium text-slate-700">
             Ресурс активен и доступен для бронирования
@@ -194,7 +194,7 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Сохранение...' : 'Сохранить'}
           </button>

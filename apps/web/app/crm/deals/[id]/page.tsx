@@ -93,7 +93,7 @@ export default async function DealDetailPage({ params }: { params: { id: string 
                             progressPercentage >= 100
                               ? 'bg-green-500'
                               : progressPercentage >= 75
-                              ? 'bg-blue-500'
+                              ? 'bg-orange-500'
                               : 'bg-yellow-500'
                           }`}
                           style={{ width: `${Math.min(progressPercentage, 100)}%` }}
@@ -115,7 +115,7 @@ export default async function DealDetailPage({ params }: { params: { id: string 
               </h2>
               <Link
                 href={`/crm/leads/${deal.lead.id}`}
-                className="block p-4 rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                className="block p-4 rounded-lg border border-slate-200 hover:border-orange-300 hover:bg-orange-50 transition-colors"
               >
                 <div className="font-medium text-slate-900 mb-1">{deal.lead.name}</div>
                 <div className="text-sm text-slate-500 space-y-1">
@@ -150,7 +150,7 @@ export default async function DealDetailPage({ params }: { params: { id: string 
                       : deal.stage === 'lost'
                       ? 'bg-red-100 text-red-700'
                       : deal.stage === 'new'
-                      ? 'bg-blue-100 text-blue-700'
+                      ? 'bg-orange-100 text-orange-700'
                       : deal.stage === 'attended'
                       ? 'bg-teal-100 text-teal-700'
                       : 'bg-slate-100 text-slate-700'

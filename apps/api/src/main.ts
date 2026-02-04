@@ -23,8 +23,11 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     cors: {
       origin: [
+        'http://localhost',
         'http://localhost:3000',
         'http://localhost:3001',
+        'http://localhost:3002',
+        'http://localhost:3004',
         process.env.PUBLIC_SITE_URL,
         process.env.CRM_DOMAIN,
         process.env.CLIENT_DOMAIN,
@@ -48,8 +51,9 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(3001);
-  console.log(`🚀 API server running on http://localhost:3001`);
+  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
+  await app.listen(port);
+  console.log(`🚀 API server running on http://localhost:${port}`);
 }
 
 bootstrap();

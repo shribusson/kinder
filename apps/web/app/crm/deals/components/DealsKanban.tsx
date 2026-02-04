@@ -31,7 +31,7 @@ interface DealsKanbanProps {
 }
 
 const STAGES = [
-  { value: 'new', label: 'Новая', color: 'bg-blue-100 border-blue-200' },
+  { value: 'new', label: 'Новая', color: 'bg-orange-100 border-orange-200' },
   { value: 'contacted', label: 'Контакт', color: 'bg-purple-100 border-purple-200' },
   { value: 'qualified', label: 'Квалифицирована', color: 'bg-yellow-100 border-yellow-200' },
   { value: 'trial_booked', label: 'Пробное', color: 'bg-indigo-100 border-indigo-200' },
@@ -60,13 +60,13 @@ function SortableDealCard({ deal, onEdit }: { deal: Deal; onEdit: (deal: Deal) =
     <div
       ref={setNodeRef}
       style={style}
-      className="group rounded-lg border border-slate-200 bg-white px-3 py-3 hover:border-blue-300 hover:shadow-md transition-all cursor-move"
+      className="group rounded-lg border border-slate-200 bg-white px-3 py-3 hover:border-orange-300 hover:shadow-md transition-all cursor-move"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <Link
             href={`/crm/deals/${deal.id}`}
-            className="font-medium text-slate-900 hover:text-blue-600 text-sm block mb-1 truncate"
+            className="font-medium text-slate-900 hover:text-orange-600 text-sm block mb-1 truncate"
           >
             {deal.title}
           </Link>
@@ -90,7 +90,7 @@ function SortableDealCard({ deal, onEdit }: { deal: Deal; onEdit: (deal: Deal) =
               e.stopPropagation();
               onEdit(deal);
             }}
-            className="rounded p-1 text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-colors opacity-0 group-hover:opacity-100"
+            className="rounded p-1 text-slate-400 hover:bg-orange-50 hover:text-orange-600 transition-colors opacity-0 group-hover:opacity-100"
             title="Редактировать"
           >
             <IconEdit size={14} />
@@ -202,7 +202,7 @@ export default function DealsKanban({ initialDeals }: DealsKanbanProps) {
         </div>
         <button
           onClick={handleCreateClick}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+          className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors"
         >
           + Создать сделку
         </button>
@@ -242,7 +242,7 @@ export default function DealsKanban({ initialDeals }: DealsKanbanProps) {
 
         <DragOverlay>
           {activeDeal && (
-            <div className="rounded-lg border-2 border-blue-500 bg-white px-3 py-3 shadow-lg opacity-90 w-64">
+            <div className="rounded-lg border-2 border-orange-500 bg-white px-3 py-3 shadow-lg opacity-90 w-64">
               <p className="font-medium text-slate-900 text-sm mb-1">{activeDeal.title}</p>
               {activeDeal.lead && (
                 <p className="text-xs text-slate-500 mb-2">{activeDeal.lead.name}</p>

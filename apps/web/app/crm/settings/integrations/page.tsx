@@ -153,7 +153,7 @@ export default function IntegrationsSettingsPage() {
           </div>
           <button
             onClick={handleCreateClick}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors flex items-center gap-2"
+            className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors flex items-center gap-2"
           >
             <IconPlug size={16} />
             Добавить интеграцию
@@ -172,7 +172,7 @@ export default function IntegrationsSettingsPage() {
             </p>
             <button
               onClick={handleCreateClick}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
+              className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors inline-flex items-center gap-2"
             >
               <IconPlug size={16} />
               Добавить интеграцию
@@ -238,7 +238,7 @@ export default function IntegrationsSettingsPage() {
                     </button>
                     <button
                       onClick={() => handleEditClick(integration)}
-                      className="rounded-lg bg-blue-100 px-3 py-2 text-xs font-medium text-blue-700 hover:bg-blue-200 transition-colors flex items-center justify-center gap-1"
+                      className="rounded-lg bg-orange-100 px-3 py-2 text-xs font-medium text-orange-700 hover:bg-orange-200 transition-colors flex items-center justify-center gap-1"
                     >
                       <IconSettings size={14} />
                       Настроить
@@ -258,16 +258,16 @@ export default function IntegrationsSettingsPage() {
         )}
 
         {/* Info Section */}
-        <div className="card bg-blue-50 border border-blue-100">
+        <div className="card bg-orange-50 border border-orange-100">
           <div className="flex gap-3">
-            <div className="text-blue-600">
+            <div className="text-orange-600">
               <IconAlertCircle size={20} />
             </div>
             <div>
-              <h3 className="font-semibold text-blue-900 mb-1">
+              <h3 className="font-semibold text-orange-900 mb-1">
                 Как настроить интеграции
               </h3>
-              <ul className="text-sm text-blue-800 space-y-1">
+              <ul className="text-sm text-orange-800 space-y-1">
                 <li>• <strong>Telegram:</strong> Создайте бота через @BotFather и получите API токен</li>
                 <li>• <strong>WhatsApp:</strong> Настройте WhatsApp Business API и получите Phone ID + Access Token</li>
                 <li>• <strong>Телефония:</strong> Укажите параметры подключения к Asterisk ARI</li>

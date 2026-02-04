@@ -113,7 +113,7 @@ export default function CampaignsTable({ initialCampaigns }: CampaignsTableProps
             <div className="h-12 w-px bg-slate-200" />
             <div>
               <div className="text-sm text-slate-500">Всего лидов</div>
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-2xl font-bold text-orange-600">
                 {totalLeads}
               </div>
             </div>
@@ -127,7 +127,7 @@ export default function CampaignsTable({ initialCampaigns }: CampaignsTableProps
           </div>
           <button
             onClick={handleCreateClick}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors flex items-center gap-2"
+            className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors flex items-center gap-2"
           >
             <IconPlus size={16} />
             Добавить кампанию
@@ -177,7 +177,7 @@ export default function CampaignsTable({ initialCampaigns }: CampaignsTableProps
                         </p>
                         <button
                           onClick={handleCreateClick}
-                          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
+                          className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors inline-flex items-center gap-2"
                         >
                           <IconPlus size={16} />
                           Добавить кампанию
@@ -202,7 +202,7 @@ export default function CampaignsTable({ initialCampaigns }: CampaignsTableProps
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                           {SOURCE_LABELS[campaign.source] || campaign.source}
                         </span>
                       </td>
@@ -212,7 +212,7 @@ export default function CampaignsTable({ initialCampaigns }: CampaignsTableProps
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-semibold text-blue-600">
+                        <span className="text-sm font-semibold text-orange-600">
                           {campaign.leads}
                         </span>
                       </td>
@@ -234,7 +234,7 @@ export default function CampaignsTable({ initialCampaigns }: CampaignsTableProps
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleEditClick(campaign)}
-                            className="rounded p-1 text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                            className="rounded p-1 text-slate-400 hover:bg-orange-50 hover:text-orange-600 transition-colors"
                             title="Редактировать"
                           >
                             <IconEdit size={18} />
@@ -259,8 +259,8 @@ export default function CampaignsTable({ initialCampaigns }: CampaignsTableProps
 
         {/* Info note */}
         {sortedCampaigns.length > 0 && (
-          <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg">
-            <p className="text-xs text-blue-800">
+          <div className="mt-4 p-4 bg-orange-50 border border-orange-100 rounded-lg">
+            <p className="text-xs text-orange-800">
               <strong>Примечание:</strong> ROI рассчитывается приблизительно на основе средней стоимости сделки 50,000 ₸ и конверсии в продажу 20%.
               Фактические показатели могут отличаться.
             </p>
