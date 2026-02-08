@@ -12,6 +12,9 @@ RUN npm ci --no-audit --no-fund --ignore-scripts
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+# Dummy DATABASE_URL for Prisma generate (doesn't actually connect)
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps ./apps
 COPY --from=deps /app/packages ./packages
