@@ -1,7 +1,7 @@
 # ===========================================
-# Kinder CRM - Production Docker Compose Override
-# Server: 213.109.146.167
-# Domain: schoolkids.kz
+# Mashinka CRM - Production Docker Compose Override
+# Server: 213.109.146.167 (yaro@213.109.146.167)
+# Domain: volnyaka.kz
 # ===========================================
 # Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 # ===========================================
@@ -69,7 +69,7 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-      MINIO_BROWSER_REDIRECT_URL: https://minio.schoolkids.kz
+      MINIO_BROWSER_REDIRECT_URL: https://minio.volnyaka.kz
     ports: []  # Remove port exposure - internal only
     deploy:
       resources:
@@ -77,27 +77,6 @@ services:
           memory: 1G
         reservations:
           memory: 512M
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  # ===========================================
-  # TELEPHONY - SIP ports exposed for external trunks
-  # ===========================================
-  asterisk:
-    environment:
-      ASTERISK_ARI_PASSWORD: ${ASTERISK_ARI_PASSWORD}
-    ports:
-      - "5060:5060/udp"
-      - "10000-10099:10000-10099/udp"
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-        reservations:
-          memory: 256M
     logging:
       driver: "json-file"
       options:
@@ -131,7 +110,7 @@ services:
   web:
     build:
       args:
-        NEXT_PUBLIC_API_BASE_URL: https://api.schoolkids.kz
+        NEXT_PUBLIC_API_BASE_URL: https://api.volnyaka.kz
     env_file:
       - .env.production
     ports: []  # Remove port exposure - access via Caddy only
@@ -171,7 +150,7 @@ services:
   grafana:
     environment:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
-      GF_SERVER_ROOT_URL: https://grafana.schoolkids.kz
+      GF_SERVER_ROOT_URL: https://grafana.volnyaka.kz
       GF_SECURITY_COOKIE_SECURE: "true"
       GF_SECURITY_STRICT_TRANSPORT_SECURITY: "true"
       GF_SECURITY_CONTENT_SECURITY_POLICY: "true"

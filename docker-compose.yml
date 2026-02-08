@@ -57,21 +57,6 @@ services:
       retries: 3
 
   # ===========================================
-  # TELEPHONY
-  # ===========================================
-  asterisk:
-    image: andrius/asterisk:latest
-    container_name: kinder_asterisk
-    ports:
-      - "5060:5060/udp"  # SIP
-      - "8088:8088"      # ARI/HTTP
-      - "10000-10099:10000-10099/udp"  # RTP
-    volumes:
-      - ./asterisk/etc:/etc/asterisk
-      - asterisk_recordings:/var/spool/asterisk/monitor
-    restart: always
-
-  # ===========================================
   # APPLICATION
   # ===========================================
   api:
@@ -87,9 +72,6 @@ services:
       S3_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
       S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
       JWT_SECRET: ${JWT_SECRET}
-      ASTERISK_ARI_URL: http://asterisk:8088/ari
-      ASTERISK_ARI_USERNAME: ${ASTERISK_ARI_USERNAME:-asterisk}
-      ASTERISK_ARI_PASSWORD: ${ASTERISK_ARI_PASSWORD:-asterisk}
     ports:
       - "3001:3001"
     depends_on:
@@ -199,7 +181,6 @@ volumes:
   postgres_data:
   redis_data:
   minio_data:
-  asterisk_recordings:
   prometheus_data:
   grafana_data:
   loki_data:

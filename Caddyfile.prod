@@ -1,12 +1,12 @@
 # ===========================================
-# Kinder CRM - Production Caddyfile
-# Domain: schoolkids.kz
+# Mashinka CRM - Production Caddyfile
+# Domain: volnyaka.kz
 # Security-first configuration
 # ===========================================
 
 # Global options
 {
-    email admin@schoolkids.kz
+    email admin@volnyaka.kz
     admin off
 
     servers {
@@ -23,7 +23,7 @@
 # ===========================================
 # MAIN WEBSITE
 # ===========================================
-schoolkids.kz, www.schoolkids.kz {
+volnyaka.kz, www.volnyaka.kz {
     reverse_proxy web:3000 {
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
@@ -40,7 +40,7 @@ schoolkids.kz, www.schoolkids.kz {
         X-Content-Type-Options "nosniff"
         X-XSS-Protection "1; mode=block"
         Referrer-Policy "strict-origin-when-cross-origin"
-        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.schoolkids.kz wss://api.schoolkids.kz; frame-ancestors 'self';"
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.volnyaka.kz wss://api.volnyaka.kz; frame-ancestors 'self';"
         -Server
     }
 
@@ -60,7 +60,7 @@ schoolkids.kz, www.schoolkids.kz {
 # ===========================================
 # API SUBDOMAIN
 # ===========================================
-api.schoolkids.kz {
+api.volnyaka.kz {
     reverse_proxy api:3001 {
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
@@ -78,7 +78,7 @@ api.schoolkids.kz {
         Referrer-Policy "no-referrer"
         -Server
 
-        Access-Control-Allow-Origin "https://schoolkids.kz"
+        Access-Control-Allow-Origin "https://volnyaka.kz"
         Access-Control-Allow-Credentials "true"
         Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
         Access-Control-Allow-Headers "Content-Type, Authorization"
@@ -100,21 +100,21 @@ api.schoolkids.kz {
 # ===========================================
 # CRM SUBDOMAIN - Redirect to main site
 # ===========================================
-crm.schoolkids.kz {
-    redir https://schoolkids.kz/crm{uri} permanent
+crm.volnyaka.kz {
+    redir https://volnyaka.kz/crm{uri} permanent
 }
 
 # ===========================================
 # CLIENT PORTAL - Redirect to main site
 # ===========================================
-client.schoolkids.kz {
-    redir https://schoolkids.kz/client{uri} permanent
+client.volnyaka.kz {
+    redir https://volnyaka.kz/client{uri} permanent
 }
 
 # ===========================================
 # GRAFANA MONITORING
 # ===========================================
-grafana.schoolkids.kz {
+grafana.volnyaka.kz {
     reverse_proxy grafana:3000 {
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
@@ -141,7 +141,7 @@ grafana.schoolkids.kz {
 # ===========================================
 # MINIO CONSOLE (Optional admin access)
 # ===========================================
-minio.schoolkids.kz {
+minio.volnyaka.kz {
     reverse_proxy minio:9001 {
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
