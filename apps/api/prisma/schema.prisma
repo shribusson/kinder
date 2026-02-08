@@ -16,6 +16,7 @@ enum UserRole {
   superadmin
   admin
   manager
+  mechanic
   client
 }
 
@@ -30,12 +31,12 @@ enum LeadStage {
 }
 
 enum DealStage {
-  на_диагностике
-  запланирована
-  в_работе
-  готова
-  закрыта
-  отменена
+  diagnostics
+  planned
+  in_progress
+  ready
+  closed
+  cancelled
 }
 
 enum InteractionChannel {
@@ -174,13 +175,14 @@ enum ResourceType {
 // ============================================
 
 model Account {
-  id        String   @id @default(uuid())
-  name      String
-  domain    String?  @unique
-  plan      String   @default("basic")
-  settings  Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                   String   @id @default(uuid())
+  name                 String
+  domain               String?  @unique
+  plan                 String   @default("basic")
+  settings             Json?
+  workOrderSettings    Json?    // Company details for work orders
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   users         User[]
   memberships   Membership[]
@@ -209,6 +211,10 @@ model Account {
   resources     Resource[]
   serviceCategories ServiceCategory[]
   services      Service[]
+  workOrders    WorkOrder[]
+  timeEntries   TimeEntry[]
+  vehicles      Vehicle[]
+  vehicleServiceHistory VehicleServiceHistory[]
 
   @@index([domain])
 }
@@ -321,23 +327,34 @@ model Lead {
 }
 
 model Deal {
-  id        String    @id @default(uuid())
-  accountId String
-  leadId    String
-  title     String
-  stage     DealStage @default(new)
-  amount    Int
-  revenue   Int?
-  metadata  Json?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id                  String    @id @default(uuid())
+  accountId           String
+  leadId              String
+  title               String
+  stage               DealStage @default(diagnostics)
+  amount              Int
+  revenue             Int?
+  assignedResourceId  String?   // Assigned mechanic
+  estimatedHours      Float?    // Time budget
+  vehicleId           String?   // Link to Vehicle (Phase 0)
+  metadata            Json?     // Car details, etc.
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
-  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  lead    Lead    @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  account            Account    @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  lead               Lead       @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  assignedResource   Resource?  @relation("AssignedDeals", fields: [assignedResourceId], references: [id], onDelete: SetNull)
+  vehicle            Vehicle?   @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  workOrder          WorkOrder?
+  dealItems          DealItem[]
+  timeEntries        TimeEntry[]
+  serviceHistories   VehicleServiceHistory[]
 
   @@index([accountId])
   @@index([leadId])
   @@index([stage])
+  @@index([assignedResourceId])
+  @@index([vehicleId])
   @@index([createdAt])
 }
 
@@ -388,14 +405,17 @@ model Resource {
   type        ResourceType
   email       String?
   phone       String?
+  hourlyRate  Float?
   isActive    Boolean      @default(true)
   workingHours Json?
   metadata    Json?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
-  account  Account    @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  bookings Booking[]
+  account       Account      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  bookings      Booking[]
+  assignedDeals Deal[]       @relation("AssignedDeals")
+  timeEntries   TimeEntry[]
 
   @@index([accountId])
   @@index([isActive])
@@ -544,6 +564,7 @@ model Message {
   @@index([status])
   @@index([createdAt])
   @@index([externalId])
+  @@index([accountId, externalId])
   @@index([conversationId, direction, readAt])
 }
 
@@ -868,12 +889,79 @@ model Service {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  category ServiceCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  account  Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  category   ServiceCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  account    Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  dealItems  DealItem[]
 
   @@unique([categoryId, name])
   @@index([categoryId])
   @@index([accountId])
+}
+
+// ============================================
+// DEAL ITEMS & TIME TRACKING
+// ============================================
+
+model DealItem {
+  id        String   @id @default(uuid())
+  dealId    String
+  serviceId String
+  quantity  Int      @default(1)
+  unitPrice Float    // Historical price at time of creation
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  deal    Deal    @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+
+  @@index([dealId])
+  @@index([serviceId])
+}
+
+model TimeEntry {
+  id              String    @id @default(uuid())
+  accountId       String
+  dealId          String
+  resourceId      String
+  startedAt       DateTime
+  endedAt         DateTime?
+  durationMinutes Int?      // Calculated when stopped
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  account  Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  deal     Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([dealId])
+  @@index([resourceId])
+  @@index([startedAt])
+}
+
+model WorkOrder {
+  id            String   @id @default(uuid())
+  accountId     String
+  dealId        String   @unique
+  orderNumber   Int
+  generatedAt   DateTime @default(now())
+  pdfUrl        String?
+  customerName  String
+  carModel      String?
+  licensePlate  String?
+  vin           String?
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  deal    Deal    @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([orderNumber])
+  @@index([dealId])
 }
 
 // ============================================
@@ -960,4 +1048,113 @@ model Webinar {
 
   @@index([productId])
   @@index([scheduledAt])
+}
+
+// ============================================
+// VEHICLE DATABASE MODELS (Phase 0)
+// ============================================
+
+model VehicleBrand {
+  id            String   @id // "TOYOTA", "BMW", etc. (from cars-base.ru)
+  name          String   // Latin name
+  cyrillicName  String?  // Cyrillic name
+  numericId     Int?     // cars-base.ru numeric ID
+  country       String?
+  popular       Boolean  @default(false)
+  yearFrom      Int?
+  yearTo        Int?
+  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now())
+
+  models        VehicleModel[]
+  vehicles      Vehicle[]
+
+  @@index([popular])
+  @@index([name])
+}
+
+model VehicleModel {
+  id            String   @id // "TOYOTA_CAMRY", "BMW_X5", etc.
+  brandId       String
+  name          String   // Latin name
+  cyrillicName  String?  // Cyrillic name
+  class         String?  // Vehicle class (A, B, C, D, E, S, etc.)
+  yearFrom      Int?
+  yearTo        Int?
+  technicalData Json?    // Future: technical specs from TecAlliance/AutoData
+  partsData     Json?    // Future: parts catalog data
+  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now())
+
+  brand         VehicleBrand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  vehicles      Vehicle[]
+  externalIds   VehicleExternalId[]
+
+  @@index([brandId])
+  @@index([name])
+}
+
+model Vehicle {
+  id              String   @id @default(uuid())
+  accountId       String
+  brandId         String
+  modelId         String
+  year            Int?
+  vin             String?
+  licensePlate    String?
+  color           String?
+  mileage         Int?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  account         Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  brand           VehicleBrand  @relation(fields: [brandId], references: [id], onDelete: Restrict)
+  model           VehicleModel  @relation(fields: [modelId], references: [id], onDelete: Restrict)
+  deals           Deal[]
+  serviceHistory  VehicleServiceHistory[]
+
+  @@unique([accountId, vin])
+  @@unique([accountId, licensePlate])
+  @@index([accountId])
+  @@index([brandId])
+  @@index([modelId])
+  @@index([vin])
+  @@index([licensePlate])
+}
+
+model VehicleServiceHistory {
+  id              String   @id @default(uuid())
+  accountId       String
+  vehicleId       String
+  dealId          String?
+  serviceDate     DateTime
+  mileageAtService Int?
+  description     String
+  notes           String?
+  cost            Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  account         Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  vehicle         Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  deal            Deal?    @relation(fields: [dealId], references: [id], onDelete: SetNull)
+
+  @@index([accountId])
+  @@index([vehicleId])
+  @@index([dealId])
+  @@index([serviceDate])
+}
+
+model VehicleExternalId {
+  id            String   @id @default(uuid())
+  modelId       String
+  source        String   // "tecalliance", "autodata", etc.
+  externalId    String   // ID in external system
+  createdAt     DateTime @default(now())
+
+  model         VehicleModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@unique([source, externalId])
+  @@index([modelId])
 }
