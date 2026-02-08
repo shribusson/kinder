@@ -26,7 +26,7 @@ describe('DealsController', () => {
     accountId: 'account-123',
     leadId: 'lead-123',
     title: 'Test Deal',
-    stage: DealStage.new,
+    stage: DealStage.diagnostics,
     amount: 50000,
     revenue: null,
     createdAt: new Date(),

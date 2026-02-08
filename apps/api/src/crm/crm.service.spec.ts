@@ -41,7 +41,7 @@ describe('CrmService', () => {
     accountId: 'account-123',
     leadId: 'lead-123',
     title: 'Test Deal',
-    stage: DealStage.new,
+    stage: DealStage.diagnostics,
     amount: 50000,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -204,10 +204,10 @@ describe('CrmService', () => {
       it('should filter deals by stage', async () => {
         prismaService.deal.findMany.mockResolvedValue([]);
 
-        await service.listDeals(undefined, DealStage.won);
+        await service.listDeals(undefined, DealStage.closed);
 
         const findManyCall = prismaService.deal.findMany.mock.calls[0][0];
-        expect(findManyCall.where.stage).toBe(DealStage.won);
+        expect(findManyCall.where.stage).toBe(DealStage.closed);
       });
     });
 
@@ -228,7 +228,7 @@ describe('CrmService', () => {
         expect(prismaService.auditLog.create).toHaveBeenCalled();
       });
 
-      it('should use default stage "new" when not provided', async () => {
+      it('should use default stage "diagnostics" when not provided', async () => {
         prismaService.deal.create.mockResolvedValue(mockDeal);
         prismaService.auditLog.create.mockResolvedValue({});
 
@@ -240,7 +240,7 @@ describe('CrmService', () => {
         });
 
         const createCall = prismaService.deal.create.mock.calls[0][0];
-        expect(createCall.data.stage).toBe(DealStage.new);
+        expect(createCall.data.stage).toBe(DealStage.diagnostics);
       });
     });
   });

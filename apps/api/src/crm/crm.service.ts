@@ -90,7 +90,7 @@ export class CrmService {
         account: { connect: { id: data.accountId } },
         lead: { connect: { id: data.leadId } },
         title: data.title,
-        stage: data.stage ?? DealStage.new,
+        stage: data.stage ?? DealStage.diagnostics,
         amount: data.amount
       }
     });
