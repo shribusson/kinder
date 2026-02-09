@@ -11,7 +11,6 @@ import { apiCall } from '@/lib/api';
 interface WorkOrderSettings {
   companyName?: string;
   inn?: string;
-  okpo?: string;
   address?: string;
   phone?: string;
 }
@@ -107,26 +106,14 @@ export default function WorkOrderSettingsPage() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">ИНН</label>
-            <Input
-              value={settings.inn || ''}
-              onChange={(e) => setSettings({ ...settings, inn: e.target.value })}
-              placeholder="12345678901"
-              maxLength={12}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">ОКПО</label>
-            <Input
-              value={settings.okpo || ''}
-              onChange={(e) => setSettings({ ...settings, okpo: e.target.value })}
-              placeholder="12345678"
-              maxLength={8}
-            />
-          </div>
+        <div>
+          <label className="block text-sm font-medium mb-2">ИНН</label>
+          <Input
+            value={settings.inn || ''}
+            onChange={(e) => setSettings({ ...settings, inn: e.target.value })}
+            placeholder="930323350026"
+            maxLength={12}
+          />
         </div>
 
         <div>
