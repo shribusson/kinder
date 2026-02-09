@@ -69,8 +69,6 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
     setError('');
 
     try {
-      const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
-
       const url = lead
         ? `${apiBaseUrl}/crm/leads/${lead.id}`
         : `${apiBaseUrl}/crm/leads`;

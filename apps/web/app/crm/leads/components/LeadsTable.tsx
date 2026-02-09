@@ -5,7 +5,7 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { IconEdit, IconTrash } from '@tabler/icons-react';
 import LeadModal from './LeadModal';
-import { apiBaseUrl } from '@/app/lib/api';
+import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
 
 interface Lead {
   id: string;
@@ -54,9 +54,9 @@ export default function LeadsTable({ initialLeads }: LeadsTableProps) {
 
   const refreshLeads = async () => {
     try {
-      const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
-      const response = await fetch(`${apiBaseUrl}/crm/leads?accountId=${accountId}`, {
+      const response = await fetch(`${apiBaseUrl}/crm/leads`, {
         cache: 'no-store',
+        headers: getAuthHeaders(),
       });
       if (response.ok) {
         const data = await response.json();

@@ -577,95 +577,32 @@ async function main() {
 
   // Service categories
   const serviceCategories = [
-    { slug: 'diagnostics', name: 'Диагностика', icon: '🔍', sortOrder: 1 },
-    { slug: 'maintenance', name: 'Техническое обслуживание', icon: '🔧', sortOrder: 2 },
-    { slug: 'engine', name: 'Двигатель', icon: '⚙️', sortOrder: 3 },
-    { slug: 'transmission', name: 'Трансмиссия', icon: '🚗', sortOrder: 4 },
-    { slug: 'suspension', name: 'Подвеска', icon: '🛞', sortOrder: 5 },
-    { slug: 'brakes', name: 'Тормозная система', icon: '🛑', sortOrder: 6 },
-    { slug: 'steering', name: 'Рулевое управление', icon: '🎯', sortOrder: 7 },
-    { slug: 'electrical', name: 'Электрика', icon: '⚡', sortOrder: 8 },
-    { slug: 'bodywork', name: 'Кузовные работы', icon: '🎨', sortOrder: 9 },
-    { slug: 'tires', name: 'Шиномонтаж', icon: '🏁', sortOrder: 10 },
-    { slug: 'other', name: 'Прочее', icon: '📦', sortOrder: 11 },
+    { slug: 'brakes', name: 'Тормозная система', icon: '🛑', sortOrder: 1 },
+    { slug: 'cooling_system', name: 'Система охлаждения', icon: '❄️', sortOrder: 2 },
   ];
 
   // Service types (auto repair services)
   const services = [
-    // Диагностика
-    { name: 'Компьютерная диагностика', categorySlug: 'diagnostics', price: 5000 },
-    { name: 'Диагностика подвески', categorySlug: 'diagnostics', price: 3000 },
-    { name: 'Диагностика двигателя', categorySlug: 'diagnostics', price: 4000 },
-    { name: 'Диагностика тормозной системы', categorySlug: 'diagnostics', price: 2500 },
-
-    // ТО
-    { name: 'ТО-1 (5000 км)', categorySlug: 'maintenance', price: 15000 },
-    { name: 'ТО-2 (10000 км)', categorySlug: 'maintenance', price: 20000 },
-    { name: 'ТО-3 (15000 км)', categorySlug: 'maintenance', price: 25000 },
-    { name: 'ТО-4 (20000 км)', categorySlug: 'maintenance', price: 30000 },
-
-    // Двигатель
-    { name: 'Замена масла и фильтров', categorySlug: 'engine', price: 8000 },
-    { name: 'Замена ремня ГРМ', categorySlug: 'engine', price: 25000 },
-    { name: 'Замена свечей зажигания', categorySlug: 'engine', price: 5000 },
-    { name: 'Замена воздушного фильтра', categorySlug: 'engine', price: 2000 },
-    { name: 'Промывка инжектора', categorySlug: 'engine', price: 12000 },
-    { name: 'Раскоксовка двигателя', categorySlug: 'engine', price: 15000 },
-
-    // Трансмиссия
-    { name: 'Замена масла АКПП', categorySlug: 'transmission', price: 18000 },
-    { name: 'Замена масла МКПП', categorySlug: 'transmission', price: 10000 },
-    { name: 'Замена сцепления', categorySlug: 'transmission', price: 35000 },
-    { name: 'Ремонт АКПП', categorySlug: 'transmission', price: 80000 },
-    { name: 'Ремонт МКПП', categorySlug: 'transmission', price: 50000 },
-
-    // Подвеска
-    { name: 'Замена амортизаторов (комплект)', categorySlug: 'suspension', price: 40000 },
-    { name: 'Замена стоек стабилизатора', categorySlug: 'suspension', price: 8000 },
-    { name: 'Замена рычагов подвески', categorySlug: 'suspension', price: 25000 },
-    { name: 'Замена шаровых опор', categorySlug: 'suspension', price: 12000 },
-    { name: 'Замена сайлентблоков', categorySlug: 'suspension', price: 15000 },
-    { name: 'Развал-схождение', categorySlug: 'suspension', price: 6000 },
-
     // Тормозная система
-    { name: 'Замена тормозных колодок (передние)', categorySlug: 'brakes', price: 8000 },
-    { name: 'Замена тормозных колодок (задние)', categorySlug: 'brakes', price: 7000 },
-    { name: 'Замена тормозных дисков (передние)', categorySlug: 'brakes', price: 18000 },
-    { name: 'Замена тормозных дисков (задние)', categorySlug: 'brakes', price: 15000 },
+    { name: 'Проточка тормозных дисков', categorySlug: 'brakes', price: 16000 },
+    { name: 'Замена главного тормозного цилиндра (ГТЦ)', categorySlug: 'brakes', price: 15000 },
     { name: 'Замена тормозной жидкости', categorySlug: 'brakes', price: 5000 },
-    { name: 'Прокачка тормозов', categorySlug: 'brakes', price: 4000 },
+    { name: 'Замена тормозных колодок (передние)', categorySlug: 'brakes', price: 4000 },
+    { name: 'Замена задних колодок с электронным ручником', categorySlug: 'brakes', price: 6000 },
+    { name: 'Замена барабанных колодок', categorySlug: 'brakes', price: 7000 },
+    { name: 'Ремонт суппорта (1-поршневой)', categorySlug: 'brakes', price: 6000 },
+    { name: 'Ремонт суппорта (2-поршневой)', categorySlug: 'brakes', price: 7000 },
+    { name: 'Ремонт суппорта (4-поршневой)', categorySlug: 'brakes', price: 9000 },
 
-    // Рулевое управление
-    { name: 'Замена рулевых наконечников', categorySlug: 'steering', price: 10000 },
-    { name: 'Замена рулевой тяги', categorySlug: 'steering', price: 12000 },
-    { name: 'Ремонт рулевой рейки', categorySlug: 'steering', price: 30000 },
-    { name: 'Замена ГУР насоса', categorySlug: 'steering', price: 25000 },
-
-    // Электрика
-    { name: 'Замена аккумулятора', categorySlug: 'electrical', price: 3000 },
-    { name: 'Диагностика электрики', categorySlug: 'electrical', price: 5000 },
-    { name: 'Замена генератора', categorySlug: 'electrical', price: 15000 },
-    { name: 'Замена стартера', categorySlug: 'electrical', price: 12000 },
-    { name: 'Ремонт проводки', categorySlug: 'electrical', price: 8000 },
-
-    // Кузовные работы
-    { name: 'Покраска элемента кузова', categorySlug: 'bodywork', price: 25000 },
-    { name: 'Рихтовка', categorySlug: 'bodywork', price: 15000 },
-    { name: 'Полировка кузова', categorySlug: 'bodywork', price: 20000 },
-    { name: 'Антикоррозийная обработка', categorySlug: 'bodywork', price: 18000 },
-
-    // Шиномонтаж
-    { name: 'Шиномонтаж (4 колеса)', categorySlug: 'tires', price: 5000 },
-    { name: 'Балансировка (4 колеса)', categorySlug: 'tires', price: 4000 },
-    { name: 'Ремонт проколов', categorySlug: 'tires', price: 2000 },
-    { name: 'Хранение шин (сезон)', categorySlug: 'tires', price: 10000 },
-
-    // Прочее
-    { name: 'Мойка автомобиля', categorySlug: 'other', price: 3000 },
-    { name: 'Химчистка салона', categorySlug: 'other', price: 15000 },
-    { name: 'Замена лобового стекла', categorySlug: 'other', price: 30000 },
-    { name: 'Тонировка стекол', categorySlug: 'other', price: 20000 },
-    { name: 'Установка сигнализации', categorySlug: 'other', price: 25000 },
+    // Система охлаждения
+    { name: 'Замена антифриза', categorySlug: 'cooling_system', price: 5000 },
+    { name: 'Замена антифриза с продувкой', categorySlug: 'cooling_system', price: 7000 },
+    { name: 'Замена термостата', categorySlug: 'cooling_system', price: 5000 },
+    { name: 'Промывка системы охлаждения — блок двигателя', categorySlug: 'cooling_system', price: 10000 },
+    { name: 'Промывка системы охлаждения — основной радиатор', categorySlug: 'cooling_system', price: 10000 },
+    { name: 'Промывка системы охлаждения — радиатор отопителя', categorySlug: 'cooling_system', price: 12000 },
+    { name: 'Замена основного радиатора', categorySlug: 'cooling_system', price: 15000 },
+    { name: 'Замена радиатора отопителя', categorySlug: 'cooling_system', price: 25000 },
   ];
 
   console.log('\nSeeding service categories and services...');
