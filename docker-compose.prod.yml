@@ -93,6 +93,7 @@ services:
     ports: []  # Remove port exposure - access via Caddy only
     environment:
       NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
     deploy:
       resources:
         limits:
