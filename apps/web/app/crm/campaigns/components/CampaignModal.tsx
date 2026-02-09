@@ -65,10 +65,6 @@ export default function CampaignModal({ campaign, isOpen, onClose, onSuccess }: 
         leads: parseInt(formData.leads),
       };
 
-      if (!campaign) {
-        payload.accountId = accountId;
-      }
-
       const response = await fetch(url, {
         method,
         headers: {

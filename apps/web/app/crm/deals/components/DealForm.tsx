@@ -321,10 +321,6 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
         amount: Number(formData.amount),
       };
 
-      if (!deal) {
-        payload.accountId = accountId;
-      }
-
       if (formData.revenue) {
         payload.revenue = Number(formData.revenue);
       }

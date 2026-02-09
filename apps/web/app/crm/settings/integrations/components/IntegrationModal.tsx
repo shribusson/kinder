@@ -100,7 +100,6 @@ export default function IntegrationModal({ integration, isOpen, onClose, onSucce
 
       if (!integration) {
         payload.channel = formData.channel;
-        payload.accountId = accountId;
       }
 
       const response = await fetch(url, {

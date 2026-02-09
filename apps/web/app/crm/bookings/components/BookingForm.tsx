@@ -108,10 +108,6 @@ export default function BookingForm({ booking, onSuccess, onCancel }: BookingFor
         status: formData.status,
       };
 
-      if (!booking) {
-        payload.accountId = accountId;
-      }
-
       // Use resourceId if available, otherwise fall back to specialist string
       if (formData.resourceId) {
         payload.resourceId = formData.resourceId;

@@ -82,10 +82,6 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
         stage: formData.stage,
       };
 
-      if (!lead) {
-        payload.accountId = accountId;
-      }
-
       if (formData.phone) payload.phone = formData.phone;
       if (formData.email) payload.email = formData.email;
 

@@ -1,24 +1,83 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req } from "@nestjs/common";
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsEmail,
+  IsEnum,
+  IsNumber,
+  IsBoolean,
+  Min,
+  MaxLength,
+  Matches,
+} from 'class-validator';
 import { CrmService } from "./crm.service";
 import { Roles } from "../common/roles.decorator";
 import { PrismaService } from "../prisma.service";
 import { AuthenticatedRequest } from "../common/types/request.types";
 
 export class CreateResourceDto {
+  @IsString()
+  @IsNotEmpty({ message: 'Name is required' })
+  @MaxLength(200)
   name!: string;
-  type!: "specialist" | "room" | "equipment";
+
+  @IsEnum(['specialist', 'room', 'equipment'], { message: 'Invalid resource type' })
+  @IsNotEmpty({ message: 'Type is required' })
+  type!: 'specialist' | 'room' | 'equipment';
+
+  @IsOptional()
+  @IsEmail({}, { message: 'Invalid email format' })
   email?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^\+?[1-9]\d{6,14}$/, { message: 'Invalid phone number format' })
   phone?: string;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'Hourly rate must be a number' })
+  @Min(0, { message: 'Hourly rate must be positive' })
+  hourlyRate?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+
+  @IsOptional()
   workingHours?: Record<string, unknown>;
 }
 
 export class UpdateResourceDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
   name?: string;
-  type?: "specialist" | "room" | "equipment";
+
+  @IsOptional()
+  @IsEnum(['specialist', 'room', 'equipment'], { message: 'Invalid resource type' })
+  type?: 'specialist' | 'room' | 'equipment';
+
+  @IsOptional()
+  @IsEmail({}, { message: 'Invalid email format' })
   email?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^\+?[1-9]\d{6,14}$/, { message: 'Invalid phone number format' })
   phone?: string;
-  workingHours?: Record<string, unknown>;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'Hourly rate must be a number' })
+  @Min(0, { message: 'Hourly rate must be positive' })
+  hourlyRate?: number;
+
+  @IsOptional()
+  @IsBoolean()
   isActive?: boolean;
+
+  @IsOptional()
+  workingHours?: Record<string, unknown>;
 }
 
 @Controller("crm/resources")
@@ -57,6 +116,8 @@ export class ResourcesController {
         type: payload.type,
         email: payload.email,
         phone: payload.phone,
+        hourlyRate: payload.hourlyRate,
+        isActive: payload.isActive ?? true,
         workingHours: payload.workingHours as any,
       }
     });
@@ -89,8 +150,9 @@ export class ResourcesController {
         type: payload.type,
         email: payload.email,
         phone: payload.phone,
-        workingHours: payload.workingHours as any,
+        hourlyRate: payload.hourlyRate,
         isActive: payload.isActive,
+        workingHours: payload.workingHours as any,
       }
     });
 

@@ -63,10 +63,6 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
         isActive: formData.isActive,
       };
 
-      if (!resource) {
-        payload.accountId = accountId;
-      }
-
       if (formData.email) payload.email = formData.email;
       if (formData.phone) payload.phone = formData.phone;
       if (formData.type === 'specialist' && formData.hourlyRate) {
