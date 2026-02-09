@@ -21,7 +21,7 @@ export class SalesPlansController {
       });
       resolvedAccountId = membership?.accountId;
     }
-    return this.crm.getSalesPlans(resolvedAccountId);
+    return this.crm.getSalesPlans(resolvedAccountId as string);
   }
 
   @Get(":id")
