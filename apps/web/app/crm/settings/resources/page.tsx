@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { IconPlus, IconEdit, IconTrash, IconUser, IconDoor, IconTool, IconAlertCircle } from '@tabler/icons-react';
 import ResourceModal from './components/ResourceModal';
-import { apiBaseUrl } from '@/app/lib/api';
+import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
 
 interface Resource {
   id: string;
@@ -37,9 +37,9 @@ export default function ResourcesSettingsPage() {
 
   const fetchResources = async () => {
     try {
-      const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
-      const response = await fetch(`${apiBaseUrl}/crm/resources?accountId=${accountId}`, {
+      const response = await fetch(`${apiBaseUrl}/crm/resources`, {
         cache: 'no-store',
+        headers: getAuthHeaders(),
       });
       if (response.ok) {
         const data = await response.json();
@@ -71,6 +71,7 @@ export default function ResourcesSettingsPage() {
     try {
       const response = await fetch(`${apiBaseUrl}/crm/resources/${id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -92,6 +93,7 @@ export default function ResourcesSettingsPage() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         body: JSON.stringify({
           isActive: !resource.isActive,

@@ -86,6 +86,7 @@ export default function LeadsTable({ initialLeads }: LeadsTableProps) {
     try {
       const response = await fetch(`${apiBaseUrl}/crm/leads/${id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {

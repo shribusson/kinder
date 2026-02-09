@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { IconPhone, IconPhoneOff } from '@tabler/icons-react';
-import { apiBaseUrl } from '@/app/lib/api';
+import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
 import { useCallEvents } from '@/app/hooks/useCallEvents';
 
 interface Call {
@@ -106,6 +106,7 @@ export default function CallsTable({ initialCalls }: CallsTableProps) {
 
       const response = await fetch(`${apiBaseUrl}/telephony/calls?accountId=${id}`, {
         cache: 'no-store',
+        headers: getAuthHeaders(),
       });
       if (response.ok) {
         const data = await response.json();

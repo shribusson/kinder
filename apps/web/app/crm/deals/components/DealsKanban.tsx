@@ -7,7 +7,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-
 import { CSS } from '@dnd-kit/utilities';
 import { IconEdit, IconGripVertical } from '@tabler/icons-react';
 import DealModal from './DealModal';
-import { apiBaseUrl } from '@/app/lib/api';
+import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
 
 interface Lead {
   id: string;
@@ -116,9 +116,9 @@ export default function DealsKanban({ initialDeals }: DealsKanbanProps) {
 
   const refreshDeals = async () => {
     try {
-      const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
-      const response = await fetch(`${apiBaseUrl}/crm/deals?accountId=${accountId}`, {
+      const response = await fetch(`${apiBaseUrl}/crm/deals`, {
         cache: 'no-store',
+        headers: getAuthHeaders(),
       });
       if (response.ok) {
         const data = await response.json();
@@ -162,6 +162,7 @@ export default function DealsKanban({ initialDeals }: DealsKanbanProps) {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         body: JSON.stringify({ stage: newStage }),
       });

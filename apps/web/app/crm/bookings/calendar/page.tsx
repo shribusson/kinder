@@ -8,7 +8,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import Link from 'next/link';
 import { IconArrowLeft } from '@tabler/icons-react';
 import BookingModal from '../components/BookingModal';
-import { apiBaseUrl } from '@/app/lib/api';
+import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
 
 // Set Russian locale
 moment.locale('ru');
@@ -72,9 +72,9 @@ export default function BookingsCalendarPage() {
 
   const fetchBookings = async () => {
     try {
-      const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
-      const response = await fetch(`${apiBaseUrl}/crm/bookings?accountId=${accountId}`, {
+      const response = await fetch(`${apiBaseUrl}/crm/bookings`, {
         cache: 'no-store',
+        headers: getAuthHeaders(),
       });
       if (response.ok) {
         const data = await response.json();

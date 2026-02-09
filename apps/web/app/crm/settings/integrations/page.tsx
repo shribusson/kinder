@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { IconCheck, IconX, IconSettings, IconPlug, IconAlertCircle } from '@tabler/icons-react';
 import IntegrationModal from './components/IntegrationModal';
-import { apiBaseUrl } from '@/app/lib/api';
+import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
 
 interface Integration {
   id: string;
@@ -56,9 +56,9 @@ export default function IntegrationsSettingsPage() {
 
   const fetchIntegrations = async () => {
     try {
-      const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
-      const response = await fetch(`${apiBaseUrl}/crm/integrations?accountId=${accountId}`, {
+      const response = await fetch(`${apiBaseUrl}/crm/integrations`, {
         cache: 'no-store',
+        headers: getAuthHeaders(),
       });
       if (response.ok) {
         const data = await response.json();
@@ -76,6 +76,7 @@ export default function IntegrationsSettingsPage() {
     try {
       const response = await fetch(`${apiBaseUrl}/crm/integrations/${integrationId}/test`, {
         method: 'POST',
+        headers: getAuthHeaders(),
       });
 
       if (response.ok) {
@@ -100,6 +101,7 @@ export default function IntegrationsSettingsPage() {
     try {
       const response = await fetch(`${apiBaseUrl}/crm/integrations/${id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {

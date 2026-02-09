@@ -40,9 +40,9 @@ function LoginForm() {
         localStorage.setItem('accountId', user.accountId);
       }
 
-      // Редирект на исходную страницу или дашборд
+      // Full page reload гарантирует что cookie будет отправлен с первым же запросом
       const redirect = searchParams.get("redirect") || "/crm";
-      router.push(redirect);
+      window.location.href = redirect;
     } catch (err: any) {
       setError(err.message || "Ошибка входа");
     } finally {

@@ -27,9 +27,9 @@ export default function RevenuePlanPage() {
 
   const fetchPlans = async () => {
     try {
-      const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
-      const response = await fetch(`${apiBaseUrl}/crm/sales-plans?accountId=${accountId}`, {
+      const response = await fetch(`${apiBaseUrl}/crm/sales-plans`, {
         cache: 'no-store',
+        headers: getAuthHeaders(),
       });
       if (response.ok) {
         const data = await response.json();
@@ -49,7 +49,6 @@ export default function RevenuePlanPage() {
     }
 
     try {
-      const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
       const response = await fetch(`${apiBaseUrl}/crm/sales-plans`, {
         method: 'POST',
         headers: {
@@ -57,7 +56,6 @@ export default function RevenuePlanPage() {
           ...getAuthHeaders(),
         },
         body: JSON.stringify({
-          accountId,
           period: newPlan.period,
           target: parseFloat(newPlan.target),
         }),

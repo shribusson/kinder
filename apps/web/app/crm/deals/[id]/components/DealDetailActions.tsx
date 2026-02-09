@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { IconEdit, IconTrash } from '@tabler/icons-react';
 import DealModal from '../../components/DealModal';
-import { apiBaseUrl } from '@/app/lib/api';
+import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
 
 interface Deal {
   id: string;
@@ -39,6 +39,7 @@ export default function DealDetailActions({ deal }: DealDetailActionsProps) {
     try {
       const response = await fetch(`${apiBaseUrl}/crm/deals/${deal.id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {

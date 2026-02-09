@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { IconEdit, IconTrash, IconTrendingUp, IconPlus } from '@tabler/icons-react';
 import CampaignModal from './CampaignModal';
-import { apiBaseUrl } from '@/app/lib/api';
+import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
 
 interface Campaign {
   id: string;
@@ -39,9 +39,9 @@ export default function CampaignsTable({ initialCampaigns }: CampaignsTableProps
 
   const refreshCampaigns = async () => {
     try {
-      const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
-      const response = await fetch(`${apiBaseUrl}/crm/campaigns?accountId=${accountId}`, {
+      const response = await fetch(`${apiBaseUrl}/crm/campaigns`, {
         cache: 'no-store',
+        headers: getAuthHeaders(),
       });
       if (response.ok) {
         const data = await response.json();
@@ -71,6 +71,7 @@ export default function CampaignsTable({ initialCampaigns }: CampaignsTableProps
     try {
       const response = await fetch(`${apiBaseUrl}/crm/campaigns/${id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {

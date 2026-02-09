@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { IconEdit, IconTrash, IconCalendar } from '@tabler/icons-react';
 import BookingModal from './BookingModal';
-import { apiBaseUrl } from '@/app/lib/api';
+import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
 
 interface Lead {
   id: string;
@@ -51,9 +51,9 @@ export default function BookingsTable({ initialBookings }: BookingsTableProps) {
 
   const refreshBookings = async () => {
     try {
-      const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
-      const response = await fetch(`${apiBaseUrl}/crm/bookings?accountId=${accountId}`, {
+      const response = await fetch(`${apiBaseUrl}/crm/bookings`, {
         cache: 'no-store',
+        headers: getAuthHeaders(),
       });
       if (response.ok) {
         const data = await response.json();
@@ -83,6 +83,7 @@ export default function BookingsTable({ initialBookings }: BookingsTableProps) {
     try {
       const response = await fetch(`${apiBaseUrl}/crm/bookings/${id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {

@@ -121,9 +121,9 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
   useEffect(() => {
     const fetchLeads = async () => {
       try {
-        const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
-        const response = await fetch(`${apiBaseUrl}/crm/leads?accountId=${accountId}`, {
+        const response = await fetch(`${apiBaseUrl}/crm/leads`, {
           cache: 'no-store',
+          headers: getAuthHeaders(),
         });
         if (response.ok) {
           const data = await response.json();

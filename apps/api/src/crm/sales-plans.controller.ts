@@ -13,8 +13,15 @@ export class SalesPlansController {
   ) {}
 
   @Get()
-  async list(@Query("accountId") accountId: string) {
-    return this.crm.getSalesPlans(accountId);
+  async list(@Query("accountId") accountId?: string, @Req() req?: AuthenticatedRequest) {
+    let resolvedAccountId = accountId;
+    if (!resolvedAccountId && req?.user?.sub) {
+      const membership = await this.prisma.membership.findFirst({
+        where: { userId: req.user.sub },
+      });
+      resolvedAccountId = membership?.accountId;
+    }
+    return this.crm.getSalesPlans(resolvedAccountId);
   }
 
   @Get(":id")

@@ -63,11 +63,11 @@ export default function BookingForm({ booking, onSuccess, onCancel }: BookingFor
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
+        const headers = getAuthHeaders();
 
         const [leadsResponse, resourcesResponse] = await Promise.all([
-          fetch(`${apiBaseUrl}/crm/leads?accountId=${accountId}`, { cache: 'no-store' }),
-          fetch(`${apiBaseUrl}/crm/resources?accountId=${accountId}`, { cache: 'no-store' }),
+          fetch(`${apiBaseUrl}/crm/leads`, { cache: 'no-store', headers }),
+          fetch(`${apiBaseUrl}/crm/resources`, { cache: 'no-store', headers }),
         ]);
 
         if (leadsResponse.ok) {

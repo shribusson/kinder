@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { IconEdit, IconTrash } from '@tabler/icons-react';
 import LeadModal from '../../components/LeadModal';
-import { apiBaseUrl } from '@/app/lib/api';
+import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
 
 interface Lead {
   id: string;
@@ -38,6 +38,7 @@ export default function LeadDetailActions({ lead }: LeadDetailActionsProps) {
     try {
       const response = await fetch(`${apiBaseUrl}/crm/leads/${lead.id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {

@@ -87,9 +87,16 @@ export class ResourcesController {
   ) {}
 
   @Get()
-  async list(@Query("accountId") accountId: string) {
+  async list(@Query("accountId") accountId?: string, @Req() req?: AuthenticatedRequest) {
+    let resolvedAccountId = accountId;
+    if (!resolvedAccountId && req?.user?.sub) {
+      const membership = await this.prisma.membership.findFirst({
+        where: { userId: req.user.sub },
+      });
+      resolvedAccountId = membership?.accountId;
+    }
     return this.prisma.resource.findMany({
-      where: { accountId },
+      where: resolvedAccountId ? { accountId: resolvedAccountId } : {},
       orderBy: { name: "asc" }
     });
   }
