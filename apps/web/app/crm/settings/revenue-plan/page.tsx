@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { IconPlus, IconEdit, IconTrash, IconTrendingUp, IconAlertCircle } from '@tabler/icons-react';
-import { apiBaseUrl } from '@/app/lib/api';
+import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
 
 interface SalesPlan {
   id: string;
@@ -54,6 +54,7 @@ export default function RevenuePlanPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         body: JSON.stringify({
           accountId,
@@ -86,6 +87,7 @@ export default function RevenuePlanPage() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         body: JSON.stringify({
           target: parseFloat(editValue),
@@ -113,6 +115,9 @@ export default function RevenuePlanPage() {
     try {
       const response = await fetch(`${apiBaseUrl}/crm/sales-plans/${planId}`, {
         method: 'DELETE',
+        headers: {
+          ...getAuthHeaders(),
+        },
       });
 
       if (!response.ok) {

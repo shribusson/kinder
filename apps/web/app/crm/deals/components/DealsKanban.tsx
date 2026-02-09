@@ -31,13 +31,12 @@ interface DealsKanbanProps {
 }
 
 const STAGES = [
-  { value: 'new', label: 'Новая', color: 'bg-orange-100 border-orange-200' },
-  { value: 'contacted', label: 'Контакт', color: 'bg-purple-100 border-purple-200' },
-  { value: 'qualified', label: 'Квалифицирована', color: 'bg-yellow-100 border-yellow-200' },
-  { value: 'trial_booked', label: 'Пробное', color: 'bg-indigo-100 border-indigo-200' },
-  { value: 'attended', label: 'Посетил', color: 'bg-teal-100 border-teal-200' },
-  { value: 'won', label: 'Выиграна', color: 'bg-green-100 border-green-200' },
-  { value: 'lost', label: 'Проиграна', color: 'bg-red-100 border-red-200' },
+  { value: 'diagnostics', label: 'На диагностике', color: 'bg-indigo-100 border-indigo-200' },
+  { value: 'planned', label: 'Запланирована', color: 'bg-purple-100 border-purple-200' },
+  { value: 'in_progress', label: 'В работе', color: 'bg-yellow-100 border-yellow-200' },
+  { value: 'ready', label: 'Готова', color: 'bg-teal-100 border-teal-200' },
+  { value: 'closed', label: 'Закрыта', color: 'bg-green-100 border-green-200' },
+  { value: 'cancelled', label: 'Отменена', color: 'bg-red-100 border-red-200' },
 ];
 
 function SortableDealCard({ deal, onEdit }: { deal: Deal; onEdit: (deal: Deal) => void }) {

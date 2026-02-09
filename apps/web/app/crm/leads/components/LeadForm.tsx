@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { apiBaseUrl } from '@/app/lib/api';
+import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
 
 interface Lead {
   id: string;
@@ -28,8 +28,8 @@ const LEAD_STAGES = [
   { value: 'new', label: 'Новый' },
   { value: 'contacted', label: 'Связались' },
   { value: 'qualified', label: 'Квалифицирован' },
-  { value: 'trial_booked', label: 'Записан на пробное' },
-  { value: 'attended', label: 'Посетил' },
+  { value: 'trial_booked', label: 'Записан на диагностику' },
+  { value: 'attended', label: 'Диагностика проведена' },
   { value: 'won', label: 'Выигран' },
   { value: 'lost', label: 'Потерян' },
 ];
@@ -104,6 +104,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
         method,
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         body: JSON.stringify(payload),
       });
@@ -286,7 +287,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
                 value={formData.utmTerm}
                 onChange={(e) => setFormData({ ...formData, utmTerm: e.target.value })}
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-                placeholder="логопед караганда"
+                placeholder="автомастерская караганда"
               />
             </div>
           </div>

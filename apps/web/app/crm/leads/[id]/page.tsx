@@ -36,8 +36,8 @@ const STAGE_LABELS: Record<string, string> = {
   new: 'Новый',
   contacted: 'Связались',
   qualified: 'Квалифицирован',
-  trial_booked: 'Записан на пробное',
-  attended: 'Посетил',
+  trial_booked: 'Записан на диагностику',
+  attended: 'Диагностика проведена',
   won: 'Выигран',
   lost: 'Потерян',
 };

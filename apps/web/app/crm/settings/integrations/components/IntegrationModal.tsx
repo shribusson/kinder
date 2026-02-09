@@ -67,7 +67,7 @@ export default function IntegrationModal({ integration, isOpen, onClose, onSucce
         };
       } else if (formData.channel === 'whatsapp') {
         credentials = {
-          phoneId: formData.wabaPhoneId,
+          phoneNumberId: formData.wabaPhoneId,
           accessToken: formData.wabaAccessToken,
           webhookVerifyToken: formData.wabaWebhookVerifyToken,
         };
@@ -85,7 +85,7 @@ export default function IntegrationModal({ integration, isOpen, onClose, onSucce
         };
       }
 
-      // For simplicity, we'll store credentials as JSON string (in production, encrypt them!)
+      // Backend will encrypt credentials automatically
       const credentialsEncrypted = JSON.stringify(credentials);
 
       const url = integration

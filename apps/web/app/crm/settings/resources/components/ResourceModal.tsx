@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import Modal from '@/app/components/Modal';
-import { apiBaseUrl } from '@/app/lib/api';
+import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
 
 interface Resource {
   id: string;
@@ -11,6 +11,7 @@ interface Resource {
   type: 'specialist' | 'room' | 'equipment';
   email?: string;
   phone?: string;
+  hourlyRate?: number;
   isActive: boolean;
   workingHours?: Record<string, any>;
 }
@@ -34,7 +35,10 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
     type: resource?.type || 'specialist',
     email: resource?.email || '',
     phone: resource?.phone || '',
+    hourlyRate: resource?.hourlyRate || 0,
     isActive: resource?.isActive ?? true,
+    createUser: false,
+    userPassword: '',
   });
 
   const [loading, setLoading] = useState(false);
@@ -65,11 +69,15 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
 
       if (formData.email) payload.email = formData.email;
       if (formData.phone) payload.phone = formData.phone;
+      if (formData.type === 'specialist' && formData.hourlyRate) {
+        payload.hourlyRate = formData.hourlyRate;
+      }
 
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         body: JSON.stringify(payload),
       });
@@ -79,7 +87,44 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
         throw new Error(errorData.message || 'Ошибка сохранения');
       }
 
-      toast.success(resource ? 'Ресурс успешно обновлен!' : 'Ресурс успешно создан!');
+      // Create user account if requested (only for new specialists)
+      if (!resource && formData.type === 'specialist' && formData.createUser && formData.email) {
+        try {
+          const [firstName, ...lastNameParts] = formData.name.split(' ');
+          const lastName = lastNameParts.join(' ') || firstName;
+
+          const userResponse = await fetch(`${apiBaseUrl}/auth/register`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...getAuthHeaders(),
+            },
+            body: JSON.stringify({
+              email: formData.email,
+              password: formData.userPassword,
+              firstName,
+              lastName,
+              phone: formData.phone,
+              role: 'mechanic',
+              accountId,
+            }),
+          });
+
+          if (!userResponse.ok) {
+            const errorData = await userResponse.json().catch(() => ({}));
+            console.error('Failed to create user:', errorData);
+            toast.error('Ресурс создан, но не удалось создать учётную запись');
+          } else {
+            toast.success('Ресурс и учётная запись успешно созданы!');
+          }
+        } catch (userError) {
+          console.error('Error creating user:', userError);
+          toast.error('Ресурс создан, но не удалось создать учётную запись');
+        }
+      } else {
+        toast.success(resource ? 'Ресурс успешно обновлен!' : 'Ресурс успешно создан!');
+      }
+
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -111,7 +156,7 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-            placeholder="Логопед Айгуль"
+            placeholder="Мастер Виктор"
           />
         </div>
 
@@ -165,6 +210,69 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
               placeholder="+7 (XXX) XXX-XX-XX"
             />
+          </div>
+        )}
+
+        {/* Hourly Rate (for specialists) */}
+        {formData.type === 'specialist' && (
+          <div>
+            <label htmlFor="hourlyRate" className="block text-sm font-medium text-slate-700 mb-1">
+              Цена/час (₸) *
+            </label>
+            <input
+              id="hourlyRate"
+              type="number"
+              value={formData.hourlyRate}
+              onChange={(e) => setFormData({ ...formData, hourlyRate: Number(e.target.value) })}
+              onInput={(e) => {
+                const target = e.target as HTMLInputElement;
+                target.value = target.value.replace(/^0+(?=\d)/, '');
+              }}
+              required
+              min="0"
+              step="100"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              placeholder="5000"
+            />
+          </div>
+        )}
+
+        {/* Create User Account (for new specialists only) */}
+        {!resource && formData.type === 'specialist' && formData.email && (
+          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 space-y-3">
+            <div className="flex items-center gap-3">
+              <input
+                id="createUser"
+                type="checkbox"
+                checked={formData.createUser}
+                onChange={(e) => setFormData({ ...formData, createUser: e.target.checked })}
+                className="w-4 h-4 text-blue-600 bg-slate-100 border-slate-300 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              <label htmlFor="createUser" className="text-sm font-medium text-blue-900">
+                Создать учётную запись для входа в систему
+              </label>
+            </div>
+
+            {formData.createUser && (
+              <div>
+                <label htmlFor="userPassword" className="block text-sm font-medium text-blue-900 mb-1">
+                  Пароль для входа *
+                </label>
+                <input
+                  id="userPassword"
+                  type="password"
+                  value={formData.userPassword}
+                  onChange={(e) => setFormData({ ...formData, userPassword: e.target.value })}
+                  required={formData.createUser}
+                  minLength={6}
+                  className="w-full rounded-lg border border-blue-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  placeholder="Минимум 6 символов"
+                />
+                <p className="text-xs text-blue-700 mt-1">
+                  Email: {formData.email}, роль: Механик
+                </p>
+              </div>
+            )}
           </div>
         )}
 

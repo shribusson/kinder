@@ -29,10 +29,16 @@ function LoginForm() {
         throw new Error(data.message || "Неверный email или пароль");
       }
 
-      const { access_token } = await response.json();
+      const data = await response.json();
+      const { accessToken, user } = data;
 
       // Сохраняем токен в cookie
-      document.cookie = `auth_token=${access_token}; path=/; max-age=86400`; // 24 часа
+      document.cookie = `auth_token=${accessToken}; path=/; max-age=86400`; // 24 часа
+
+      // Сохраняем accountId в localStorage
+      if (user?.accountId) {
+        localStorage.setItem('accountId', user.accountId);
+      }
 
       // Редирект на исходную страницу или дашборд
       const redirect = searchParams.get("redirect") || "/crm";

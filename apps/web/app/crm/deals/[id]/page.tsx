@@ -1,8 +1,10 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { IconArrowLeft, IconUser, IconCurrencyTenge } from '@tabler/icons-react';
+import { IconArrowLeft, IconUser, IconCurrencyTenge, IconCar } from '@tabler/icons-react';
 import { fetchJson } from '@/app/lib/api';
 import DealDetailActions from './components/DealDetailActions';
+import { WorkOrderSection } from './components/WorkOrderSection';
+import VehicleHistorySection from './components/VehicleHistorySection';
 
 interface Deal {
   id: string;
@@ -11,6 +13,8 @@ interface Deal {
   stage: string;
   amount: number;
   revenue?: number;
+  metadata?: Record<string, any>;
+  vehicleId?: string;
   createdAt: string;
   updatedAt: string;
   lead?: {
@@ -19,16 +23,43 @@ interface Deal {
     phone?: string;
     email?: string;
   };
+  vehicle?: {
+    id: string;
+    brandId: string;
+    modelId: string;
+    year?: number;
+    vin?: string;
+    licensePlate?: string;
+    color?: string;
+    mileage?: number;
+    brand?: {
+      id: string;
+      name: string;
+      cyrillicName?: string;
+    };
+    model?: {
+      id: string;
+      name: string;
+      cyrillicName?: string;
+      class?: string;
+    };
+  };
+  workOrder?: {
+    id: string;
+    orderNumber: number;
+    generatedAt: string;
+    pdfUrl: string;
+    customerName: string;
+  };
 }
 
 const STAGE_LABELS: Record<string, string> = {
-  new: 'Новая',
-  contacted: 'Контакт установлен',
-  qualified: 'Квалифицирована',
-  trial_booked: 'Записан на пробное',
-  attended: 'Посетил',
-  won: 'Выиграна',
-  lost: 'Проиграна',
+  diagnostics: 'На диагностике',
+  planned: 'Запланирована',
+  in_progress: 'В работе',
+  ready: 'Готова',
+  closed: 'Закрыта',
+  cancelled: 'Отменена',
 };
 
 export default async function DealDetailPage({ params }: { params: { id: string } }) {
@@ -126,12 +157,87 @@ export default async function DealDetailPage({ params }: { params: { id: string 
             </div>
           )}
 
+          {/* Vehicle Information */}
+          {deal.vehicle && (
+            <div className="card">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <IconCar size={20} className="text-slate-400" />
+                Автомобиль
+              </h2>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-bold text-lg">
+                    {(deal.vehicle.brand?.cyrillicName || deal.vehicle.brand?.name || '?')[0]}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-slate-900 text-base mb-1">
+                      {deal.vehicle.brand?.cyrillicName || deal.vehicle.brand?.name} {deal.vehicle.model?.cyrillicName || deal.vehicle.model?.name}
+                    </div>
+                    <div className="text-sm text-slate-600 space-y-0.5">
+                      {deal.vehicle.year && <div>Год: {deal.vehicle.year}</div>}
+                      {deal.vehicle.licensePlate && (
+                        <div className="font-mono font-medium text-slate-700">
+                          {deal.vehicle.licensePlate}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <dl className="grid grid-cols-2 gap-3 text-sm">
+                  {deal.vehicle.vin && (
+                    <div className="col-span-2">
+                      <dt className="text-xs text-slate-500 mb-1">VIN</dt>
+                      <dd className="font-mono text-xs text-slate-900 bg-slate-100 px-2 py-1 rounded">
+                        {deal.vehicle.vin}
+                      </dd>
+                    </div>
+                  )}
+                  {deal.vehicle.color && (
+                    <div>
+                      <dt className="text-xs text-slate-500 mb-1">Цвет</dt>
+                      <dd className="font-medium text-slate-900">{deal.vehicle.color}</dd>
+                    </div>
+                  )}
+                  {deal.vehicle.mileage && (
+                    <div>
+                      <dt className="text-xs text-slate-500 mb-1">Пробег</dt>
+                      <dd className="font-medium text-slate-900">
+                        {deal.vehicle.mileage.toLocaleString('ru-RU')} км
+                      </dd>
+                    </div>
+                  )}
+                  {deal.vehicle.model?.class && (
+                    <div>
+                      <dt className="text-xs text-slate-500 mb-1">Класс</dt>
+                      <dd className="font-medium text-slate-900">{deal.vehicle.model.class}</dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+
+              {/* Vehicle History Section */}
+              {deal.vehicleId && <VehicleHistorySection vehicleId={deal.vehicleId} />}
+            </div>
+          )}
+
           {/* Activity History Placeholder */}
           <div className="card">
             <h2 className="text-lg font-semibold text-slate-900 mb-4">История активности</h2>
             <p className="text-sm text-slate-500">
               Скоро здесь появится история изменений и взаимодействий
             </p>
+          </div>
+
+          {/* Work Order Section */}
+          <div className="card">
+            <WorkOrderSection
+              dealId={deal.id}
+              customerName={deal.lead?.name || ''}
+              carModel={(deal.metadata as any)?.carModel}
+              licensePlate={(deal.metadata as any)?.licensePlate}
+              workOrder={deal.workOrder}
+            />
           </div>
         </div>
 
@@ -145,13 +251,13 @@ export default async function DealDetailPage({ params }: { params: { id: string 
                 <dt className="text-xs text-slate-500 mb-1">Стадия</dt>
                 <dd>
                   <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
-                    deal.stage === 'won'
+                    deal.stage === 'closed'
                       ? 'bg-green-100 text-green-700'
-                      : deal.stage === 'lost'
+                      : deal.stage === 'cancelled'
                       ? 'bg-red-100 text-red-700'
-                      : deal.stage === 'new'
-                      ? 'bg-orange-100 text-orange-700'
-                      : deal.stage === 'attended'
+                      : deal.stage === 'diagnostics'
+                      ? 'bg-indigo-100 text-indigo-700'
+                      : deal.stage === 'ready'
                       ? 'bg-teal-100 text-teal-700'
                       : 'bg-slate-100 text-slate-700'
                   }`}>
