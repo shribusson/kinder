@@ -16,6 +16,7 @@ export interface OutboundMessageJobData {
   mediaFileId?: string;
   mediaType?: 'image' | 'video' | 'audio' | 'document';
   recipient: string;
+  businessConnectionId?: string;
 }
 
 @Processor('outbound-messages')
@@ -102,7 +103,7 @@ export class OutboundMessageProcessor {
     const result = await this.telegramService.sendMessage(
       integrationId,
       data.recipient,
-      { text: data.content }
+      { text: data.content, businessConnectionId: data.businessConnectionId }
     );
 
     return {

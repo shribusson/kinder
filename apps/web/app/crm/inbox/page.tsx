@@ -14,6 +14,14 @@ interface Conversation {
   assignedToUserId?: string;
   lastMessageAt?: string;
   createdAt: string;
+  metadata?: {
+    chatId?: string;
+    businessConnectionId?: string;
+    conversationType?: string;
+    firstName?: string;
+    lastName?: string;
+    username?: string;
+  };
   lead?: {
     id: string;
     name: string;
@@ -249,8 +257,16 @@ export default function InboxPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <p className="font-medium text-slate-900 truncate">
-                      {conversation.lead?.name || "Без контакта"}
+                      {conversation.lead?.name
+                        || (conversation.metadata?.firstName
+                          ? `${conversation.metadata.firstName} ${conversation.metadata.lastName || ''}`.trim()
+                          : "Без контакта")}
                     </p>
+                    {conversation.metadata?.conversationType === "business" && (
+                      <span className="flex-shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                        Business
+                      </span>
+                    )}
                   </div>
                   <p className="text-sm text-slate-600 truncate">
                     {conversation.messages?.[0]?.content || "Нет сообщений"}

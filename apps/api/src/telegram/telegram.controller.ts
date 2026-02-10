@@ -41,7 +41,44 @@ export class TelegramController {
       throw new BadRequestException('Invalid integration');
     }
 
-    // Process webhook asynchronously
+    // Handle business-specific updates before Telegraf (unsupported by @telegraf/types)
+    if (update.business_connection) {
+      await this.telegramService.handleBusinessConnection(
+        integrationId,
+        integration.accountId,
+        update.business_connection,
+      );
+      return { ok: true };
+    }
+
+    if (update.business_message) {
+      await this.telegramService.handleBusinessMessage(
+        integrationId,
+        integration.accountId,
+        update.business_message,
+      );
+      return { ok: true };
+    }
+
+    if (update.edited_business_message) {
+      await this.telegramService.handleEditedBusinessMessage(
+        integrationId,
+        integration.accountId,
+        update.edited_business_message,
+      );
+      return { ok: true };
+    }
+
+    if (update.deleted_business_messages) {
+      await this.telegramService.handleDeletedBusinessMessages(
+        integrationId,
+        integration.accountId,
+        update.deleted_business_messages,
+      );
+      return { ok: true };
+    }
+
+    // Regular bot updates go through Telegraf
     await this.telegramService.processWebhook(integrationId, update);
 
     return { ok: true };
