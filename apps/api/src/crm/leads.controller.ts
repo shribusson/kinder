@@ -14,18 +14,29 @@ export class LeadsController {
     private prisma: PrismaService,
   ) {}
 
+  private async getAccountId(req: AuthenticatedRequest): Promise<string> {
+    const membership = await this.prisma.membership.findFirst({
+      where: { userId: req.user.sub },
+    });
+    if (!membership) throw new Error('No account');
+    return membership.accountId;
+  }
+
   @Get()
-  list(
+  async list(
+    @Req() req: AuthenticatedRequest,
     @Query("q") search?: string,
     @Query("source") source?: string,
     @Query("stage") stage?: string
   ) {
-    return this.crm.listLeads(search, source, stage as never);
+    const accountId = await this.getAccountId(req);
+    return this.crm.listLeads(accountId, search, source, stage as never);
   }
 
   @Get("export")
-  async export(@Res() res: Response) {
-    const leads = await this.crm.listLeads();
+  async export(@Req() req: AuthenticatedRequest, @Res() res: Response) {
+    const accountId = await this.getAccountId(req);
+    const leads = await this.crm.listLeads(accountId);
     const csv = toCsv(
       leads.map((lead) => ({
         id: lead.id,

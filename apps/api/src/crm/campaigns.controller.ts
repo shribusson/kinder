@@ -12,9 +12,18 @@ export class CampaignsController {
     private prisma: PrismaService,
   ) {}
 
+  private async getAccountId(req: AuthenticatedRequest): Promise<string> {
+    const membership = await this.prisma.membership.findFirst({
+      where: { userId: req.user.sub },
+    });
+    if (!membership) throw new Error('No account');
+    return membership.accountId;
+  }
+
   @Get()
-  list() {
-    return this.crm.listCampaigns();
+  async list(@Req() req: AuthenticatedRequest) {
+    const accountId = await this.getAccountId(req);
+    return this.crm.listCampaigns(accountId);
   }
 
   @Post()

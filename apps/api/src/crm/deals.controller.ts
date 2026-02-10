@@ -14,14 +14,24 @@ export class DealsController {
     private prisma: PrismaService,
   ) {}
 
+  private async getAccountId(req: AuthenticatedRequest): Promise<string> {
+    const membership = await this.prisma.membership.findFirst({
+      where: { userId: req.user.sub },
+    });
+    if (!membership) throw new Error('No account');
+    return membership.accountId;
+  }
+
   @Get()
-  list(@Query("q") search?: string, @Query("stage") stage?: string) {
-    return this.crm.listDeals(search, stage as never);
+  async list(@Req() req: AuthenticatedRequest, @Query("q") search?: string, @Query("stage") stage?: string) {
+    const accountId = await this.getAccountId(req);
+    return this.crm.listDeals(accountId, search, stage as never);
   }
 
   @Get("export")
-  async export(@Res() res: Response) {
-    const deals = await this.crm.listDeals();
+  async export(@Req() req: AuthenticatedRequest, @Res() res: Response) {
+    const accountId = await this.getAccountId(req);
+    const deals = await this.crm.listDeals(accountId);
     const csv = toCsv(
       deals.map((deal) => ({
         id: deal.id,

@@ -13,9 +13,10 @@ export class CrmService {
     @InjectQueue(QUEUE_NAMES.WEBHOOKS) private webhooksQueue: Queue<WebhookJobData>,
   ) {}
 
-  async listLeads(search?: string, source?: string, stage?: LeadStage) {
+  async listLeads(accountId: string, search?: string, source?: string, stage?: LeadStage) {
     return this.prisma.lead.findMany({
       where: {
+        accountId,
         source: source || undefined,
         stage: stage || undefined,
         OR: search
@@ -66,9 +67,10 @@ export class CrmService {
     return lead;
   }
 
-  async listDeals(search?: string, stage?: DealStage) {
+  async listDeals(accountId: string, search?: string, stage?: DealStage) {
     return this.prisma.deal.findMany({
       where: {
+        accountId,
         stage: stage || undefined,
         OR: search
           ? [{ title: { contains: search, mode: "insensitive" } }]
@@ -172,8 +174,9 @@ export class CrmService {
     return deal;
   }
 
-  async listBookings() {
+  async listBookings(accountId: string) {
     return this.prisma.booking.findMany({
+      where: { accountId },
       orderBy: { scheduledAt: "asc" }
     });
   }
@@ -206,8 +209,9 @@ export class CrmService {
     return booking;
   }
 
-  async listCampaigns() {
+  async listCampaigns(accountId: string) {
     return this.prisma.campaign.findMany({
+      where: { accountId },
       orderBy: { createdAt: "desc" }
     });
   }
@@ -240,12 +244,13 @@ export class CrmService {
     return campaign;
   }
 
-  async analyticsSummary() {
-    const leads = await this.prisma.lead.count();
-    const deals = await this.prisma.deal.findMany();
+  async analyticsSummary(accountId: string) {
+    const leads = await this.prisma.lead.count({ where: { accountId } });
+    const deals = await this.prisma.deal.findMany({ where: { accountId } });
     const revenue = deals.reduce((sum, deal) => sum + (deal.revenue ?? deal.amount), 0);
     const avgCheck = deals.length ? Math.round(revenue / deals.length) : 0;
     const plan = await this.prisma.salesPlan.findFirst({
+      where: { accountId },
       orderBy: { createdAt: "desc" }
     });
 
@@ -258,9 +263,10 @@ export class CrmService {
     };
   }
 
-  async utmReport() {
+  async utmReport(accountId: string) {
     const grouped = await this.prisma.lead.groupBy({
       by: ["utmSource", "utmMedium"],
+      where: { accountId },
       _count: { _all: true }
     });
     return grouped.map((row) => ({
