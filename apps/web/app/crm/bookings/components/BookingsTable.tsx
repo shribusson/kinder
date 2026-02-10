@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { IconEdit, IconTrash, IconCalendar } from '@tabler/icons-react';
 import BookingModal from './BookingModal';
@@ -48,6 +48,10 @@ export default function BookingsTable({ initialBookings }: BookingsTableProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | undefined>();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    refreshBookings();
+  }, []);
 
   const refreshBookings = async () => {
     try {

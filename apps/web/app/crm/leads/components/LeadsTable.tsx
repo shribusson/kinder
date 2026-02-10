@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { IconEdit, IconTrash } from '@tabler/icons-react';
@@ -51,6 +51,10 @@ export default function LeadsTable({ initialLeads }: LeadsTableProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | undefined>();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    refreshLeads();
+  }, []);
 
   const refreshLeads = async () => {
     try {

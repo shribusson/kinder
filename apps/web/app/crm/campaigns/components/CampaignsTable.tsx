@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { IconEdit, IconTrash, IconTrendingUp, IconPlus } from '@tabler/icons-react';
 import CampaignModal from './CampaignModal';
 import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
@@ -36,6 +36,10 @@ export default function CampaignsTable({ initialCampaigns }: CampaignsTableProps
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | undefined>();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    refreshCampaigns();
+  }, []);
 
   const refreshCampaigns = async () => {
     try {

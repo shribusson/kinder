@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { DndContext, closestCenter, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -113,6 +113,10 @@ export default function DealsKanban({ initialDeals }: DealsKanbanProps) {
     acc[stage.value] = deals.filter(deal => deal.stage === stage.value);
     return acc;
   }, {});
+
+  useEffect(() => {
+    refreshDeals();
+  }, []);
 
   const refreshDeals = async () => {
     try {

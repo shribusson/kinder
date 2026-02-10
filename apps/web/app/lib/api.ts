@@ -8,12 +8,20 @@ export const apiBaseUrl =
 
 export function getAuthHeaders(): Record<string, string> {
   if (typeof window === "undefined") {
+    try {
+      const { cookies } = require('next/headers');
+      const cookieStore = cookies();
+      const authToken = cookieStore.get('auth_token');
+      if (authToken?.value) {
+        return { Authorization: `Bearer ${authToken.value}` };
+      }
+    } catch {}
     return {};
   }
 
   try {
-    const cookies = document.cookie.split(';');
-    const authCookie = cookies.find(c => c.trim().startsWith('auth_token='));
+    const allCookies = document.cookie.split(';');
+    const authCookie = allCookies.find(c => c.trim().startsWith('auth_token='));
     const token = authCookie?.split('=')[1];
 
     if (!token || token === 'undefined') {
