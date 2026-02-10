@@ -121,7 +121,7 @@ export function UserModal({ user, onClose }: UserModalProps) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">
-              Email <span className="text-red-500">*</span>
+              Email
             </label>
             <input
               type="email"
@@ -130,7 +130,6 @@ export function UserModal({ user, onClose }: UserModalProps) {
                 setFormData({ ...formData, email: e.target.value })
               }
               disabled={!!user}
-              required
               className="w-full px-3 py-2 border rounded-md disabled:bg-gray-100"
             />
           </div>
