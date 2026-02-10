@@ -16,7 +16,7 @@ import { CrmService } from "./crm.service";
 import { Roles } from "../common/roles.decorator";
 import { PrismaService } from "../prisma.service";
 import { AuthenticatedRequest } from "../common/types/request.types";
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
 
 export class CreateResourceDto {
   @IsString()

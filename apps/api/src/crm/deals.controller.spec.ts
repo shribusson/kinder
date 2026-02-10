@@ -39,6 +39,8 @@ describe('DealsController', () => {
     accountId: 'account-123',
   };
 
+  const mockReq = { user: { sub: 'user-123' } } as any;
+
   beforeEach(async () => {
     crmService = {
       listDeals: jest.fn().mockResolvedValue([mockDeal]),
@@ -68,22 +70,22 @@ describe('DealsController', () => {
 
   describe('list', () => {
     it('should return list of deals', async () => {
-      const result = await controller.list();
+      const result = await controller.list(mockReq);
 
       expect(result).toEqual([mockDeal]);
-      expect(crmService.listDeals).toHaveBeenCalledWith(undefined, undefined);
+      expect(crmService.listDeals).toHaveBeenCalledWith('account-123', undefined, undefined);
     });
 
     it('should filter by search query', async () => {
-      await controller.list('test');
+      await controller.list(mockReq, 'test');
 
-      expect(crmService.listDeals).toHaveBeenCalledWith('test', undefined);
+      expect(crmService.listDeals).toHaveBeenCalledWith('account-123', 'test', undefined);
     });
 
     it('should filter by stage', async () => {
-      await controller.list(undefined, 'won');
+      await controller.list(mockReq, undefined, 'won');
 
-      expect(crmService.listDeals).toHaveBeenCalledWith(undefined, 'won');
+      expect(crmService.listDeals).toHaveBeenCalledWith('account-123', undefined, 'won');
     });
   });
 
@@ -94,7 +96,7 @@ describe('DealsController', () => {
         send: jest.fn(),
       };
 
-      await controller.export(mockRes as any);
+      await controller.export(mockReq, mockRes as any);
 
       expect(mockRes.setHeader).toHaveBeenCalledWith('Content-Type', 'text/csv');
       expect(mockRes.setHeader).toHaveBeenCalledWith(
@@ -107,14 +109,13 @@ describe('DealsController', () => {
 
   describe('create', () => {
     it('should create a new deal', async () => {
-      const req = { user: { sub: 'user-123' } };
       const payload = {
         leadId: 'lead-123',
         title: 'New Deal',
         amount: 75000,
       };
 
-      const result = await controller.create(payload, req as any);
+      const result = await controller.create(payload, mockReq);
 
       expect(result).toEqual(mockDeal);
       expect(crmService.createDeal).toHaveBeenCalledWith({
@@ -126,14 +127,13 @@ describe('DealsController', () => {
     it('should throw error when no membership found', async () => {
       prismaService.membership.findFirst.mockResolvedValue(null);
 
-      const req = { user: { sub: 'user-123' } };
       const payload = {
         leadId: 'lead-123',
         title: 'New Deal',
         amount: 50000,
       };
 
-      await expect(controller.create(payload, req as any)).rejects.toThrow('No account');
+      await expect(controller.create(payload, mockReq)).rejects.toThrow('No account');
     });
   });
 });

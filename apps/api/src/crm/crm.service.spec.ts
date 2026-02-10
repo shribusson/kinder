@@ -114,7 +114,7 @@ describe('CrmService', () => {
       it('should return all leads', async () => {
         prismaService.lead.findMany.mockResolvedValue([mockLead]);
 
-        const result = await service.listLeads();
+        const result = await service.listLeads('account-123');
 
         expect(result).toEqual([mockLead]);
         expect(prismaService.lead.findMany).toHaveBeenCalled();
@@ -123,7 +123,7 @@ describe('CrmService', () => {
       it('should filter leads by search query', async () => {
         prismaService.lead.findMany.mockResolvedValue([mockLead]);
 
-        await service.listLeads('test');
+        await service.listLeads('account-123', 'test');
 
         const findManyCall = prismaService.lead.findMany.mock.calls[0][0];
         expect(findManyCall.where.OR).toBeDefined();
@@ -132,7 +132,7 @@ describe('CrmService', () => {
       it('should filter leads by source', async () => {
         prismaService.lead.findMany.mockResolvedValue([]);
 
-        await service.listLeads(undefined, 'website');
+        await service.listLeads('account-123', undefined, 'website');
 
         const findManyCall = prismaService.lead.findMany.mock.calls[0][0];
         expect(findManyCall.where.source).toBe('website');
@@ -141,7 +141,7 @@ describe('CrmService', () => {
       it('should filter leads by stage', async () => {
         prismaService.lead.findMany.mockResolvedValue([]);
 
-        await service.listLeads(undefined, undefined, LeadStage.qualified);
+        await service.listLeads('account-123', undefined, undefined, LeadStage.qualified);
 
         const findManyCall = prismaService.lead.findMany.mock.calls[0][0];
         expect(findManyCall.where.stage).toBe(LeadStage.qualified);
@@ -187,7 +187,7 @@ describe('CrmService', () => {
       it('should return all deals', async () => {
         prismaService.deal.findMany.mockResolvedValue([mockDeal]);
 
-        const result = await service.listDeals();
+        const result = await service.listDeals('account-123');
 
         expect(result).toEqual([mockDeal]);
       });
@@ -195,7 +195,7 @@ describe('CrmService', () => {
       it('should filter deals by search query', async () => {
         prismaService.deal.findMany.mockResolvedValue([]);
 
-        await service.listDeals('test');
+        await service.listDeals('account-123', 'test');
 
         const findManyCall = prismaService.deal.findMany.mock.calls[0][0];
         expect(findManyCall.where.OR).toBeDefined();
@@ -204,7 +204,7 @@ describe('CrmService', () => {
       it('should filter deals by stage', async () => {
         prismaService.deal.findMany.mockResolvedValue([]);
 
-        await service.listDeals(undefined, DealStage.closed);
+        await service.listDeals('account-123', undefined, DealStage.closed);
 
         const findManyCall = prismaService.deal.findMany.mock.calls[0][0];
         expect(findManyCall.where.stage).toBe(DealStage.closed);
@@ -250,10 +250,11 @@ describe('CrmService', () => {
       it('should return all bookings ordered by scheduledAt', async () => {
         prismaService.booking.findMany.mockResolvedValue([mockBooking]);
 
-        const result = await service.listBookings();
+        const result = await service.listBookings('account-123');
 
         expect(result).toEqual([mockBooking]);
         expect(prismaService.booking.findMany).toHaveBeenCalledWith({
+          where: { accountId: 'account-123' },
           orderBy: { scheduledAt: 'asc' },
         });
       });
@@ -285,10 +286,11 @@ describe('CrmService', () => {
         const mockCampaign = { id: 'camp-123', name: 'Test Campaign' };
         prismaService.campaign.findMany.mockResolvedValue([mockCampaign]);
 
-        const result = await service.listCampaigns();
+        const result = await service.listCampaigns('account-123');
 
         expect(result).toEqual([mockCampaign]);
         expect(prismaService.campaign.findMany).toHaveBeenCalledWith({
+          where: { accountId: 'account-123' },
           orderBy: { createdAt: 'desc' },
         });
       });

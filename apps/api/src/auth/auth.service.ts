@@ -6,7 +6,7 @@ import { User, UserRole } from '@prisma/client';
 
 export interface JwtPayload {
   sub: string;
-  email: string;
+  email: string | null;
   accountId: string | null;
   role: UserRole;
 }
@@ -16,7 +16,7 @@ export interface AuthResponse {
   refreshToken: string;
   user: {
     id: string;
-    email: string;
+    email: string | null;
     firstName: string;
     lastName: string;
     role: UserRole;
@@ -74,7 +74,7 @@ export class AuthService {
   }
 
   async register(data: {
-    email: string;
+    email?: string;
     password: string;
     firstName: string;
     lastName: string;
@@ -82,13 +82,15 @@ export class AuthService {
     locale?: string;
     role?: UserRole;
   }): Promise<AuthResponse> {
-    // Check if user already exists
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email: data.email },
-    });
+    // Check if user already exists (only if email provided)
+    if (data.email) {
+      const existingUser = await this.prisma.user.findUnique({
+        where: { email: data.email },
+      });
 
-    if (existingUser) {
-      throw new UnauthorizedException('User with this email already exists');
+      if (existingUser) {
+        throw new UnauthorizedException('User with this email already exists');
+      }
     }
 
     // Hash password
