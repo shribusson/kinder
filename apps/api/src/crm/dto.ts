@@ -95,6 +95,10 @@ export class CreateBookingDto {
   @MaxLength(200)
   specialist!: string;
 
+  @IsOptional()
+  @IsString()
+  resourceId?: string;
+
   @IsDateString({}, { message: 'Invalid date format' })
   @IsNotEmpty({ message: 'Scheduled date is required' })
   scheduledAt!: string;

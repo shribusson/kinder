@@ -155,6 +155,7 @@ export class ResourcesController {
           lastName: payload.name.split(' ').slice(1).join(' ') || 'Механик',
           phone: payload.phone,
           role: 'mechanic',
+          accountId: membership.accountId,
           isActive: true,
         },
       });
