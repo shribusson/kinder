@@ -11,12 +11,15 @@ const navItems = [
   { label: "Лиды", href: "/crm/leads", icon: "👥" },
   { label: "Сделки", href: "/crm/deals", icon: "🎯" },
   { label: "Записи", href: "/crm/bookings", icon: "📅" },
+  { label: "Автомобили", href: "/crm/vehicles", icon: "🚗" },
   { label: "Кампании", href: "/crm/campaigns", icon: "📢" },
   { label: "Аналитика", href: "/crm/analytics", icon: "📈" },
   { label: "Механик", href: "/crm/mechanic", icon: "🔧" }
 ];
 
 const settingsItems = [
+  { label: "Услуги", href: "/crm/settings/services", icon: "🛠️" },
+  { label: "Марки авто", href: "/crm/settings/vehicle-brands", icon: "🏭" },
   { label: "Интеграции", href: "/crm/settings/integrations", icon: "🔌" },
   { label: "План по выручке", href: "/crm/settings/revenue-plan", icon: "💰" },
   { label: "Ресурсы", href: "/crm/settings/resources", icon: "⚙️" },

@@ -3,6 +3,7 @@ import {
   IsOptional,
   IsNumber,
   IsNotEmpty,
+  IsBoolean,
   MaxLength,
   Min,
 } from "class-validator";
@@ -17,6 +18,27 @@ export class CreateServiceCategoryDto {
   @IsNotEmpty()
   @MaxLength(100)
   slug!: string;
+
+  @IsOptional()
+  @IsString()
+  icon?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  sortOrder?: number;
+}
+
+export class UpdateServiceCategoryDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  slug?: string;
 
   @IsOptional()
   @IsString()
@@ -59,4 +81,45 @@ export class CreateServiceDto {
   @IsNumber()
   @Min(0)
   sortOrder?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+}
+
+export class UpdateServiceDto {
+  @IsOptional()
+  @IsString()
+  categoryId?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  price?: number;
+
+  @IsOptional()
+  @IsString()
+  priceNote?: string;
+
+  @IsOptional()
+  @IsString()
+  unit?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  sortOrder?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }
