@@ -84,16 +84,82 @@ export class CrmService {
     title: string;
     stage?: DealStage;
     amount: number;
+    revenue?: number;
+    vehicleData?: {
+      brandId: string;
+      modelId: string;
+      year?: number;
+      vin?: string;
+      licensePlate?: string;
+      color?: string;
+      mileage?: number;
+    };
+    services?: Array<{ serviceId: string; quantity: number }>;
   }) {
+    // Create or find vehicle if vehicleData provided
+    let vehicleId: string | undefined;
+    if (data.vehicleData) {
+      const vd = data.vehicleData;
+      let existingVehicle = null;
+      if (vd.vin) {
+        existingVehicle = await this.prisma.vehicle.findUnique({
+          where: { accountId_vin: { accountId: data.accountId, vin: vd.vin } },
+        });
+      }
+      if (!existingVehicle && vd.licensePlate) {
+        existingVehicle = await this.prisma.vehicle.findUnique({
+          where: { accountId_licensePlate: { accountId: data.accountId, licensePlate: vd.licensePlate } },
+        });
+      }
+      if (existingVehicle) {
+        vehicleId = existingVehicle.id;
+      } else {
+        const newVehicle = await this.prisma.vehicle.create({
+          data: {
+            accountId: data.accountId,
+            brandId: vd.brandId,
+            modelId: vd.modelId,
+            year: vd.year,
+            vin: vd.vin || null,
+            licensePlate: vd.licensePlate || null,
+            color: vd.color || null,
+            mileage: vd.mileage,
+          },
+        });
+        vehicleId = newVehicle.id;
+      }
+    }
+
     const deal = await this.prisma.deal.create({
       data: {
         account: { connect: { id: data.accountId } },
         lead: { connect: { id: data.leadId } },
         title: data.title,
         stage: data.stage ?? DealStage.diagnostics,
-        amount: data.amount
+        amount: data.amount,
+        revenue: data.revenue,
+        ...(vehicleId ? { vehicle: { connect: { id: vehicleId } } } : {}),
       }
     });
+
+    // Create DealItems for selected services
+    if (data.services && data.services.length > 0) {
+      const serviceIds = data.services.map(s => s.serviceId);
+      const services = await this.prisma.service.findMany({
+        where: { id: { in: serviceIds } },
+      });
+      const serviceMap = new Map(services.map(s => [s.id, s]));
+
+      await this.prisma.dealItem.createMany({
+        data: data.services.map(item => ({
+          dealId: deal.id,
+          serviceId: item.serviceId,
+          quantity: item.quantity,
+          unitPrice: serviceMap.get(item.serviceId)?.price ?? 0,
+        })),
+      });
+    }
+
     await this.prisma.auditLog.create({
       data: {
         account: { connect: { id: data.accountId } },
@@ -382,11 +448,22 @@ export class CrmService {
       stage?: DealStage;
       amount?: number;
       revenue?: number;
+      vehicleData?: {
+        brandId: string;
+        modelId: string;
+        year?: number;
+        vin?: string;
+        licensePlate?: string;
+        color?: string;
+        mileage?: number;
+      };
+      services?: Array<{ serviceId: string; quantity: number }>;
     }
   ) {
+    const { vehicleData, services, ...dealData } = data;
     const deal = await this.prisma.deal.update({
       where: { id },
-      data
+      data: dealData
     });
     await this.prisma.auditLog.create({
       data: {
@@ -394,7 +471,7 @@ export class CrmService {
         action: "update",
         entity: "Deal",
         entityId: deal.id,
-        meta: { changes: data }
+        meta: { changes: dealData }
       }
     });
     return deal;

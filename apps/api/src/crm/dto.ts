@@ -9,6 +9,7 @@ import {
   IsEnum,
   IsDateString,
   IsObject,
+  IsArray,
   MaxLength,
   Matches,
   Min,
@@ -61,6 +62,27 @@ export class CreateDealDto {
   @IsNumber({}, { message: 'Amount must be a number' })
   @Min(0, { message: 'Amount must be positive' })
   amount!: number;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'Revenue must be a number' })
+  @Min(0, { message: 'Revenue must be positive' })
+  revenue?: number;
+
+  @IsOptional()
+  @IsObject()
+  vehicleData?: {
+    brandId: string;
+    modelId: string;
+    year?: number;
+    vin?: string;
+    licensePlate?: string;
+    color?: string;
+    mileage?: number;
+  };
+
+  @IsOptional()
+  @IsArray()
+  services?: Array<{ serviceId: string; quantity: number }>;
 }
 
 export class CreateBookingDto {
@@ -155,6 +177,22 @@ export class UpdateDealDto {
   @IsNumber({}, { message: 'Revenue must be a number' })
   @Min(0, { message: 'Revenue must be positive' })
   revenue?: number;
+
+  @IsOptional()
+  @IsObject()
+  vehicleData?: {
+    brandId: string;
+    modelId: string;
+    year?: number;
+    vin?: string;
+    licensePlate?: string;
+    color?: string;
+    mileage?: number;
+  };
+
+  @IsOptional()
+  @IsArray()
+  services?: Array<{ serviceId: string; quantity: number }>;
 }
 
 export class UpdateBookingDto {
