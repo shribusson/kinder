@@ -38,6 +38,7 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
     hourlyRate: resource?.hourlyRate || 0,
     isActive: resource?.isActive ?? true,
     createUser: false,
+    username: '',
     userPassword: '',
   });
 
@@ -69,6 +70,12 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
         payload.hourlyRate = formData.hourlyRate;
       }
 
+      // Передать данные для создания аккаунта механика
+      if (!resource && formData.type === 'specialist' && formData.createUser) {
+        payload.username = formData.username || formData.email;
+        payload.password = formData.userPassword;
+      }
+
       const response = await fetch(url, {
         method,
         headers: {
@@ -83,40 +90,8 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
         throw new Error(errorData.message || 'Ошибка сохранения');
       }
 
-      // Create user account if requested (only for new specialists)
-      if (!resource && formData.type === 'specialist' && formData.createUser && formData.email) {
-        try {
-          const [firstName, ...lastNameParts] = formData.name.split(' ');
-          const lastName = lastNameParts.join(' ') || firstName;
-
-          const userResponse = await fetch(`${apiBaseUrl}/auth/register`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...getAuthHeaders(),
-            },
-            body: JSON.stringify({
-              email: formData.email,
-              password: formData.userPassword,
-              firstName,
-              lastName,
-              phone: formData.phone,
-              role: 'mechanic',
-              accountId,
-            }),
-          });
-
-          if (!userResponse.ok) {
-            const errorData = await userResponse.json().catch(() => ({}));
-            console.error('Failed to create user:', errorData);
-            toast.error('Ресурс создан, но не удалось создать учётную запись');
-          } else {
-            toast.success('Ресурс и учётная запись успешно созданы!');
-          }
-        } catch (userError) {
-          console.error('Error creating user:', userError);
-          toast.error('Ресурс создан, но не удалось создать учётную запись');
-        }
+      if (!resource && formData.type === 'specialist' && formData.createUser) {
+        toast.success('Ресурс и учётная запись механика успешно созданы!');
       } else {
         toast.success(resource ? 'Ресурс успешно обновлен!' : 'Ресурс успешно создан!');
       }
@@ -234,7 +209,7 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
         )}
 
         {/* Create User Account (for new specialists only) */}
-        {!resource && formData.type === 'specialist' && formData.email && (
+        {!resource && formData.type === 'specialist' && (
           <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 space-y-3">
             <div className="flex items-center gap-3">
               <input
@@ -250,23 +225,42 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
             </div>
 
             {formData.createUser && (
-              <div>
-                <label htmlFor="userPassword" className="block text-sm font-medium text-blue-900 mb-1">
-                  Пароль для входа *
-                </label>
-                <input
-                  id="userPassword"
-                  type="password"
-                  value={formData.userPassword}
-                  onChange={(e) => setFormData({ ...formData, userPassword: e.target.value })}
-                  required={formData.createUser}
-                  minLength={6}
-                  className="w-full rounded-lg border border-blue-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                  placeholder="Минимум 6 символов"
-                />
-                <p className="text-xs text-blue-700 mt-1">
-                  Email: {formData.email}, роль: Механик
-                </p>
+              <div className="space-y-3">
+                <div>
+                  <label htmlFor="username" className="block text-sm font-medium text-blue-900 mb-1">
+                    Логин *
+                  </label>
+                  <input
+                    id="username"
+                    type="text"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    required={formData.createUser}
+                    className="w-full rounded-lg border border-blue-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    placeholder={formData.email || "ivanov_mechanic"}
+                  />
+                  <p className="text-xs text-blue-700 mt-1">
+                    {formData.email ? `По умолчанию: ${formData.email}` : 'Введите логин для входа'}
+                  </p>
+                </div>
+                <div>
+                  <label htmlFor="userPassword" className="block text-sm font-medium text-blue-900 mb-1">
+                    Пароль для входа *
+                  </label>
+                  <input
+                    id="userPassword"
+                    type="password"
+                    value={formData.userPassword}
+                    onChange={(e) => setFormData({ ...formData, userPassword: e.target.value })}
+                    required={formData.createUser}
+                    minLength={6}
+                    className="w-full rounded-lg border border-blue-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    placeholder="Минимум 6 символов"
+                  />
+                  <p className="text-xs text-blue-700 mt-1">
+                    Роль: Механик
+                  </p>
+                </div>
               </div>
             )}
           </div>

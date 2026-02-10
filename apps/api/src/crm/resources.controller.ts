@@ -8,6 +8,7 @@ import {
   IsNumber,
   IsBoolean,
   Min,
+  MinLength,
   MaxLength,
   Matches,
 } from 'class-validator';
@@ -15,6 +16,7 @@ import { CrmService } from "./crm.service";
 import { Roles } from "../common/roles.decorator";
 import { PrismaService } from "../prisma.service";
 import { AuthenticatedRequest } from "../common/types/request.types";
+import * as bcrypt from 'bcryptjs';
 
 export class CreateResourceDto {
   @IsString()
@@ -46,6 +48,18 @@ export class CreateResourceDto {
 
   @IsOptional()
   workingHours?: Record<string, unknown>;
+
+  // Поля для создания аккаунта механика (только для type === 'specialist')
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  username?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(6, { message: 'Password must be at least 6 characters' })
+  @MaxLength(100)
+  password?: string;
 }
 
 export class UpdateResourceDto {
@@ -128,6 +142,33 @@ export class ResourcesController {
         workingHours: payload.workingHours as any,
       }
     });
+
+    // Автоматически создать аккаунт механика для specialist
+    if (payload.type === 'specialist' && payload.username && payload.password) {
+      const passwordHash = await bcrypt.hash(payload.password, 10);
+
+      const user = await this.prisma.user.create({
+        data: {
+          email: payload.email, // может быть null
+          passwordHash,
+          firstName: payload.name.split(' ')[0] || payload.name,
+          lastName: payload.name.split(' ').slice(1).join(' ') || 'Механик',
+          phone: payload.phone,
+          role: 'mechanic',
+          isActive: true,
+        },
+      });
+
+      // Создать Membership для связи user с account
+      await this.prisma.membership.create({
+        data: {
+          userId: user.id,
+          accountId: membership.accountId,
+          role: 'mechanic',
+          permissions: {},
+        },
+      });
+    }
 
     await this.prisma.auditLog.create({
       data: {
