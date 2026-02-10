@@ -10,18 +10,41 @@ import { User } from '@prisma/client';
 export class MechanicService {
   constructor(private prisma: PrismaService) {}
 
-  async getResourceIdForUser(user: User): Promise<string | null> {
-    if (!user.accountId) return null;
-    const resource = await this.prisma.resource.findFirst({
-      where: {
-        accountId: user.accountId,
-        email: user.email,
-        type: 'specialist',
-        isActive: true,
-      },
-      select: { id: true },
-    });
-    return resource?.id || null;
+  async getResourceIdForUser(user: any): Promise<string | null> {
+    let accountId = user.accountId;
+    if (!accountId) {
+      const membership = await this.prisma.membership.findFirst({
+        where: { userId: user.sub || user.id },
+      });
+      if (!membership) return null;
+      accountId = membership.accountId;
+    }
+
+    // Try to find resource matching user's email
+    if (user.email) {
+      const resource = await this.prisma.resource.findFirst({
+        where: {
+          accountId,
+          email: user.email,
+          type: 'specialist',
+          isActive: true,
+        },
+        select: { id: true },
+      });
+      if (resource) return resource.id;
+    }
+
+    // For admin/manager: fall back to first specialist in account
+    const role = user.role;
+    if (role === 'admin' || role === 'superadmin' || role === 'manager') {
+      const firstSpecialist = await this.prisma.resource.findFirst({
+        where: { accountId, type: 'specialist', isActive: true },
+        select: { id: true },
+      });
+      return firstSpecialist?.id || null;
+    }
+
+    return null;
   }
 
   async getDashboard(resourceId: string, accountId: string) {
