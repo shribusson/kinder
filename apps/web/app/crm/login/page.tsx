@@ -30,10 +30,11 @@ function LoginForm() {
       }
 
       const data = await response.json();
-      const { accessToken, user } = data;
+      const { accessToken, refreshToken, user } = data;
 
-      // Сохраняем токен в cookie
-      document.cookie = `auth_token=${accessToken}; path=/; max-age=86400`; // 24 часа
+      // Сохраняем токены в cookie (7 дней)
+      document.cookie = `auth_token=${accessToken}; path=/; max-age=604800`;
+      document.cookie = `refresh_token=${refreshToken}; path=/; max-age=604800`;
 
       // Сохраняем accountId в localStorage
       if (user?.accountId) {
