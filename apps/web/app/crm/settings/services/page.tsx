@@ -62,9 +62,7 @@ export default function ServicesSettingsPage() {
       if (res.ok) {
         const data = await res.json();
         setCategories(data);
-        if (data.length > 0 && expandedCategories.size === 0) {
-          setExpandedCategories(new Set(data.map((c: ServiceCategory) => c.id)));
-        }
+        // Categories start collapsed by default
       }
     } catch (e) {
       console.error('Failed to fetch categories:', e);
