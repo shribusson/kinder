@@ -242,6 +242,7 @@ model User {
   orders             Order[]
   accessGrants       AccessGrant[]
   serviceHistory     ServiceHistory[]
+  resource           Resource?
 
   @@index([email])
   @@index([accountId])
@@ -401,6 +402,7 @@ model Campaign {
 model Resource {
   id          String       @id @default(uuid())
   accountId   String
+  userId      String?      @unique
   name        String
   type        ResourceType
   email       String?
@@ -413,6 +415,7 @@ model Resource {
   updatedAt   DateTime     @updatedAt
 
   account       Account      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  user          User?        @relation(fields: [userId], references: [id])
   bookings      Booking[]
   assignedDeals Deal[]       @relation("AssignedDeals")
   timeEntries   TimeEntry[]

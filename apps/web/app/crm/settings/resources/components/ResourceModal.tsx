@@ -14,6 +14,8 @@ interface Resource {
   hourlyRate?: number;
   isActive: boolean;
   workingHours?: Record<string, any>;
+  userId?: string;
+  user?: { id: string; email: string; firstName: string; lastName: string; role: string; isActive: boolean } | null;
 }
 
 interface ResourceModalProps {
@@ -71,7 +73,7 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
       }
 
       // Передать данные для создания аккаунта механика
-      if (!resource && formData.type === 'specialist' && formData.createUser) {
+      if (formData.type === 'specialist' && formData.createUser && (!resource || !resource.user)) {
         payload.username = formData.username || formData.email;
         payload.password = formData.userPassword;
       }
@@ -208,8 +210,18 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
           </div>
         )}
 
-        {/* Create User Account (for new specialists only) */}
-        {!resource && formData.type === 'specialist' && (
+        {/* Show linked user info */}
+        {resource?.user && formData.type === 'specialist' && (
+          <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+            <p className="text-sm font-medium text-green-900">Привязанный аккаунт</p>
+            <p className="text-sm text-green-700 mt-1">
+              {resource.user.email} ({resource.user.firstName} {resource.user.lastName}) — {resource.user.isActive ? 'Активен' : 'Неактивен'}
+            </p>
+          </div>
+        )}
+
+        {/* Create User Account (for specialists without linked user) */}
+        {formData.type === 'specialist' && (!resource || !resource.user) && (
           <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 space-y-3">
             <div className="flex items-center gap-3">
               <input

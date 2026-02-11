@@ -13,6 +13,8 @@ interface Resource {
   phone?: string;
   isActive: boolean;
   workingHours?: Record<string, any>;
+  userId?: string;
+  user?: { id: string; email: string; firstName: string; lastName: string; role: string; isActive: boolean } | null;
   createdAt: string;
   updatedAt: string;
 }

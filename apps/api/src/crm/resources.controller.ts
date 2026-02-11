@@ -92,6 +92,18 @@ export class UpdateResourceDto {
 
   @IsOptional()
   workingHours?: Record<string, unknown>;
+
+  // Поля для создания аккаунта механика
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  username?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(6, { message: 'Password must be at least 6 characters' })
+  @MaxLength(100)
+  password?: string;
 }
 
 @Controller("crm/resources")
@@ -111,6 +123,7 @@ export class ResourcesController {
     }
     return this.prisma.resource.findMany({
       where: resolvedAccountId ? { accountId: resolvedAccountId } : {},
+      include: { user: { select: { id: true, email: true, firstName: true, lastName: true, role: true, isActive: true } } },
       orderBy: { name: "asc" }
     });
   }
@@ -118,7 +131,8 @@ export class ResourcesController {
   @Get(":id")
   async getOne(@Param("id") id: string) {
     return this.prisma.resource.findUnique({
-      where: { id }
+      where: { id },
+      include: { user: { select: { id: true, email: true, firstName: true, lastName: true, role: true, isActive: true } } },
     });
   }
 
@@ -149,15 +163,21 @@ export class ResourcesController {
 
       const user = await this.prisma.user.create({
         data: {
-          email: payload.email, // может быть null
+          email: payload.username,
           passwordHash,
           firstName: payload.name.split(' ')[0] || payload.name,
-          lastName: payload.name.split(' ').slice(1).join(' ') || 'Механик',
+          lastName: payload.name.split(' ').slice(1).join(' ') || '',
           phone: payload.phone,
           role: 'mechanic',
           accountId: membership.accountId,
           isActive: true,
         },
+      });
+
+      // Связать пользователя с ресурсом
+      await this.prisma.resource.update({
+        where: { id: resource.id },
+        data: { userId: user.id },
       });
 
       // Создать Membership для связи user с account
@@ -186,7 +206,7 @@ export class ResourcesController {
 
   @Patch(":id")
   @Roles("admin", "manager")
-  async update(@Param("id") id: string, @Body() payload: UpdateResourceDto) {
+  async update(@Param("id") id: string, @Body() payload: UpdateResourceDto, @Req() req: AuthenticatedRequest) {
     const resource = await this.prisma.resource.findUnique({
       where: { id }
     });
@@ -204,6 +224,38 @@ export class ResourcesController {
         workingHours: payload.workingHours as any,
       }
     });
+
+    // Создать аккаунт механика если запрошено и ещё нет привязки
+    if (!resource.userId && payload.username && payload.password) {
+      const passwordHash = await bcrypt.hash(payload.password, 10);
+
+      const user = await this.prisma.user.create({
+        data: {
+          email: payload.username,
+          passwordHash,
+          firstName: (payload.name || resource.name).split(' ')[0] || resource.name,
+          lastName: (payload.name || resource.name).split(' ').slice(1).join(' ') || '',
+          phone: payload.phone || resource.phone,
+          role: 'mechanic',
+          accountId: resource.accountId,
+          isActive: true,
+        },
+      });
+
+      await this.prisma.resource.update({
+        where: { id },
+        data: { userId: user.id },
+      });
+
+      await this.prisma.membership.create({
+        data: {
+          userId: user.id,
+          accountId: resource.accountId,
+          role: 'mechanic',
+          permissions: {},
+        },
+      });
+    }
 
     await this.prisma.auditLog.create({
       data: {
