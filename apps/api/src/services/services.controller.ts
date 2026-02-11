@@ -67,6 +67,7 @@ export class ServicesController {
         slug: dto.slug,
         icon: dto.icon,
         sortOrder: dto.sortOrder ?? 0,
+        isActive: dto.isActive ?? true,
       },
     });
   }
@@ -83,6 +84,7 @@ export class ServicesController {
         slug: dto.slug,
         icon: dto.icon,
         sortOrder: dto.sortOrder,
+        isActive: dto.isActive,
       },
     });
   }

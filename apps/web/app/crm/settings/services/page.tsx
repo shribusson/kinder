@@ -10,6 +10,7 @@ interface ServiceCategory {
   slug: string;
   icon?: string;
   sortOrder: number;
+  isActive: boolean;
   services: Service[];
 }
 
@@ -44,7 +45,6 @@ export default function ServicesSettingsPage() {
     description: '',
     price: '',
     priceNote: '',
-    unit: '',
     sortOrder: 0,
     isActive: true,
   });
@@ -143,7 +143,6 @@ export default function ServicesSettingsPage() {
         description: svc.description || '',
         price: svc.price?.toString() || '',
         priceNote: svc.priceNote || '',
-        unit: svc.unit || '',
         sortOrder: svc.sortOrder,
         isActive: svc.isActive,
       });
@@ -155,7 +154,6 @@ export default function ServicesSettingsPage() {
         description: '',
         price: '',
         priceNote: '',
-        unit: '',
         sortOrder: 0,
         isActive: true,
       });
@@ -174,7 +172,6 @@ export default function ServicesSettingsPage() {
         description: svcForm.description || undefined,
         price: svcForm.price ? parseFloat(svcForm.price) : undefined,
         priceNote: svcForm.priceNote || undefined,
-        unit: svcForm.unit || undefined,
         sortOrder: svcForm.sortOrder,
         isActive: svcForm.isActive,
       };
@@ -216,6 +213,19 @@ export default function ServicesSettingsPage() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ isActive: !svc.isActive }),
+      });
+      fetchCategories();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const toggleCatActive = async (cat: ServiceCategory) => {
+    try {
+      await fetch(`${apiBaseUrl}/services/categories/${cat.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ isActive: !cat.isActive }),
       });
       fetchCategories();
     } catch (e) {
@@ -287,7 +297,7 @@ export default function ServicesSettingsPage() {
         ) : (
           <div className="flex flex-col gap-4">
             {categories.map(cat => (
-              <div key={cat.id} className="card">
+              <div key={cat.id} className={`card ${!cat.isActive ? 'opacity-60' : ''}`}>
                 {/* Category Header */}
                 <div className="flex items-center justify-between">
                   <button
@@ -307,6 +317,15 @@ export default function ServicesSettingsPage() {
                     </div>
                   </button>
                   <div className="flex items-center gap-2">
+                    <label className="relative inline-flex items-center cursor-pointer mr-2" title={cat.isActive ? 'Категория активна' : 'Категория неактивна'}>
+                      <input
+                        type="checkbox"
+                        checked={cat.isActive}
+                        onChange={() => toggleCatActive(cat)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-600"></div>
+                    </label>
                     <button
                       onClick={() => openSvcModal(cat.id)}
                       className="rounded-lg bg-green-100 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-200 transition-colors flex items-center gap-1"
@@ -337,7 +356,6 @@ export default function ServicesSettingsPage() {
                         <tr className="text-left text-xs text-slate-500 uppercase">
                           <th className="pb-2">Название</th>
                           <th className="pb-2">Цена</th>
-                          <th className="pb-2">Ед.</th>
                           <th className="pb-2 text-center">Активна</th>
                           <th className="pb-2 text-right">Действия</th>
                         </tr>
@@ -358,7 +376,6 @@ export default function ServicesSettingsPage() {
                                 <span className="text-slate-400">{svc.priceNote || '—'}</span>
                               )}
                             </td>
-                            <td className="py-2 text-slate-500">{svc.unit || '—'}</td>
                             <td className="py-2 text-center">
                               <label className="relative inline-flex items-center cursor-pointer">
                                 <input
@@ -508,26 +525,15 @@ export default function ServicesSettingsPage() {
                   rows={2}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Цена (тг)</label>
-                  <input
-                    type="number"
-                    value={svcForm.price}
-                    onChange={e => setSvcForm(f => ({ ...f, price: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-md"
-                    placeholder="5000"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Ед. измерения</label>
-                  <input
-                    value={svcForm.unit}
-                    onChange={e => setSvcForm(f => ({ ...f, unit: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-md"
-                    placeholder="шт / час"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Цена (тг)</label>
+                <input
+                  type="number"
+                  value={svcForm.price}
+                  onChange={e => setSvcForm(f => ({ ...f, price: e.target.value }))}
+                  className="w-full px-3 py-2 border rounded-md"
+                  placeholder="5000"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Примечание к цене</label>

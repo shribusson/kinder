@@ -27,6 +27,10 @@ export class CreateServiceCategoryDto {
   @IsNumber()
   @Min(0)
   sortOrder?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }
 
 export class UpdateServiceCategoryDto {
@@ -48,6 +52,10 @@ export class UpdateServiceCategoryDto {
   @IsNumber()
   @Min(0)
   sortOrder?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }
 
 export class CreateServiceDto {
