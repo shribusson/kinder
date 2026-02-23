@@ -23,6 +23,23 @@ interface Lead {
     title: string;
     stage: string;
     amount: number;
+    vehicleId?: string | null;
+  }>;
+  vehicles?: Array<{
+    id: string;
+    year?: number;
+    vin?: string;
+    licensePlate?: string;
+    color?: string;
+    mileage?: number;
+    brand: {
+      name: string;
+      cyrillicName?: string;
+    };
+    model: {
+      name: string;
+      cyrillicName?: string;
+    };
   }>;
   bookings?: Array<{
     id: string;
@@ -115,6 +132,50 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
               )}
             </dl>
           </div>
+
+          {/* Vehicles */}
+          {lead.vehicles && lead.vehicles.length > 0 && (
+            <div className="card">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">Автомобили клиента</h2>
+              <div className="space-y-3">
+                {lead.vehicles.map((vehicle) => (
+                  <div key={vehicle.id} className="rounded-lg border border-slate-200 p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="font-medium text-slate-900">
+                        {vehicle.brand.cyrillicName || vehicle.brand.name} {vehicle.model.cyrillicName || vehicle.model.name}
+                        {vehicle.year ? ` ${vehicle.year}` : ''}
+                      </div>
+                      {vehicle.licensePlate && (
+                        <span className="rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
+                          {vehicle.licensePlate}
+                        </span>
+                      )}
+                    </div>
+                    <dl className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                      {vehicle.vin && (
+                        <div className="sm:col-span-2">
+                          <dt className="text-slate-500">VIN</dt>
+                          <dd className="font-mono text-slate-800">{vehicle.vin}</dd>
+                        </div>
+                      )}
+                      {vehicle.mileage !== undefined && vehicle.mileage !== null && (
+                        <div>
+                          <dt className="text-slate-500">Пробег</dt>
+                          <dd className="font-medium text-slate-900">{vehicle.mileage.toLocaleString('ru-RU')} км</dd>
+                        </div>
+                      )}
+                      {vehicle.color && (
+                        <div>
+                          <dt className="text-slate-500">Цвет</dt>
+                          <dd className="font-medium text-slate-900">{vehicle.color}</dd>
+                        </div>
+                      )}
+                    </dl>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* UTM Data */}
           {(lead.utmSource || lead.utmMedium || lead.utmCampaign || lead.utmContent || lead.utmTerm) && (

@@ -36,20 +36,20 @@ interface DealCardProps {
 }
 
 const stageLabels: Record<string, string> = {
-  diagnostics: 'Диагностика',
-  planned: 'Запланирован',
-  in_progress: 'В работе',
-  ready: 'Готов',
-  closed: 'Закрыт',
-  cancelled: 'Отменён',
+  diagnostics: 'Контакт',
+  planned: 'Запись',
+  in_progress: 'Сервис',
+  ready: 'Сервис',
+  closed: 'Успех',
+  cancelled: 'Провал',
 };
 
 const stageColors: Record<string, string> = {
   diagnostics: 'bg-blue-100 text-blue-800',
   planned: 'bg-purple-100 text-purple-800',
   in_progress: 'bg-yellow-100 text-yellow-800',
-  ready: 'bg-green-100 text-green-800',
-  closed: 'bg-gray-100 text-gray-800',
+  ready: 'bg-yellow-100 text-yellow-800',
+  closed: 'bg-green-100 text-green-800',
   cancelled: 'bg-red-100 text-red-800',
 };
 

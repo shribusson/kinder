@@ -248,10 +248,109 @@ async function main() {
 
   console.log('✅ Created 18 services across 3 categories (9 brake + 9 cooling)');
 
+  // Mechanic role + sample deal with work logs
+  const mechanicPasswordHash = await bcrypt.hash('mechanic123', 10);
+  const mechanicUser = await prisma.user.upsert({
+    where: { email: 'mechanic@kinder.kz' },
+    update: {},
+    create: {
+      email: 'mechanic@kinder.kz',
+      passwordHash: mechanicPasswordHash,
+      firstName: 'Ivan',
+      lastName: 'Mechanic',
+      role: UserRole.mechanic,
+      accountId: account.id,
+      locale: 'ru',
+    },
+  });
+
+  await prisma.membership.upsert({
+    where: {
+      userId_accountId: {
+        userId: mechanicUser.id,
+        accountId: account.id,
+      },
+    },
+    update: {},
+    create: {
+      userId: mechanicUser.id,
+      accountId: account.id,
+      role: UserRole.mechanic,
+      permissions: {
+        crm: true,
+        deals: true,
+      },
+    },
+  });
+
+  const mechanicResource = await prisma.resource.upsert({
+    where: { userId: mechanicUser.id },
+    update: {},
+    create: {
+      accountId: account.id,
+      userId: mechanicUser.id,
+      name: 'Иван Механик',
+      type: 'specialist',
+      email: mechanicUser.email,
+      phone: '+77001112233',
+    },
+  });
+
+  const demoLead = await prisma.lead.create({
+    data: {
+      accountId: account.id,
+      name: 'Demo Client',
+      phone: '+77005556677',
+      source: 'seed',
+    },
+  });
+
+  const demoDeal = await prisma.deal.create({
+    data: {
+      accountId: account.id,
+      leadId: demoLead.id,
+      title: 'Диагностика подвески',
+      stage: 'in_progress',
+      amount: 0,
+      assignedResourceId: mechanicResource.id,
+      metadata: {
+        licensePlate: '123ABC01',
+      },
+    },
+  });
+
+  await prisma.workLog.createMany({
+    data: [
+      {
+        accountId: account.id,
+        dealId: demoDeal.id,
+        resourceId: mechanicResource.id,
+        title: 'Прием авто',
+        description: 'Осмотр внешних повреждений, фото кузова',
+        status: 'open',
+      },
+      {
+        accountId: account.id,
+        dealId: demoDeal.id,
+        resourceId: mechanicResource.id,
+        title: 'Диагностика подвески',
+        description: 'Проверка стоек, втулок стабилизатора, шаровых',
+        status: 'open',
+        checklist: [
+          { text: 'Передние стойки', done: false },
+          { text: 'Втулки стабилизатора', done: true },
+        ] as any,
+      },
+    ],
+  });
+
+  console.log('✅ Added mechanic user, resource and demo deal with work logs');
+
   console.log('\n🎉 Seed completed successfully!');
   console.log('\n📝 Default credentials:');
   console.log('   Admin: admin@kinder.kz / admin123');
   console.log('   Manager: manager@kinder.kz / manager123');
+  console.log('   Mechanic: mechanic@kinder.kz / mechanic123');
   console.log('   Client: client@example.com / client123');
   console.log('\n⚠️  Change these passwords immediately in production!');
 }

@@ -213,6 +213,7 @@ model Account {
   services      Service[]
   workOrders    WorkOrder[]
   timeEntries   TimeEntry[]
+  workLogs      WorkLog[]
   vehicles      Vehicle[]
   vehicleServiceHistory VehicleServiceHistory[]
 
@@ -349,6 +350,7 @@ model Deal {
   workOrder          WorkOrder?
   dealItems          DealItem[]
   timeEntries        TimeEntry[]
+  workLogs           WorkLog[]
   serviceHistories   VehicleServiceHistory[]
 
   @@index([accountId])
@@ -419,6 +421,7 @@ model Resource {
   bookings      Booking[]
   assignedDeals Deal[]       @relation("AssignedDeals")
   timeEntries   TimeEntry[]
+  workLogs      WorkLog[]
 
   @@index([accountId])
   @@index([isActive])
@@ -649,6 +652,7 @@ model MediaFile {
   messages       Message[]
   callRecordings CallRecording[]
   contentItems   ContentItem[]
+  workLogMedia   WorkLogMedia[]
 
   @@index([accountId])
   @@index([storageKey])
@@ -943,6 +947,42 @@ model TimeEntry {
   @@index([dealId])
   @@index([resourceId])
   @@index([startedAt])
+}
+
+model WorkLog {
+  id          String   @id @default(uuid())
+  accountId   String
+  dealId      String
+  resourceId  String
+  title       String?
+  description String?
+  status      String   @default("open")
+  checklist   Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  account  Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  deal     Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  media    WorkLogMedia[]
+
+  @@index([accountId])
+  @@index([dealId])
+  @@index([resourceId])
+  @@index([createdAt])
+}
+
+model WorkLogMedia {
+  id          String   @id @default(uuid())
+  workLogId   String
+  mediaFileId String
+  createdAt   DateTime @default(now())
+
+  workLog   WorkLog   @relation(fields: [workLogId], references: [id], onDelete: Cascade)
+  mediaFile MediaFile @relation(fields: [mediaFileId], references: [id], onDelete: Cascade)
+
+  @@index([workLogId])
+  @@index([mediaFileId])
 }
 
 model WorkOrder {

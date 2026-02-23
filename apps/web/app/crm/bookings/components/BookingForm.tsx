@@ -59,6 +59,14 @@ export default function BookingForm({ booking, onSuccess, onCancel }: BookingFor
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -222,20 +230,32 @@ export default function BookingForm({ booking, onSuccess, onCancel }: BookingFor
         <label htmlFor="scheduledAt" className="block text-sm font-medium text-slate-700 mb-1">
           Дата и время *
         </label>
-        <DatePicker
-          id="scheduledAt"
-          selected={formData.scheduledAt}
-          onChange={(date: Date | null) => date && setFormData({ ...formData, scheduledAt: date })}
-          showTimeSelect
-          timeFormat="HH:mm"
-          timeIntervals={15}
-          dateFormat="dd.MM.yyyy HH:mm"
-          minDate={new Date()}
-          timeCaption="Время"
-          required
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-          wrapperClassName="w-full"
-        />
+        {isMobile ? (
+          <input
+            id="scheduledAt"
+            type="datetime-local"
+            value={new Date(formData.scheduledAt.getTime() - formData.scheduledAt.getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
+            min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
+            onChange={(e) => setFormData({ ...formData, scheduledAt: new Date(e.target.value) })}
+            required
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 min-h-[44px]"
+          />
+        ) : (
+          <DatePicker
+            id="scheduledAt"
+            selected={formData.scheduledAt}
+            onChange={(date: Date | null) => date && setFormData({ ...formData, scheduledAt: date })}
+            showTimeSelect
+            timeFormat="HH:mm"
+            timeIntervals={15}
+            dateFormat="dd.MM.yyyy HH:mm"
+            minDate={new Date()}
+            timeCaption="Время"
+            required
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+            wrapperClassName="w-full"
+          />
+        )}
         <p className="mt-1 text-xs text-slate-500">
           Выберите дату и время приёма
         </p>

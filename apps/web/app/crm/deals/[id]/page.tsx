@@ -54,12 +54,12 @@ interface Deal {
 }
 
 const STAGE_LABELS: Record<string, string> = {
-  diagnostics: 'На диагностике',
-  planned: 'Запланирована',
-  in_progress: 'В работе',
-  ready: 'Готова',
-  closed: 'Закрыта',
-  cancelled: 'Отменена',
+  diagnostics: 'Контакт',
+  planned: 'Запись',
+  in_progress: 'Сервис',
+  ready: 'Сервис',
+  closed: 'Успех',
+  cancelled: 'Провал',
 };
 
 export default async function DealDetailPage({ params }: { params: { id: string } }) {
@@ -229,6 +229,19 @@ export default async function DealDetailPage({ params }: { params: { id: string 
             </p>
           </div>
 
+          <div className="card">
+            <h2 className="text-lg font-semibold text-slate-900 mb-3">Журнал работ</h2>
+            <p className="text-sm text-slate-600 mb-3">
+              Ведение журнала работ, чек-листы и медиа выполняются в карточке механика.
+            </p>
+            <Link
+              href={`/crm/mechanic/deals/${deal.id}`}
+              className="inline-flex rounded-lg bg-orange-100 px-3 py-2 text-sm font-medium text-orange-700 hover:bg-orange-200 transition-colors"
+            >
+              Открыть журнал работ
+            </Link>
+          </div>
+
           {/* Work Order Section */}
           <div className="card">
             <WorkOrderSection
@@ -257,14 +270,30 @@ export default async function DealDetailPage({ params }: { params: { id: string 
                       ? 'bg-red-100 text-red-700'
                       : deal.stage === 'diagnostics'
                       ? 'bg-indigo-100 text-indigo-700'
-                      : deal.stage === 'ready'
-                      ? 'bg-teal-100 text-teal-700'
+                      : deal.stage === 'planned'
+                      ? 'bg-purple-100 text-purple-700'
                       : 'bg-slate-100 text-slate-700'
                   }`}>
                     {STAGE_LABELS[deal.stage] || deal.stage}
                   </span>
                 </dd>
               </div>
+              {deal.stage === 'cancelled' && (
+                <div>
+                  <dt className="text-xs text-slate-500 mb-1">Причина провала</dt>
+                  <dd className="font-medium text-slate-900">
+                    {(deal.metadata as any)?.failReason || 'Не указана'}
+                  </dd>
+                </div>
+              )}
+              {(deal.metadata as any)?.guaranteeUntil && (
+                <div>
+                  <dt className="text-xs text-slate-500 mb-1">Гарантия до</dt>
+                  <dd className="font-medium text-slate-900">
+                    {new Date((deal.metadata as any).guaranteeUntil).toLocaleDateString('ru-RU')}
+                  </dd>
+                </div>
+              )}
               <div>
                 <dt className="text-xs text-slate-500 mb-1">Дата создания</dt>
                 <dd className="font-medium text-slate-900">
@@ -299,10 +328,10 @@ export default async function DealDetailPage({ params }: { params: { id: string 
               <div>
                 <dt className="text-xs text-slate-500 mb-1">Конверсия</dt>
                 <dd className="font-medium text-slate-900">
-                  {deal.stage === 'won'
-                    ? '100% (Выиграна)'
-                    : deal.stage === 'lost'
-                    ? '0% (Проиграна)'
+                  {deal.stage === 'closed'
+                    ? '100% (Успех)'
+                    : deal.stage === 'cancelled'
+                    ? '0% (Провал)'
                     : 'В процессе'}
                 </dd>
               </div>

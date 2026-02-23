@@ -8,6 +8,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { IconEdit, IconGripVertical } from '@tabler/icons-react';
 import DealModal from './DealModal';
 import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
+import { CRM_VISIBLE_DEAL_STAGES, isCrmVisibleDealStage, mapCrmStageToVisible } from '@kinder/shared';
 
 interface Lead {
   id: string;
@@ -23,6 +24,10 @@ interface Deal {
   stage: string;
   amount: number;
   revenue?: number;
+  metadata?: {
+    failReason?: string;
+    guaranteeUntil?: string;
+  };
   lead?: Lead;
 }
 
@@ -30,14 +35,17 @@ interface DealsKanbanProps {
   initialDeals: Deal[];
 }
 
-const STAGES = [
-  { value: 'diagnostics', label: 'На диагностике', color: 'bg-indigo-100 border-indigo-200' },
-  { value: 'planned', label: 'Запланирована', color: 'bg-purple-100 border-purple-200' },
-  { value: 'in_progress', label: 'В работе', color: 'bg-yellow-100 border-yellow-200' },
-  { value: 'ready', label: 'Готова', color: 'bg-teal-100 border-teal-200' },
-  { value: 'closed', label: 'Закрыта', color: 'bg-green-100 border-green-200' },
-  { value: 'cancelled', label: 'Отменена', color: 'bg-red-100 border-red-200' },
+type VisibleStage = (typeof CRM_VISIBLE_DEAL_STAGES)[number];
+
+const VISIBLE_STAGES: Array<{ value: VisibleStage; label: string; color: string }> = [
+  { value: 'diagnostics', label: 'Контакт', color: 'bg-indigo-100 border-indigo-200' },
+  { value: 'planned', label: 'Запись', color: 'bg-purple-100 border-purple-200' },
+  { value: 'in_progress', label: 'Сервис', color: 'bg-yellow-100 border-yellow-200' },
 ];
+
+function isVisibleStage(value: string): value is VisibleStage {
+  return isCrmVisibleDealStage(value);
+}
 
 function SortableDealCard({ deal, onEdit }: { deal: Deal; onEdit: (deal: Deal) => void }) {
   const {
@@ -109,10 +117,13 @@ export default function DealsKanban({ initialDeals }: DealsKanbanProps) {
   const [selectedDeal, setSelectedDeal] = useState<Deal | undefined>();
   const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
 
-  const dealsByStage = STAGES.reduce<Record<string, Deal[]>>((acc, stage) => {
-    acc[stage.value] = deals.filter(deal => deal.stage === stage.value);
+  const dealsByStage = VISIBLE_STAGES.reduce<Record<VisibleStage, Deal[]>>((acc, stage) => {
+    acc[stage.value] = deals.filter((deal) => mapCrmStageToVisible(deal.stage) === stage.value);
     return acc;
-  }, {});
+  }, { diagnostics: [], planned: [], in_progress: [] });
+
+  const successDealsCount = deals.filter((deal) => deal.stage === 'closed').length;
+  const failedDealsCount = deals.filter((deal) => deal.stage === 'cancelled').length;
 
   useEffect(() => {
     refreshDeals();
@@ -146,15 +157,25 @@ export default function DealsKanban({ initialDeals }: DealsKanbanProps) {
     if (!over) return;
 
     const dealId = active.id as string;
-    const newStage = over.id as string;
+    const overId = over.id as string;
+    let newStage: VisibleStage | null = null;
 
-    // Check if we're dropping on a stage column
-    if (!STAGES.find(s => s.value === newStage)) {
-      return;
+    if (isVisibleStage(overId)) {
+      newStage = overId;
+    } else {
+      const overDeal = deals.find((d) => d.id === overId);
+      if (overDeal) {
+        newStage = mapCrmStageToVisible(overDeal.stage);
+      }
     }
+    if (!newStage) return;
 
     const deal = deals.find(d => d.id === dealId);
-    if (!deal || deal.stage === newStage) return;
+    if (!deal) return;
+
+    const previousStage = deal.stage;
+    const currentVisibleStage = mapCrmStageToVisible(deal.stage);
+    if (currentVisibleStage === newStage) return;
 
     // Optimistically update UI
     setDeals(prev =>
@@ -178,9 +199,9 @@ export default function DealsKanban({ initialDeals }: DealsKanbanProps) {
       console.error('Failed to update deal stage:', error);
       // Revert on error
       setDeals(prev =>
-        prev.map(d => (d.id === dealId ? { ...d, stage: deal.stage } : d))
+        prev.map(d => (d.id === dealId ? { ...d, stage: previousStage } : d))
       );
-      alert('Ошибка обновления стадии сделки');
+      alert('Ошибка обновления стадии заказа');
     }
   };
 
@@ -201,14 +222,30 @@ export default function DealsKanban({ initialDeals }: DealsKanbanProps) {
   return (
     <>
       <div className="mb-4 flex items-center justify-between bg-white rounded-lg px-6 py-4 shadow-sm ring-1 ring-slate-100">
-        <div className="text-sm text-slate-600">
-          Всего сделок: <span className="font-semibold text-slate-900">{deals.length}</span>
+        <div className="flex flex-col gap-1 text-sm text-slate-600">
+          <div>
+            Активные заказы: <span className="font-semibold text-slate-900">{dealsByStage.diagnostics.length + dealsByStage.planned.length + dealsByStage.in_progress.length}</span>
+          </div>
+          <div className="flex items-center gap-4 text-xs">
+            <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 font-medium text-green-700">
+              Успех: {successDealsCount}
+            </span>
+            <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 font-medium text-red-700">
+              Провал: {failedDealsCount}
+            </span>
+          </div>
+          <Link
+            href="/crm/bookings/calendar"
+            className="text-xs text-orange-600 hover:text-orange-700 underline underline-offset-2"
+          >
+            Открыть календарь записей
+          </Link>
         </div>
         <button
           onClick={handleCreateClick}
           className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors"
         >
-          + Создать сделку
+          + Создать заказ
         </button>
       </div>
 
@@ -217,8 +254,8 @@ export default function DealsKanban({ initialDeals }: DealsKanbanProps) {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-4 xl:grid-cols-7">
-          {STAGES.map((stage) => {
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          {VISIBLE_STAGES.map((stage) => {
             const stageDeals = dealsByStage[stage.value] || [];
             return (
               <div

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req, Res } from "@nestjs/common";
+import { Body, Controller, Delete, ForbiddenException, Get, Param, Patch, Post, Put, Query, Req, Res } from "@nestjs/common";
 import { Response } from "express";
 import { CrmService } from "./crm.service";
 import { CreateDealDto, UpdateDealDto } from "./dto";
@@ -20,6 +20,32 @@ export class DealsController {
     });
     if (!membership) throw new Error('No account');
     return membership.accountId;
+  }
+
+  private async getMechanicResourceId(req: AuthenticatedRequest, accountId: string): Promise<string | null> {
+    const resourceByUser = await this.prisma.resource.findFirst({
+      where: {
+        accountId,
+        userId: req.user.sub,
+        type: 'specialist',
+        isActive: true,
+      },
+      select: { id: true },
+    });
+    if (resourceByUser) return resourceByUser.id;
+
+    if (!req.user.email) return null;
+
+    const resourceByEmail = await this.prisma.resource.findFirst({
+      where: {
+        accountId,
+        email: req.user.email,
+        type: 'specialist',
+        isActive: true,
+      },
+      select: { id: true },
+    });
+    return resourceByEmail?.id ?? null;
   }
 
   @Get()
@@ -48,13 +74,26 @@ export class DealsController {
   }
 
   @Post()
-  @Roles("admin", "manager")
+  @Roles("admin", "manager", "mechanic")
   async create(@Body() payload: CreateDealDto, @Req() req: AuthenticatedRequest) {
     const membership = await this.prisma.membership.findFirst({
       where: { userId: req.user.sub },
     });
     if (!membership) throw new Error('No account');
-    return this.crm.createDeal({ ...payload, accountId: membership.accountId });
+
+    let assignedResourceId: string | undefined;
+    if (req.user.role === 'mechanic') {
+      assignedResourceId = (await this.getMechanicResourceId(req, membership.accountId)) ?? undefined;
+      if (!assignedResourceId) {
+        throw new ForbiddenException('Механик не привязан к активному ресурсу');
+      }
+    }
+
+    return this.crm.createDeal({
+      ...payload,
+      accountId: membership.accountId,
+      assignedResourceId,
+    });
   }
 
   @Get(":id")
@@ -76,7 +115,7 @@ export class DealsController {
 
   @Put(":id/stage")
   @Roles("admin", "manager")
-  async updateStage(@Param("id") id: string, @Body() payload: { stage: string }) {
-    return this.crm.updateDealStage(id, payload.stage as never);
+  async updateStage(@Param("id") id: string, @Body() payload: { stage: string; failReason?: string }) {
+    return this.crm.updateDealStage(id, payload.stage as never, payload.failReason);
   }
 }

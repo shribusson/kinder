@@ -6,6 +6,8 @@ import { DealCard } from './components/DealCard';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiCall } from '@/lib/api';
+import { Button } from '@/components/ui/button';
+import DealModal from '@/app/crm/deals/components/DealModal';
 
 interface DashboardData {
   resource: {
@@ -24,6 +26,7 @@ interface DashboardData {
 export default function MechanicDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+  const [showNewDeal, setShowNewDeal] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -92,6 +95,11 @@ export default function MechanicDashboard() {
     loadDashboard();
   };
 
+  const handleDealCreated = () => {
+    toast({ title: 'Заказ создан', description: 'Назначен на вас' });
+    loadDashboard();
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -120,6 +128,16 @@ export default function MechanicDashboard() {
       {/* Active Timer Widget - Sticky on mobile */}
       <TimerWidget timer={dashboard.activeTimer} onTimerStopped={handleTimerStopped} />
 
+       {/* Floating actions */}
+      <div className="fixed bottom-4 right-4 z-20 flex flex-col gap-3">
+        <Button
+          onClick={() => setShowNewDeal(true)}
+          className="h-12 rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 px-5"
+        >
+          Новый заказ
+        </Button>
+      </div>
+
       <div className="p-4 space-y-6">
         {/* Header */}
         <div className="mb-4">
@@ -146,7 +164,7 @@ export default function MechanicDashboard() {
               unit="шт"
             />
             <StatCard
-              label="В работе"
+              label="В сервисе"
               value={dashboard.stats.dealsInProgress}
               unit="шт"
             />
@@ -176,6 +194,12 @@ export default function MechanicDashboard() {
           )}
         </section>
       </div>
+
+      <DealModal
+        isOpen={showNewDeal}
+        onClose={() => setShowNewDeal(false)}
+        onSuccess={handleDealCreated}
+      />
     </div>
   );
 }

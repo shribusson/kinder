@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
+import { normalizeCrmEditableStage } from '@kinder/shared';
 
 interface Lead {
   id: string;
@@ -44,15 +45,20 @@ interface Service {
   description?: string;
   price?: number;
   unit?: string;
+  isActive?: boolean;
+  sortOrder?: number;
   category?: {
     id: string;
     name: string;
+    sortOrder?: number;
+    isActive?: boolean;
   };
 }
 
 interface ServiceSelection {
   serviceId: string;
   quantity: number;
+  plannedMinutes: number;
   service?: Service;
 }
 
@@ -63,6 +69,16 @@ interface Deal {
   stage: string;
   amount: number;
   revenue?: number;
+  estimatedHours?: number;
+  metadata?: {
+    failReason?: string;
+    guaranteeUntil?: string;
+    serviceTimeBudgets?: Array<{ serviceId: string; plannedMinutes: number }>;
+  };
+  dealItems?: Array<{
+    serviceId: string;
+    quantity: number;
+  }>;
   lead?: Lead;
   vehicleId?: string;
   vehicle?: Vehicle;
@@ -75,21 +91,38 @@ interface DealFormProps {
 }
 
 const DEAL_STAGES = [
-  { value: 'diagnostics', label: 'На диагностике' },
-  { value: 'planned', label: 'Запланирована' },
-  { value: 'in_progress', label: 'В работе' },
-  { value: 'ready', label: 'Готова' },
-  { value: 'closed', label: 'Закрыта' },
-  { value: 'cancelled', label: 'Отменена' },
+  { value: 'diagnostics', label: 'Контакт' },
+  { value: 'planned', label: 'Запись' },
+  { value: 'in_progress', label: 'Сервис' },
+  { value: 'closed', label: 'Успех (скрытая)' },
+  { value: 'cancelled', label: 'Провал (скрытая)' },
 ];
+
+function formatDateForInput(value?: string): string {
+  if (!value) return '';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return parsed.toISOString().slice(0, 10);
+}
+
+function getDefaultBookingDateTimeInput(): string {
+  const date = new Date();
+  date.setHours(date.getHours() + 1, 0, 0, 0);
+  const offsetMs = date.getTimezoneOffset() * 60 * 1000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+}
 
 export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
   const [formData, setFormData] = useState({
     leadId: deal?.leadId || '',
     title: deal?.title || '',
-    stage: deal?.stage || 'diagnostics',
+    stage: normalizeCrmEditableStage(deal?.stage),
     amount: deal?.amount || 0,
     revenue: deal?.revenue || 0,
+    estimatedHours: deal?.estimatedHours || 0,
+    failReason: deal?.metadata?.failReason || '',
+    guaranteeUntil: formatDateForInput(deal?.metadata?.guaranteeUntil),
+    bookingScheduledAt: getDefaultBookingDateTimeInput(),
   });
 
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -205,8 +238,13 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
           cache: 'no-store',
         });
         if (response.ok) {
-          const services = await response.json();
-          setAvailableServices(services);
+          const services = (await response.json()) as Service[];
+          const activeServices = services.filter((service) => {
+            const serviceActive = service.isActive !== false;
+            const categoryActive = service.category?.isActive !== false;
+            return serviceActive && categoryActive;
+          });
+          setAvailableServices(activeServices);
         }
       } catch (err) {
         console.error('Failed to fetch services:', err);
@@ -217,6 +255,47 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
 
     fetchServices();
   }, []);
+
+  useEffect(() => {
+    if (!deal?.dealItems || deal.dealItems.length === 0) return;
+    if (selectedServices.length > 0) return;
+
+    const budgetsMap = new Map(
+      (deal.metadata?.serviceTimeBudgets || []).map((item) => [item.serviceId, item.plannedMinutes]),
+    );
+
+    setSelectedServices(
+      deal.dealItems.map((item) => ({
+        serviceId: item.serviceId,
+        quantity: item.quantity,
+        plannedMinutes: budgetsMap.get(item.serviceId) || 0,
+      })),
+    );
+  }, [deal, selectedServices.length]);
+
+  const groupedServices = availableServices.reduce((acc, service) => {
+    const categoryId = service.category?.id || 'uncategorized';
+    const categoryName = service.category?.name || 'Без категории';
+
+    if (!acc[categoryId]) {
+      acc[categoryId] = {
+        id: categoryId,
+        name: categoryName,
+        sortOrder: service.category?.sortOrder ?? Number.MAX_SAFE_INTEGER,
+        services: [],
+      };
+    }
+
+    acc[categoryId].services.push(service);
+    return acc;
+  }, {} as Record<string, { id: string; name: string; sortOrder: number; services: Service[] }>);
+
+  const sortedCategoryGroups = Object.values(groupedServices)
+    .map((group) => ({
+      ...group,
+      services: group.services.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
+    }))
+    .sort((a, b) => a.sortOrder - b.sortOrder);
 
   // Auto-calculate total amount from selected services
   useEffect(() => {
@@ -229,6 +308,21 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
     setFormData(prev => ({ ...prev, amount: total }));
   }, [selectedServices, availableServices]);
 
+  useEffect(() => {
+    const totalPlannedMinutes = selectedServices.reduce(
+      (sum, item) => sum + (item.plannedMinutes * item.quantity),
+      0,
+    );
+
+    if (totalPlannedMinutes <= 0) return;
+
+    const estimatedHours = Math.round((totalPlannedMinutes / 60) * 10) / 10;
+    setFormData((prev) => {
+      if (prev.estimatedHours === estimatedHours) return prev;
+      return { ...prev, estimatedHours };
+    });
+  }, [selectedServices]);
+
   // Add service to selection
   const handleAddService = (serviceId: string) => {
     if (!serviceId) return;
@@ -237,7 +331,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
       return;
     }
 
-    setSelectedServices([...selectedServices, { serviceId, quantity: 1 }]);
+    setSelectedServices([...selectedServices, { serviceId, quantity: 1, plannedMinutes: 0 }]);
   };
 
   // Update service quantity
@@ -247,6 +341,15 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
       prev.map(item =>
         item.serviceId === serviceId ? { ...item, quantity } : item
       )
+    );
+  };
+
+  const handleUpdatePlannedMinutes = (serviceId: string, plannedMinutes: number) => {
+    if (plannedMinutes < 0) return;
+    setSelectedServices((prev) =>
+      prev.map((item) =>
+        item.serviceId === serviceId ? { ...item, plannedMinutes } : item,
+      ),
     );
   };
 
@@ -307,7 +410,9 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
     setError('');
 
     try {
-      const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
+      if (formData.stage === 'cancelled' && !formData.failReason.trim()) {
+        throw new Error('Для стадии "Провал" нужно указать причину');
+      }
 
       const url = deal
         ? `${apiBaseUrl}/crm/deals/${deal.id}`
@@ -323,6 +428,22 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
 
       if (formData.revenue) {
         payload.revenue = Number(formData.revenue);
+      }
+
+      if (formData.estimatedHours) {
+        payload.estimatedHours = Number(formData.estimatedHours);
+      }
+
+      if (formData.stage === 'cancelled') {
+        payload.failReason = formData.failReason.trim();
+      }
+
+      if (formData.guaranteeUntil) {
+        payload.guaranteeUntil = new Date(`${formData.guaranteeUntil}T23:59:59.999Z`).toISOString();
+      }
+
+      if (!deal && formData.bookingScheduledAt) {
+        payload.bookingScheduledAt = new Date(formData.bookingScheduledAt).toISOString();
       }
 
       // Add vehicle data if provided
@@ -344,6 +465,16 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
           serviceId: item.serviceId,
           quantity: item.quantity,
         }));
+
+        const budgets = selectedServices
+          .filter((item) => item.plannedMinutes > 0)
+          .map((item) => ({
+            serviceId: item.serviceId,
+            plannedMinutes: item.plannedMinutes,
+          }));
+        if (budgets.length > 0) {
+          payload.serviceTimeBudgets = budgets;
+        }
       }
 
       const response = await fetch(url, {
@@ -360,7 +491,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
         throw new Error(errorData.message || 'Ошибка сохранения');
       }
 
-      toast.success(deal ? 'Сделка успешно обновлена!' : 'Сделка успешно создана!');
+      toast.success(deal ? 'Заказ успешно обновлён!' : 'Заказ успешно создан!');
       onSuccess();
     } catch (err: any) {
       const errorMessage = err.message || 'Произошла ошибка';
@@ -399,7 +530,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
         )}
         {deal && (
           <p className="mt-1 text-xs text-slate-500">
-            Лида нельзя изменить после создания сделки
+            Лида нельзя изменить после создания заказа
           </p>
         )}
       </div>
@@ -407,7 +538,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
       {/* Title */}
       <div>
         <label htmlFor="title" className="block text-sm font-medium text-slate-700 mb-1">
-          Название сделки *
+          Название заказа *
         </label>
         <input
           id="title"
@@ -597,10 +728,14 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
             >
               <option value="">Выберите услугу...</option>
-              {availableServices.map((service) => (
-                <option key={service.id} value={service.id}>
-                  {service.name} {service.price ? `— ${service.price.toLocaleString('ru-RU')} ₸` : ''}
-                </option>
+              {sortedCategoryGroups.map((group) => (
+                <optgroup key={group.id} label={group.name}>
+                  {group.services.map((service) => (
+                    <option key={service.id} value={service.id}>
+                      {service.name} {service.price ? `— ${service.price.toLocaleString('ru-RU')} ₸` : ''}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
           )}
@@ -618,18 +753,32 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
 
               const unitPrice = service.price || 0;
               const total = unitPrice * item.quantity;
+              const totalPlannedHours = Math.round(((item.plannedMinutes * item.quantity) / 60) * 10) / 10;
 
               return (
                 <div
                   key={item.serviceId}
-                  className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 bg-slate-50"
+                  className="flex items-start gap-3 p-3 rounded-lg border border-slate-200 bg-slate-50"
                 >
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm text-slate-900 truncate">
                       {service.name}
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-slate-500 mb-2">
                       {unitPrice.toLocaleString('ru-RU')} ₸ {service.unit ? `за ${service.unit}` : ''}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-slate-600">План, мин/ед:</label>
+                      <input
+                        type="number"
+                        value={item.plannedMinutes}
+                        onChange={(e) => handleUpdatePlannedMinutes(item.serviceId, parseInt(e.target.value) || 0)}
+                        min={0}
+                        className="w-20 rounded border border-slate-300 px-2 py-1 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <span className="text-xs text-slate-500">
+                        План-факт: {totalPlannedHours.toLocaleString('ru-RU')}ч / —
+                      </span>
                     </div>
                   </div>
 
@@ -676,15 +825,25 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
 
             {/* Total */}
             <div className="flex items-center justify-between pt-3 border-t border-slate-200">
-              <div className="text-sm font-semibold text-slate-900">Итого:</div>
-              <div className="text-lg font-bold text-orange-600">
-                {formData.amount.toLocaleString('ru-RU')} ₸
+              <div>
+                <div className="text-sm font-semibold text-slate-900">Итого:</div>
+                <div className="text-xs text-slate-500">
+                  План-факт времени: {(
+                    Math.round((selectedServices.reduce((sum, item) => sum + (item.plannedMinutes * item.quantity), 0) / 60) * 10) / 10
+                  ).toLocaleString('ru-RU')}ч / —
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-bold text-orange-600">
+                  {formData.amount.toLocaleString('ru-RU')} ₸
+                </div>
+                <div className="text-xs text-slate-500">Факт: —</div>
               </div>
             </div>
           </div>
         ) : (
           <div className="text-sm text-slate-500 py-3 text-center bg-slate-50 rounded-lg border border-slate-200">
-            Услуги не выбраны. Сумма сделки будет указана вручную.
+            Услуги не выбраны. Сумма заказа будет указана вручную.
           </div>
         )}
       </div>
@@ -707,6 +866,76 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
           ))}
         </select>
       </div>
+
+      {!deal && (
+        <div>
+          <label htmlFor="bookingScheduledAt" className="block text-sm font-medium text-slate-700 mb-1">
+            Дата и время записи
+          </label>
+          <input
+            id="bookingScheduledAt"
+            type="datetime-local"
+            value={formData.bookingScheduledAt}
+            onChange={(e) => setFormData({ ...formData, bookingScheduledAt: e.target.value })}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+          />
+          <p className="mt-1 text-xs text-slate-500">
+            При создании заказа автоматически будет создана запись в календаре.
+          </p>
+        </div>
+      )}
+
+      <div>
+        <label htmlFor="guaranteeUntil" className="block text-sm font-medium text-slate-700 mb-1">
+          Гарантия до
+        </label>
+        <input
+          id="guaranteeUntil"
+          type="date"
+          value={formData.guaranteeUntil}
+          onChange={(e) => setFormData({ ...formData, guaranteeUntil: e.target.value })}
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+        />
+        <p className="mt-1 text-xs text-slate-500">
+          Заказ может оставаться в стадии «Сервис» до конца гарантийного срока, выручка считается сразу.
+        </p>
+      </div>
+
+      <div>
+        <label htmlFor="estimatedHours" className="block text-sm font-medium text-slate-700 mb-1">
+          План времени (часы)
+        </label>
+        <input
+          id="estimatedHours"
+          type="number"
+          value={formData.estimatedHours}
+          onChange={(e) => setFormData({ ...formData, estimatedHours: Number(e.target.value) || 0 })}
+          min={0}
+          step={0.1}
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          placeholder="2.5"
+        />
+        <p className="mt-1 text-xs text-slate-500">
+          Если задан бюджет времени по услугам, поле считается автоматически. Можно скорректировать вручную.
+        </p>
+      </div>
+
+      {formData.stage === 'cancelled' && (
+        <div>
+          <label htmlFor="failReason" className="block text-sm font-medium text-slate-700 mb-1">
+            Причина провала *
+          </label>
+          <textarea
+            id="failReason"
+            value={formData.failReason}
+            onChange={(e) => setFormData({ ...formData, failReason: e.target.value })}
+            required
+            rows={3}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+            placeholder="Например: клиент отказался по цене"
+          />
+        </div>
+      )}
 
       {/* Amount */}
       <div>
@@ -758,7 +987,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
           placeholder="45000"
         />
         <p className="mt-1 text-xs text-slate-500">
-          Заполните это поле когда сделка будет закрыта
+          Заполняйте, когда выручка уже зафиксирована (можно ещё на стадии «Сервис»)
         </p>
       </div>
 

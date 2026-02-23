@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { IconSearch, IconCar, IconHistory, IconPlus } from '@tabler/icons-react';
+import { IconSearch, IconCar, IconHistory, IconPlus, IconTrash } from '@tabler/icons-react';
 import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
 import Link from 'next/link';
 
@@ -48,6 +48,7 @@ export default function VehiclesPage() {
     notes: '',
     cost: '',
   });
+  const [deletingVehicleId, setDeletingVehicleId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchVehicles();
@@ -122,6 +123,36 @@ export default function VehiclesPage() {
     }
   };
 
+  const deleteVehicle = async (vehicle: Vehicle) => {
+    const confirmed = window.confirm(
+      `Удалить автомобиль ${vehicle.brand.name} ${vehicle.model.name}${vehicle.licensePlate ? ` (${vehicle.licensePlate})` : ''}?`,
+    );
+    if (!confirmed) return;
+
+    try {
+      setDeletingVehicleId(vehicle.id);
+      const res = await fetch(`${apiBaseUrl}/vehicles/${vehicle.id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Не удалось удалить автомобиль');
+      }
+
+      setVehicles((prev) => prev.filter((item) => item.id !== vehicle.id));
+      if (selectedVehicle?.id === vehicle.id) {
+        setSelectedVehicle(null);
+        setHistory([]);
+      }
+    } catch (e: any) {
+      alert(e.message || 'Ошибка удаления автомобиля');
+    } finally {
+      setDeletingVehicleId(null);
+    }
+  };
+
   const filteredVehicles = vehicles.filter(v => {
     if (!search) return true;
     const q = search.toLowerCase();
@@ -188,6 +219,7 @@ export default function VehiclesPage() {
                       <th className="pb-3 pr-4">Гос. номер</th>
                       <th className="pb-3 pr-4">Пробег</th>
                       <th className="pb-3 pr-4 text-center">История</th>
+                      <th className="pb-3 pr-4 text-right">Действия</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -224,6 +256,19 @@ export default function VehiclesPage() {
                             <IconHistory size={12} />
                             {v._count.serviceHistory}
                           </span>
+                        </td>
+                        <td className="py-3 pr-4 text-right">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteVehicle(v);
+                            }}
+                            disabled={deletingVehicleId === v.id}
+                            className="inline-flex items-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                          >
+                            <IconTrash size={14} />
+                            {deletingVehicleId === v.id ? 'Удаление...' : 'Удалить'}
+                          </button>
                         </td>
                       </tr>
                     ))}

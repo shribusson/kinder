@@ -6,8 +6,13 @@ interface ServiceCategory {
   slug: string;
 }
 
-export default async function ContactsPage() {
+export default async function ContactsPage({
+  searchParams,
+}: {
+  searchParams?: { lead?: string };
+}) {
   const categories = await fetchJson<ServiceCategory[]>("/services/categories", {}, []);
+  const leadStatus = searchParams?.lead;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -53,7 +58,19 @@ export default async function ContactsPage() {
           <div className="bg-white rounded-lg p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Оставьте заявку</h2>
 
+            {leadStatus === "success" && (
+              <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+                Заявка отправлена. Мы свяжемся с вами в ближайшее время.
+              </div>
+            )}
+            {leadStatus === "error" && (
+              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                Не удалось отправить заявку. Повторите попытку позже.
+              </div>
+            )}
+
             <form action="/api/website-lead" method="POST" className="space-y-4">
+              <input type="hidden" name="source" value="contacts_form" />
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                   Ваше имя

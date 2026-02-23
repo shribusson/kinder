@@ -9,7 +9,7 @@ const navItems = [
   { label: "Дашборд", href: "/crm", icon: "📊" },
   { label: "Входящие", href: "/crm/inbox", icon: "📬" },
   { label: "Лиды", href: "/crm/leads", icon: "👥" },
-  { label: "Сделки", href: "/crm/deals", icon: "🎯" },
+  { label: "Заказы", href: "/crm/deals", icon: "🎯" },
   { label: "Записи", href: "/crm/bookings", icon: "📅" },
   { label: "Автомобили", href: "/crm/vehicles", icon: "🚗" },
   { label: "Кампании", href: "/crm/campaigns", icon: "📢" },

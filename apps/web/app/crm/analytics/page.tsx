@@ -25,7 +25,7 @@ export default async function AnalyticsPage() {
   const utmReport = await fetchJson<UTMRow[]>("/crm/analytics/utm", undefined, []);
   const metrics = [
     { label: "Лиды", value: summary.leads.toString() },
-    { label: "Сделки", value: summary.deals.toString() },
+    { label: "Заказы", value: summary.deals.toString() },
     { label: "Выручка", value: `${summary.revenue.toLocaleString("ru-RU")} ₸` },
     { label: "Средний чек", value: `${summary.avgCheck.toLocaleString("ru-RU")} ₸` }
   ];

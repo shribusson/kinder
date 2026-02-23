@@ -5,10 +5,14 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { User } from '@prisma/client';
+import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class MechanicService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private storage: StorageService,
+  ) {}
 
   async getResourceIdForUser(user: any): Promise<string | null> {
     let accountId = user.accountId;
@@ -64,6 +68,13 @@ export class MechanicService {
         vehicle: { include: { brand: true, model: true } },
         dealItems: { include: { service: true } },
         timeEntries: { where: { resourceId }, orderBy: { startedAt: 'desc' } },
+        workLogs: {
+          include: {
+            media: { include: { mediaFile: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 3,
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -169,11 +180,168 @@ export class MechanicService {
         },
         dealItems: { include: { service: { include: { category: true } } } },
         timeEntries: { where: { resourceId }, orderBy: { startedAt: 'desc' } },
+        workLogs: {
+          include: {
+            resource: true,
+            media: { include: { mediaFile: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
       },
     });
     if (!deal) throw new NotFoundException('Deal not found or not assigned to you');
 
     const totalMinutes = deal.timeEntries.reduce((sum, e) => sum + (e.durationMinutes || 0), 0);
     return { ...deal, totalHoursSpent: Math.round((totalMinutes / 60) * 10) / 10 };
+  }
+
+  async quickCreateDeal(accountId: string, resourceId: string, payload: any) {
+    const lead = await this.prisma.lead.create({
+      data: {
+        accountId,
+        name: payload.lead.name,
+        phone: payload.lead.phone,
+        email: payload.lead.email,
+        source: 'mechanic',
+      },
+    });
+
+    const deal = await this.prisma.deal.create({
+      data: {
+        accountId,
+        leadId: lead.id,
+        title: payload.title || 'Новый заказ',
+        stage: payload.stage || 'diagnostics',
+        amount: 0,
+        estimatedHours: payload.estimatedHours,
+        assignedResourceId: resourceId,
+        metadata: payload.vehicle ? {
+          licensePlate: payload.vehicle.licensePlate,
+          vin: payload.vehicle.vin,
+          brandId: payload.vehicle.brandId,
+          modelId: payload.vehicle.modelId,
+        } : undefined,
+      },
+      include: {
+        lead: true,
+        vehicle: { include: { brand: true, model: true } },
+        dealItems: true,
+        timeEntries: true,
+        workLogs: true,
+      },
+    });
+
+    const resource = await this.prisma.resource.findUnique({
+      where: { id: resourceId },
+      select: { name: true },
+    });
+
+    await this.prisma.booking.create({
+      data: {
+        accountId,
+        leadId: lead.id,
+        specialist: resource?.name || 'Механик',
+        resourceId,
+        scheduledAt: new Date(),
+        status: 'PLANNED',
+        metadata: {
+          dealId: deal.id,
+          autoCreated: true,
+        },
+      },
+    });
+
+    return deal;
+  }
+
+  private async ensureDealAccess(dealId: string, resourceId: string, accountId: string) {
+    const deal = await this.prisma.deal.findFirst({
+      where: { id: dealId, accountId, assignedResourceId: resourceId },
+      select: { id: true },
+    });
+    if (!deal) throw new NotFoundException('Deal not found or not assigned to this mechanic');
+  }
+
+  async createWorkLog(accountId: string, resourceId: string, dealId: string, dto: any) {
+    await this.ensureDealAccess(dealId, resourceId, accountId);
+    return this.prisma.workLog.create({
+      data: {
+        accountId,
+        dealId,
+        resourceId,
+        title: dto.title,
+        description: dto.description,
+        status: dto.status || 'open',
+        checklist: dto.checklist,
+      },
+      include: {
+        media: { include: { mediaFile: true } },
+      },
+    });
+  }
+
+  async listWorkLogs(accountId: string, resourceId: string, dealId: string) {
+    await this.ensureDealAccess(dealId, resourceId, accountId);
+    return this.prisma.workLog.findMany({
+      where: { accountId, dealId },
+      include: {
+        media: { include: { mediaFile: true } },
+        resource: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async updateChecklist(accountId: string, resourceId: string, logId: string, checklist: any[]) {
+    const log = await this.prisma.workLog.findFirst({
+      where: { id: logId, accountId, resourceId },
+    });
+    if (!log) throw new NotFoundException('Work log not found');
+    return this.prisma.workLog.update({
+      where: { id: logId },
+      data: { checklist },
+      include: { media: { include: { mediaFile: true } } },
+    });
+  }
+
+  async attachMedia(accountId: string, resourceId: string, logId: string, file: Express.Multer.File) {
+    const log = await this.prisma.workLog.findFirst({
+      where: { id: logId, accountId, resourceId },
+    });
+    if (!log) throw new NotFoundException('Work log not found');
+
+    const key = this.storage.generateKey(accountId, 'mechanic-logs', file.originalname);
+    const { url } = await this.storage.upload({
+      key,
+      body: file.buffer,
+      contentType: file.mimetype,
+      metadata: {
+        uploadedBy: resourceId,
+        logId,
+      },
+      acl: 'private',
+    });
+
+    const mediaFile = await this.prisma.mediaFile.create({
+      data: {
+        accountId,
+        name: file.originalname,
+        url,
+        storageKey: key,
+        mimeType: file.mimetype,
+        fileSize: file.size,
+        bucket: 'default',
+      },
+    });
+
+    const link = await this.prisma.workLogMedia.create({
+      data: {
+        workLogId: logId,
+        mediaFileId: mediaFile.id,
+      },
+      include: { mediaFile: true },
+    });
+
+    return link;
   }
 }

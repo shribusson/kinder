@@ -27,7 +27,7 @@ export class BookingsController {
   }
 
   @Post()
-  @Roles("admin", "manager")
+  @Roles("admin", "manager", "mechanic")
   async create(@Body() payload: CreateBookingDto, @Req() req: AuthenticatedRequest) {
     const membership = await this.prisma.membership.findFirst({
       where: { userId: req.user.sub },
@@ -42,19 +42,19 @@ export class BookingsController {
   }
 
   @Patch(":id")
-  @Roles("admin", "manager")
+  @Roles("admin", "manager", "mechanic")
   async update(@Param("id") id: string, @Body() payload: UpdateBookingDto) {
     return this.crm.updateBooking(id, payload);
   }
 
   @Delete(":id")
-  @Roles("admin", "manager")
+  @Roles("admin", "manager", "mechanic")
   async cancel(@Param("id") id: string) {
     return this.crm.cancelBooking(id);
   }
 
   @Put(":id/status")
-  @Roles("admin", "manager")
+  @Roles("admin", "manager", "mechanic")
   async updateStatus(@Param("id") id: string, @Body() payload: { status: string }) {
     return this.crm.updateBookingStatus(id, payload.status);
   }

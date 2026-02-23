@@ -193,6 +193,16 @@ export class VehiclesController {
     return { success: true, data: await this.vehiclesService.getVehicleHistory(vehicleId) };
   }
 
+  @Delete(':id')
+  async deleteVehicle(@Req() req: any, @Param('id') vehicleId: string) {
+    const membership = await this.prisma.membership.findFirst({
+      where: { userId: req.user.sub },
+    });
+    if (!membership) throw new NotFoundException('No account');
+    const deleted = await this.vehiclesService.deleteVehicle(membership.accountId, vehicleId);
+    return { success: true, data: deleted };
+  }
+
   @Post(':id/history')
   async addServiceHistory(
     @Req() req: any,

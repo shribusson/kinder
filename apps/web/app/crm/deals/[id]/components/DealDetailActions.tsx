@@ -31,7 +31,7 @@ export default function DealDetailActions({ deal }: DealDetailActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
-    if (!confirm(`Вы уверены, что хотите удалить сделку "${deal.title}"?`)) {
+    if (!confirm(`Вы уверены, что хотите удалить заказ "${deal.title}"?`)) {
       return;
     }
 
@@ -49,7 +49,7 @@ export default function DealDetailActions({ deal }: DealDetailActionsProps) {
       router.push('/crm/deals');
     } catch (error) {
       console.error('Failed to delete deal:', error);
-      alert('Ошибка удаления сделки');
+      alert('Ошибка удаления заказа');
       setIsDeleting(false);
     }
   };

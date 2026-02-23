@@ -174,4 +174,19 @@ export class VehiclesService {
     }
     return this.createVehicle(accountId, data);
   }
+
+  async deleteVehicle(accountId: string, vehicleId: string) {
+    const vehicle = await this.prisma.vehicle.findFirst({
+      where: { id: vehicleId, accountId },
+      select: { id: true },
+    });
+
+    if (!vehicle) {
+      throw new NotFoundException('Vehicle not found');
+    }
+
+    return this.prisma.vehicle.delete({
+      where: { id: vehicleId },
+    });
+  }
 }

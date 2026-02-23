@@ -18,13 +18,29 @@ interface Deal {
   };
 }
 
-export default async function DealsPage() {
-  const deals = await fetchJson<Deal[]>("/crm/deals", undefined, []);
+interface DealsPageProps {
+  searchParams?: {
+    stage?: string;
+    q?: string;
+  };
+}
+
+export default async function DealsPage({ searchParams }: DealsPageProps) {
+  const params = new URLSearchParams();
+  if (searchParams?.stage) {
+    params.set("stage", searchParams.stage);
+  }
+  if (searchParams?.q) {
+    params.set("q", searchParams.q);
+  }
+
+  const endpoint = params.toString() ? `/crm/deals?${params.toString()}` : "/crm/deals";
+  const deals = await fetchJson<Deal[]>(endpoint, undefined, []);
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Сделки"
+        title="Заказы"
         subtitle="Канбан по стадиям — перетаскивайте карточки для изменения стадии"
         action={<ExportLink path="/crm/deals/export" label="Экспорт CSV" />}
       />

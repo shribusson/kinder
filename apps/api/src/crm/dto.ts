@@ -43,6 +43,18 @@ export class CreateLeadDto {
   @IsOptional()
   @IsObject()
   utm?: Record<string, string | undefined>;
+
+  @IsOptional()
+  @IsObject()
+  vehicleData?: {
+    brandId: string;
+    modelId: string;
+    year?: number;
+    vin?: string;
+    licensePlate?: string;
+    color?: string;
+    mileage?: number;
+  };
 }
 
 export class CreateDealDto {
@@ -69,6 +81,11 @@ export class CreateDealDto {
   revenue?: number;
 
   @IsOptional()
+  @IsNumber({}, { message: 'Estimated hours must be a number' })
+  @Min(0, { message: 'Estimated hours must be positive' })
+  estimatedHours?: number;
+
+  @IsOptional()
   @IsObject()
   vehicleData?: {
     brandId: string;
@@ -83,6 +100,23 @@ export class CreateDealDto {
   @IsOptional()
   @IsArray()
   services?: Array<{ serviceId: string; quantity: number }>;
+
+  @IsOptional()
+  @IsArray()
+  serviceTimeBudgets?: Array<{ serviceId: string; plannedMinutes: number }>;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  failReason?: string;
+
+  @IsOptional()
+  @IsDateString({}, { message: 'Invalid guarantee date format' })
+  guaranteeUntil?: string;
+
+  @IsOptional()
+  @IsDateString({}, { message: 'Invalid booking date format' })
+  bookingScheduledAt?: string;
 }
 
 export class CreateBookingDto {
@@ -160,6 +194,18 @@ export class UpdateLeadDto {
   @IsOptional()
   @IsObject()
   utm?: Record<string, string | undefined>;
+
+  @IsOptional()
+  @IsObject()
+  vehicleData?: {
+    brandId: string;
+    modelId: string;
+    year?: number;
+    vin?: string;
+    licensePlate?: string;
+    color?: string;
+    mileage?: number;
+  };
 }
 
 export class UpdateDealDto {
@@ -183,6 +229,11 @@ export class UpdateDealDto {
   revenue?: number;
 
   @IsOptional()
+  @IsNumber({}, { message: 'Estimated hours must be a number' })
+  @Min(0, { message: 'Estimated hours must be positive' })
+  estimatedHours?: number;
+
+  @IsOptional()
   @IsObject()
   vehicleData?: {
     brandId: string;
@@ -197,6 +248,23 @@ export class UpdateDealDto {
   @IsOptional()
   @IsArray()
   services?: Array<{ serviceId: string; quantity: number }>;
+
+  @IsOptional()
+  @IsArray()
+  serviceTimeBudgets?: Array<{ serviceId: string; plannedMinutes: number }>;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  failReason?: string;
+
+  @IsOptional()
+  @IsDateString({}, { message: 'Invalid guarantee date format' })
+  guaranteeUntil?: string;
+
+  @IsOptional()
+  @IsDateString({}, { message: 'Invalid booking date format' })
+  bookingScheduledAt?: string;
 }
 
 export class UpdateBookingDto {

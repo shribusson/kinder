@@ -27,8 +27,13 @@ const ICON_MAP: Record<string, React.ComponentType<any>> = {
   heater: IconTruck,
 };
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams?: { lead?: string };
+}) {
   const categories = await fetchJson<ServiceCategory[]>("/services/categories", {}, []);
+  const leadStatus = searchParams?.lead;
 
   return (
     <div className="bg-white">
@@ -167,6 +172,17 @@ export default async function HomePage() {
             <p className="text-gray-600 mb-8">
               Оставьте свои контакты, и мы свяжемся с вами в ближайшее время
             </p>
+
+            {leadStatus === "success" && (
+              <div className="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+                Заявка отправлена. Мы свяжемся с вами в ближайшее время.
+              </div>
+            )}
+            {leadStatus === "error" && (
+              <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                Не удалось отправить заявку. Повторите попытку позже.
+              </div>
+            )}
 
             <form action="/api/website-lead" method="POST" className="space-y-4 max-w-lg mx-auto">
               <input type="hidden" name="source" value="landing_form" />

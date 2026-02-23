@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Loader2, ArrowLeft, Clock, Car, Phone, PlayCircle } from 'lucide-react';
+import { Loader2, ArrowLeft, Clock, Car, Phone, PlayCircle, Plus, CheckSquare, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { apiCall } from '@/lib/api';
+import { apiCall, apiBaseUrl, getAuthHeaders } from '@/lib/api';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 interface DealDetails {
   id: string;
@@ -58,15 +60,31 @@ interface DealDetails {
     durationMinutes: number | null;
     notes?: string;
   }>;
+  workLogs: Array<{
+    id: string;
+    title?: string;
+    description?: string;
+    status: string;
+    checklist?: Array<{ text: string; done: boolean }>;
+    createdAt: string;
+    media: Array<{
+      mediaFile: {
+        id: string;
+        url: string;
+        name?: string;
+        mimeType?: string;
+      };
+    }>;
+  }>;
 }
 
 const stageLabels: Record<string, string> = {
-  diagnostics: 'Диагностика',
-  planned: 'Запланирован',
-  in_progress: 'В работе',
-  ready: 'Готов',
-  closed: 'Закрыт',
-  cancelled: 'Отменён',
+  diagnostics: 'Контакт',
+  planned: 'Запись',
+  in_progress: 'Сервис',
+  ready: 'Сервис',
+  closed: 'Успех',
+  cancelled: 'Провал',
 };
 
 export default function MechanicDealDetail() {
@@ -76,6 +94,13 @@ export default function MechanicDealDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [deal, setDeal] = useState<DealDetails | null>(null);
   const [isStartingTimer, setIsStartingTimer] = useState(false);
+  const [showLogForm, setShowLogForm] = useState(false);
+  const [creatingLog, setCreatingLog] = useState(false);
+  const [logForm, setLogForm] = useState({
+    title: '',
+    description: '',
+    checklistText: '',
+  });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -168,6 +193,65 @@ export default function MechanicDealDetail() {
 
   const hasActiveTimer = deal.timeEntries.some(entry => !entry.endedAt);
 
+  const handleCreateLog = async () => {
+    setCreatingLog(true);
+    try {
+      const checklist = logForm.checklistText
+        ? logForm.checklistText
+            .split('\n')
+            .map((line) => line.trim())
+            .filter(Boolean)
+            .map((text) => ({ text, done: false }))
+        : undefined;
+
+      const response = await apiCall(`/mechanic/deals/${dealId}/logs`, {
+        method: 'POST',
+        body: {
+          title: logForm.title || undefined,
+          description: logForm.description || undefined,
+          checklist,
+        },
+      });
+
+      if (response.success) {
+        toast({ title: 'Работа добавлена' });
+        setShowLogForm(false);
+        setLogForm({ title: '', description: '', checklistText: '' });
+        loadDeal();
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Ошибка',
+        description: error?.response?.data?.message || 'Не удалось добавить работу',
+        variant: 'destructive',
+      });
+    } finally {
+      setCreatingLog(false);
+    }
+  };
+
+  const handleUpload = async (logId: string, file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    try {
+      const res = await fetch(`${apiBaseUrl}/mechanic/logs/${logId}/media`, {
+        method: 'POST',
+        headers: {
+          ...getAuthHeaders(),
+        },
+        body: form,
+      });
+      const data = await res.json();
+      if (data.success) {
+        loadDeal();
+      } else {
+        toast({ title: 'Ошибка загрузки', description: data.error || 'Не удалось загрузить файл', variant: 'destructive' });
+      }
+    } catch (e) {
+      toast({ title: 'Ошибка загрузки', variant: 'destructive' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-8">
       {/* Header */}
@@ -209,6 +293,17 @@ export default function MechanicDealDetail() {
             )}
           </Button>
         )}
+
+        {/* Actions */}
+        <section className="bg-white rounded-lg border p-4">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-gray-900">Действия</h2>
+            <Button variant="outline" size="sm" onClick={() => setShowLogForm(true)}>
+              <Plus className="w-4 h-4 mr-1" />
+              Добавить работу
+            </Button>
+          </div>
+        </section>
 
         {/* Customer Info */}
         <section className="bg-white rounded-lg border p-4">
@@ -268,6 +363,81 @@ export default function MechanicDealDetail() {
             </div>
           </section>
         )}
+
+        {/* Work Logs */}
+        <section className="bg-white rounded-lg border p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+              <CheckSquare className="w-5 h-5" />
+              Журнал работ
+            </h2>
+            <span className="text-sm text-gray-500">{deal.workLogs.length}</span>
+          </div>
+          {deal.workLogs.length === 0 && (
+            <p className="text-sm text-gray-500">Ещё нет записей</p>
+          )}
+          {deal.workLogs.map((log) => (
+            <div key={log.id} className="border rounded-lg p-3 space-y-2">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="font-semibold text-gray-900">{log.title || 'Работа'}</p>
+                  <p className="text-xs text-gray-500">
+                    {new Date(log.createdAt).toLocaleString('ru-RU')}
+                  </p>
+                </div>
+                <span className="text-xs px-2 py-1 bg-blue-50 text-blue-800 rounded-full">
+                  {log.status}
+                </span>
+              </div>
+              {log.description && (
+                <p className="text-sm text-gray-800 whitespace-pre-wrap">{log.description}</p>
+              )}
+              {log.checklist && log.checklist.length > 0 && (
+                <div className="space-y-1">
+                  {log.checklist
+                    .slice()
+                    .sort((a, b) => Number(a.done) - Number(b.done))
+                    .map((item, idx) => (
+                      <div key={idx} className="flex items-start gap-2 text-sm">
+                        <input type="checkbox" checked={item.done} readOnly className="mt-1" />
+                        <span className={item.done ? 'line-through text-gray-500' : 'text-gray-900'}>
+                          {item.text}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              )}
+              {log.media && log.media.length > 0 && (
+                <div className="flex gap-2 flex-wrap">
+                  {log.media.map((m) => (
+                    <a
+                      key={m.mediaFile.id}
+                      href={m.mediaFile.url}
+                      target="_blank"
+                      className="text-xs text-blue-700 underline"
+                    >
+                      {m.mediaFile.name || 'Файл'}
+                    </a>
+                  ))}
+                </div>
+              )}
+              <label className="flex items-center gap-2 text-sm text-blue-700 cursor-pointer">
+                <Upload className="w-4 h-4" />
+                <span>Добавить файл</span>
+                <input
+                  type="file"
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files?.[0]) {
+                      handleUpload(log.id, e.target.files[0]);
+                      e.target.value = '';
+                    }
+                  }}
+                />
+              </label>
+            </div>
+          ))}
+        </section>
 
         {/* Services */}
         {deal.dealItems.length > 0 && (
@@ -393,6 +563,41 @@ export default function MechanicDealDetail() {
           </section>
         )}
       </div>
+
+      {/* Log form modal */}
+      {showLogForm && (
+        <div className="fixed inset-0 z-30 bg-black/50 flex items-end sm:items-center justify-center p-4">
+          <div className="bg-white w-full sm:max-w-md rounded-2xl shadow-xl p-5 space-y-3">
+            <h3 className="text-lg font-semibold text-gray-900">Новая работа</h3>
+            <Input
+              placeholder="Название"
+              value={logForm.title}
+              onChange={(e) => setLogForm({ ...logForm, title: e.target.value })}
+            />
+            <Textarea
+              placeholder="Описание"
+              rows={3}
+              value={logForm.description}
+              onChange={(e) => setLogForm({ ...logForm, description: e.target.value })}
+            />
+            <Textarea
+              placeholder="Чек-лист: по одной строке на пункт"
+              rows={3}
+              value={logForm.checklistText}
+              onChange={(e) => setLogForm({ ...logForm, checklistText: e.target.value })}
+            />
+            <div className="flex gap-2 pt-2">
+              <Button variant="ghost" className="flex-1" onClick={() => setShowLogForm(false)}>
+                Отмена
+              </Button>
+              <Button className="flex-1 bg-green-600 hover:bg-green-700" onClick={handleCreateLog} disabled={creatingLog}>
+                {creatingLog ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Сохранить
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
