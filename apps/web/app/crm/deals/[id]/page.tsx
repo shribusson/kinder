@@ -5,6 +5,7 @@ import { fetchJson } from '@/app/lib/api';
 import DealDetailActions from './components/DealDetailActions';
 import { WorkOrderSection } from './components/WorkOrderSection';
 import VehicleHistorySection from './components/VehicleHistorySection';
+import DealEnrollmentSection from './components/DealEnrollmentSection';
 
 interface Deal {
   id: string;
@@ -157,12 +158,12 @@ export default async function DealDetailPage({ params }: { params: { id: string 
             </div>
           )}
 
-          {/* Vehicle Information */}
+          {/* Profile Information */}
           {deal.vehicle && (
             <div className="card">
               <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
                 <IconCar size={20} className="text-slate-400" />
-                Автомобиль
+                Профиль
               </h2>
               <div className="space-y-3">
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50">
@@ -187,7 +188,7 @@ export default async function DealDetailPage({ params }: { params: { id: string 
                 <dl className="grid grid-cols-2 gap-3 text-sm">
                   {deal.vehicle.vin && (
                     <div className="col-span-2">
-                      <dt className="text-xs text-slate-500 mb-1">VIN</dt>
+                      <dt className="text-xs text-slate-500 mb-1">Идентификатор</dt>
                       <dd className="font-mono text-xs text-slate-900 bg-slate-100 px-2 py-1 rounded">
                         {deal.vehicle.vin}
                       </dd>
@@ -201,9 +202,9 @@ export default async function DealDetailPage({ params }: { params: { id: string 
                   )}
                   {deal.vehicle.mileage && (
                     <div>
-                      <dt className="text-xs text-slate-500 mb-1">Пробег</dt>
+                      <dt className="text-xs text-slate-500 mb-1">Индекс</dt>
                       <dd className="font-medium text-slate-900">
-                        {deal.vehicle.mileage.toLocaleString('ru-RU')} км
+                        {deal.vehicle.mileage.toLocaleString('ru-RU')}
                       </dd>
                     </div>
                   )}
@@ -232,7 +233,7 @@ export default async function DealDetailPage({ params }: { params: { id: string 
           <div className="card">
             <h2 className="text-lg font-semibold text-slate-900 mb-3">Журнал работ</h2>
             <p className="text-sm text-slate-600 mb-3">
-              Ведение журнала работ, чек-листы и медиа выполняются в карточке механика.
+              Ведение журнала работ, чек-листы и медиа выполняются в карточке специалиста.
             </p>
             <Link
               href={`/crm/mechanic/deals/${deal.id}`}
@@ -252,6 +253,11 @@ export default async function DealDetailPage({ params }: { params: { id: string 
               workOrder={deal.workOrder}
             />
           </div>
+
+          <DealEnrollmentSection
+            dealId={deal.id}
+            lead={deal.lead ? { name: deal.lead.name, phone: deal.lead.phone, email: deal.lead.email } : undefined}
+          />
         </div>
 
         {/* Sidebar */}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { TimerWidget } from './components/TimerWidget';
 import { DealCard } from './components/DealCard';
 import { Loader2 } from 'lucide-react';
@@ -29,11 +29,7 @@ export default function MechanicDashboard() {
   const [showNewDeal, setShowNewDeal] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadDashboard();
-  }, []);
-
-  const loadDashboard = async () => {
+  const loadDashboard = useCallback(async () => {
     try {
       const response = await apiCall('/mechanic/dashboard', {
         method: 'GET',
@@ -58,7 +54,11 @@ export default function MechanicDashboard() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    void loadDashboard();
+  }, [loadDashboard]);
 
   const handleStartTimer = async (dealId: string) => {
     if (!dashboard?.resource) return;
@@ -96,7 +96,7 @@ export default function MechanicDashboard() {
   };
 
   const handleDealCreated = () => {
-    toast({ title: 'Заказ создан', description: 'Назначен на вас' });
+    toast({ title: 'Сделка создана', description: 'Назначена на вас' });
     loadDashboard();
   };
 
@@ -116,7 +116,7 @@ export default function MechanicDashboard() {
             Не удалось загрузить данные
           </p>
           <p className="text-sm text-gray-600 mt-2">
-            Убедитесь, что вы авторизованы как механик
+            Убедитесь, что вы авторизованы как специалист
           </p>
         </div>
       </div>
@@ -134,7 +134,7 @@ export default function MechanicDashboard() {
           onClick={() => setShowNewDeal(true)}
           className="h-12 rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 px-5"
         >
-          Новый заказ
+          Новая сделка
         </Button>
       </div>
 
@@ -164,7 +164,7 @@ export default function MechanicDashboard() {
               unit="шт"
             />
             <StatCard
-              label="В сервисе"
+              label="В работе"
               value={dashboard.stats.dealsInProgress}
               unit="шт"
             />
@@ -174,11 +174,11 @@ export default function MechanicDashboard() {
         {/* Assigned Deals - Single column on mobile */}
         <section>
           <h2 className="text-lg font-semibold mb-3 text-gray-900">
-            Мои заказы ({dashboard.assignedDeals.length})
+            Мои сделки ({dashboard.assignedDeals.length})
           </h2>
           {dashboard.assignedDeals.length === 0 ? (
             <div className="bg-white border rounded-lg p-8 text-center">
-              <p className="text-gray-500">У вас пока нет назначенных заказов</p>
+              <p className="text-gray-500">У вас пока нет назначенных сделок</p>
             </div>
           ) : (
             <div className="space-y-3">

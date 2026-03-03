@@ -157,36 +157,36 @@ async function main() {
 
   // Create service categories and services
   const category1 = await prisma.serviceCategory.upsert({
-    where: { accountId_slug: { accountId: account.id, slug: 'tormozna-sistema' } },
+    where: { accountId_slug: { accountId: account.id, slug: 'it-i-robototexnika' } },
     update: {},
     create: {
       accountId: account.id,
-      name: 'Тормозная система',
-      slug: 'tormozna-sistema',
+      name: 'IT и робототехника',
+      slug: 'it-i-robototexnika',
       icon: 'brake',
       sortOrder: 0,
     },
   });
 
   const category2 = await prisma.serviceCategory.upsert({
-    where: { accountId_slug: { accountId: account.id, slug: 'sistema-ohlazhdenia' } },
+    where: { accountId_slug: { accountId: account.id, slug: 'yazyki-i-kommunikaciya' } },
     update: {},
     create: {
       accountId: account.id,
-      name: 'Система охлаждения',
-      slug: 'sistema-ohlazhdenia',
+      name: 'Языки и коммуникация',
+      slug: 'yazyki-i-kommunikaciya',
       icon: 'coolant',
       sortOrder: 1,
     },
   });
 
   const category3 = await prisma.serviceCategory.upsert({
-    where: { accountId_slug: { accountId: account.id, slug: 'sistema-otopleniya' } },
+    where: { accountId_slug: { accountId: account.id, slug: 'tvorchestvo-i-proekty' } },
     update: {},
     create: {
       accountId: account.id,
-      name: 'Система отопления',
-      slug: 'sistema-otopleniya',
+      name: 'Творчество и проекты',
+      slug: 'tvorchestvo-i-proekty',
       icon: 'heater',
       sortOrder: 2,
     },
@@ -196,15 +196,15 @@ async function main() {
 
   // Brake system services
   const brakeServices = [
-    { name: 'Проточка дисков', price: 16000, unit: 'ось', priceNote: 'тг/ось' },
-    { name: 'Замена главного тормозного цилиндра (ГТЦ)', price: 15000 },
-    { name: 'Замена тормозной жидкости', price: 5000 },
-    { name: 'Замена тормозных колодок (передние)', price: 4000 },
-    { name: 'Замена задних колодок с электронным ручником', price: 6000 },
-    { name: 'Замена барабанных колодок', price: 7000 },
-    { name: 'Ремонт суппорта (1-поршневой)', price: 6000 },
-    { name: 'Ремонт суппорта (2-поршневой)', price: 7000 },
-    { name: 'Ремонт суппорта (4-поршневой)', price: 9000 },
+    { name: 'Робототехника Junior (7-9 лет)', price: 28000, unit: 'месяц', priceNote: '₸/месяц' },
+    { name: 'Python Start (10-12 лет)', price: 32000, unit: 'месяц' },
+    { name: 'GameDev основы', price: 35000, unit: 'месяц' },
+    { name: 'Scratch проекты', price: 24000, unit: 'месяц' },
+    { name: '3D-моделирование для детей', price: 30000, unit: 'месяц' },
+    { name: 'Инженерные проекты', price: 38000, unit: 'месяц' },
+    { name: 'Алгоритмика PRO', price: 40000, unit: 'месяц' },
+    { name: 'Электроника и IoT', price: 36000, unit: 'месяц' },
+    { name: 'Клуб олимпиадного программирования', price: 45000, unit: 'месяц' },
   ];
 
   for (let i = 0; i < brakeServices.length; i++) {
@@ -222,15 +222,15 @@ async function main() {
 
   // Cooling system services
   const coolingServices = [
-    { name: 'Замена антифриза', price: 5000 },
-    { name: 'Замена антифриза с продувкой', price: 7000 },
-    { name: 'Замена термостата', price: null, priceNote: 'от 5 000 тг (зависит от сложности)' },
-    { name: 'Промывка системы охлаждения — блок двигателя', price: 10000 },
-    { name: 'Промывка системы охлаждения — основной радиатор', price: 10000 },
-    { name: 'Промывка системы охлаждения — радиатор отопителя', price: 12000 },
-    { name: 'Замена основного радиатора', price: 15000 },
-    { name: 'Замена радиатора отопителя', price: null, priceNote: '25 000 – 40 000 тг' },
-    { name: 'Промывка радиатора отопителя', price: null, priceNote: 'по запросу' },
+    { name: 'Английский Kids A1', price: 26000, unit: 'месяц' },
+    { name: 'Английский Kids A2', price: 29000, unit: 'месяц' },
+    { name: 'Разговорный клуб', price: 18000, unit: 'месяц' },
+    { name: 'Подготовка к школе', price: 25000, unit: 'месяц' },
+    { name: 'Публичные выступления', price: 22000, unit: 'месяц' },
+    { name: 'Дебаты для подростков', price: 24000, unit: 'месяц' },
+    { name: 'Креативное письмо', price: 21000, unit: 'месяц' },
+    { name: 'Чтение и понимание текста', price: 20000, unit: 'месяц' },
+    { name: 'Грамматика без стресса', price: 19500, unit: 'месяц' },
   ];
 
   for (let i = 0; i < coolingServices.length; i++) {
@@ -246,7 +246,27 @@ async function main() {
     });
   }
 
-  console.log('✅ Created 18 services across 3 categories (9 brake + 9 cooling)');
+  const creativeServices = [
+    { name: 'Арт-студия', price: 19000, unit: 'месяц' },
+    { name: 'Дизайн-мышление', price: 23000, unit: 'месяц' },
+    { name: 'Проектная мастерская', price: 26000, unit: 'месяц' },
+    { name: 'Медиа-лаборатория', price: 27000, unit: 'месяц' },
+  ];
+
+  for (let i = 0; i < creativeServices.length; i++) {
+    await prisma.service.upsert({
+      where: { categoryId_name: { categoryId: category3.id, name: creativeServices[i].name } },
+      update: {},
+      create: {
+        categoryId: category3.id,
+        accountId: account.id,
+        ...creativeServices[i],
+        sortOrder: i,
+      },
+    });
+  }
+
+  console.log('✅ Created education catalog services across 3 categories');
 
   // Mechanic role + sample deal with work logs
   const mechanicPasswordHash = await bcrypt.hash('mechanic123', 10);
@@ -257,7 +277,7 @@ async function main() {
       email: 'mechanic@kinder.kz',
       passwordHash: mechanicPasswordHash,
       firstName: 'Ivan',
-      lastName: 'Mechanic',
+      lastName: 'Teacher',
       role: UserRole.mechanic,
       accountId: account.id,
       locale: 'ru',
@@ -289,7 +309,7 @@ async function main() {
     create: {
       accountId: account.id,
       userId: mechanicUser.id,
-      name: 'Иван Механик',
+      name: 'Иван Преподаватель',
       type: 'specialist',
       email: mechanicUser.email,
       phone: '+77001112233',
@@ -309,12 +329,12 @@ async function main() {
     data: {
       accountId: account.id,
       leadId: demoLead.id,
-      title: 'Диагностика подвески',
+      title: 'Консультация по программе Python Start',
       stage: 'in_progress',
       amount: 0,
       assignedResourceId: mechanicResource.id,
       metadata: {
-        licensePlate: '123ABC01',
+        childAge: 10,
       },
     },
   });
@@ -325,26 +345,144 @@ async function main() {
         accountId: account.id,
         dealId: demoDeal.id,
         resourceId: mechanicResource.id,
-        title: 'Прием авто',
-        description: 'Осмотр внешних повреждений, фото кузова',
+        title: 'Первичная консультация',
+        description: 'Собрали цели семьи и образовательные интересы ребенка',
         status: 'open',
       },
       {
         accountId: account.id,
         dealId: demoDeal.id,
         resourceId: mechanicResource.id,
-        title: 'Диагностика подвески',
-        description: 'Проверка стоек, втулок стабилизатора, шаровых',
+        title: 'Диагностика навыков',
+        description: 'Оценили текущий уровень и рекомендовали учебную траекторию',
         status: 'open',
         checklist: [
-          { text: 'Передние стойки', done: false },
-          { text: 'Втулки стабилизатора', done: true },
+          { text: 'Определить стартовый уровень', done: true },
+          { text: 'Подобрать группу по расписанию', done: false },
         ] as any,
       },
     ],
   });
 
-  console.log('✅ Added mechanic user, resource and demo deal with work logs');
+  const stemProgram = await prisma.program.upsert({
+    where: { accountId_slug: { accountId: account.id, slug: 'stem-start' } },
+    update: {
+      name: 'STEM Start',
+      description: 'Программа для развития инженерного и алгоритмического мышления',
+      isActive: true,
+    },
+    create: {
+      accountId: account.id,
+      name: 'STEM Start',
+      slug: 'stem-start',
+      description: 'Программа для развития инженерного и алгоритмического мышления',
+      isActive: true,
+    },
+  });
+
+  const pythonCourse = await prisma.course.upsert({
+    where: { accountId_slug: { accountId: account.id, slug: 'python-start' } },
+    update: {
+      programId: stemProgram.id,
+      name: 'Python Start',
+      level: 'beginner',
+      ageMin: 10,
+      ageMax: 12,
+      durationWeeks: 24,
+      price: 32000,
+      isActive: true,
+    },
+    create: {
+      accountId: account.id,
+      programId: stemProgram.id,
+      name: 'Python Start',
+      slug: 'python-start',
+      level: 'beginner',
+      ageMin: 10,
+      ageMax: 12,
+      durationWeeks: 24,
+      price: 32000,
+      isActive: true,
+    },
+  });
+
+  const springCohort = await prisma.cohort.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000101' },
+    update: {
+      accountId: account.id,
+      courseId: pythonCourse.id,
+      name: 'Python Start — Spring 2026',
+      status: 'active',
+    },
+    create: {
+      id: '00000000-0000-0000-0000-000000000101',
+      accountId: account.id,
+      courseId: pythonCourse.id,
+      name: 'Python Start — Spring 2026',
+      startsAt: new Date('2026-03-15T10:00:00.000Z'),
+      endsAt: new Date('2026-06-15T10:00:00.000Z'),
+      capacity: 16,
+      status: 'active',
+      timezone: 'Asia/Almaty',
+    },
+  });
+
+  const demoFamily = await prisma.family.create({
+    data: {
+      accountId: account.id,
+      name: 'Семья Demo',
+      phone: client.phone,
+      email: client.email ?? undefined,
+      notes: 'Seeded demo family',
+    },
+  });
+
+  await prisma.familyGuardian.upsert({
+    where: {
+      familyId_userId: {
+        familyId: demoFamily.id,
+        userId: client.id,
+      },
+    },
+    update: {
+      relationLabel: 'parent',
+      isPrimary: true,
+    },
+    create: {
+      familyId: demoFamily.id,
+      userId: client.id,
+      relationLabel: 'parent',
+      isPrimary: true,
+    },
+  });
+
+  const demoStudent = await prisma.student.create({
+    data: {
+      accountId: account.id,
+      familyId: demoFamily.id,
+      firstName: 'Алиса',
+      lastName: 'Демо',
+      grade: '5',
+      schoolName: 'Школа №1',
+    },
+  });
+
+  await prisma.enrollment.create({
+    data: {
+      accountId: account.id,
+      familyId: demoFamily.id,
+      studentId: demoStudent.id,
+      courseId: pythonCourse.id,
+      cohortId: springCohort.id,
+      leadId: demoLead.id,
+      dealId: demoDeal.id,
+      status: 'active',
+      startsAt: new Date('2026-03-15T10:00:00.000Z'),
+      notes: 'Seeded enrollment from CRM demo deal',
+    },
+  });
+
+  console.log('✅ Added demo EdTech entities and connected CRM -> enrollment flow');
 
   console.log('\n🎉 Seed completed successfully!');
   console.log('\n📝 Default credentials:');

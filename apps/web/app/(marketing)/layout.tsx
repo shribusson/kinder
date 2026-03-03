@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import { IconMenu2, IconX } from '@tabler/icons-react';
 
@@ -9,8 +10,8 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
 
   const navItems = [
     { label: 'Главная', href: '/' },
-    { label: 'Услуги', href: '/services' },
-    { label: 'О нас', href: '/about' },
+    { label: 'Программы', href: '/services' },
+    { label: 'О школе', href: '/about' },
     { label: 'Контакты', href: '/contacts' },
   ];
 
@@ -21,10 +22,19 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             {/* Logo / Brand */}
-            <Link href="/" className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded bg-orange-500"></div>
+            <Link href="/" className="flex items-center gap-2 sm:gap-3">
+              <div className="relative h-9 w-9 sm:h-10 sm:w-10 overflow-hidden rounded-lg border border-gray-200 bg-white">
+                <Image
+                  src="/brand/logo.webp"
+                  alt="Скул-Кидс"
+                  fill
+                  sizes="40px"
+                  className="object-contain p-1"
+                  priority
+                />
+              </div>
               <span className="hidden text-lg font-bold text-gray-900 sm:inline">
-                Автомастерская
+                Скул-Кидс
               </span>
             </Link>
 
@@ -84,7 +94,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
                   className="block w-full bg-orange-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-orange-600 transition-colors text-center"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Записаться
+                  Оставить заявку
                 </Link>
               </div>
             </div>
@@ -101,10 +111,21 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3 mb-8">
             {/* Column 1: About */}
             <div>
-              <h3 className="font-bold text-gray-900 mb-3">Автомастерская</h3>
+              <div className="mb-3 flex items-center gap-3">
+                <div className="relative h-9 w-9 overflow-hidden rounded-lg border border-gray-200 bg-white">
+                  <Image
+                    src="/brand/logo.webp"
+                    alt="Скул-Кидс"
+                    fill
+                    sizes="36px"
+                    className="object-contain p-1"
+                  />
+                </div>
+                <h3 className="font-bold text-gray-900">Скул-Кидс</h3>
+              </div>
               <p className="text-sm text-gray-600">
-                Профессиональный ремонт и обслуживание автомобилей. Гарантия на все виды работ,
-                оригинальные запчасти и опытные специалисты.
+                Школа дополнительного образования для детей с современными программами,
+                прозрачной коммуникацией с родителями и EdTech-поддержкой обучения.
               </p>
             </div>
 
@@ -142,7 +163,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
                     href="mailto:info@auto-repair.kz"
                     className="text-gray-600 hover:text-orange-600 transition-colors"
                   >
-                    info@auto-repair.kz
+                    hello@kinder-school.kz
                   </a>
                 </li>
                 <li className="text-gray-600">г. Караганда</li>
@@ -153,7 +174,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           {/* Footer Bottom */}
           <div className="border-t border-gray-200 pt-8">
             <p className="text-center text-sm text-gray-500">
-              © 2026 Автомастерская. Все права защищены.
+              © 2026 Скул-Кидс. Все права защищены.
             </p>
           </div>
         </div>

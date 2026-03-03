@@ -12,6 +12,8 @@
 
 - Дорожная карта платформы: [PLATFORM_ROADMAP_2026.md](./PLATFORM_ROADMAP_2026.md)
 - Аудит общего кода: [SHARED_CODE_AUDIT.md](./SHARED_CODE_AUDIT.md)
+- Доменная модель EdTech-пивота: [EDTECH_SCHOOL_DOMAIN_MODEL.md](./EDTECH_SCHOOL_DOMAIN_MODEL.md)
+- Границы Client/CRM: [CLIENT_CRM_BOUNDARIES.md](./CLIENT_CRM_BOUNDARIES.md)
 
 ## Статус и отчеты
 

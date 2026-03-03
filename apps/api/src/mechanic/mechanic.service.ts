@@ -240,7 +240,7 @@ export class MechanicService {
       data: {
         accountId,
         leadId: lead.id,
-        specialist: resource?.name || 'Механик',
+        specialist: resource?.name || 'Специалист',
         resourceId,
         scheduledAt: new Date(),
         status: 'PLANNED',

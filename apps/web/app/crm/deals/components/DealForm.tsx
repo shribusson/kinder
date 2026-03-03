@@ -96,7 +96,9 @@ const DEAL_STAGES = [
   { value: 'in_progress', label: 'Сервис' },
   { value: 'closed', label: 'Успех (скрытая)' },
   { value: 'cancelled', label: 'Провал (скрытая)' },
-];
+] as const;
+
+type DealStageValue = (typeof DEAL_STAGES)[number]['value'];
 
 function formatDateForInput(value?: string): string {
   if (!value) return '';
@@ -394,7 +396,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
             color: vehicle.color || '',
             mileage: vehicle.mileage,
           });
-          toast.success('Автомобиль найден в базе!');
+          toast.success('Профиль найден в базе!');
         } else {
           setExistingVehicle(null);
         }
@@ -530,7 +532,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
         )}
         {deal && (
           <p className="mt-1 text-xs text-slate-500">
-            Лида нельзя изменить после создания заказа
+            Лида нельзя изменить после создания сделки
           </p>
         )}
       </div>
@@ -538,7 +540,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
       {/* Title */}
       <div>
         <label htmlFor="title" className="block text-sm font-medium text-slate-700 mb-1">
-          Название заказа *
+          Название сделки *
         </label>
         <input
           id="title"
@@ -547,17 +549,17 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           required
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-          placeholder="Замена тормозных колодок"
+          placeholder="Пробный урок по робототехнике"
         />
       </div>
 
-      {/* Vehicle Information Section */}
+      {/* Profile Information Section */}
       <div className="border-t border-slate-200 pt-4">
-        <h3 className="text-sm font-semibold text-slate-900 mb-3">Информация об автомобиле</h3>
+        <h3 className="text-sm font-semibold text-slate-900 mb-3">Информация о профиле</h3>
 
         {existingVehicle && (
           <div className="mb-3 rounded-lg bg-green-50 border border-green-200 px-3 py-2 text-sm text-green-700">
-            ✓ Автомобиль найден в базе: {existingVehicle.brand?.cyrillicName || existingVehicle.brand?.name} {existingVehicle.model?.cyrillicName || existingVehicle.model?.name}
+            ✓ Профиль найден в базе: {existingVehicle.brand?.cyrillicName || existingVehicle.brand?.name} {existingVehicle.model?.cyrillicName || existingVehicle.model?.name}
           </div>
         )}
 
@@ -565,7 +567,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
           {/* Brand */}
           <div>
             <label htmlFor="brandId" className="block text-sm font-medium text-slate-700 mb-1">
-              Марка
+              Категория
             </label>
             {loadingBrands ? (
               <div className="text-xs text-slate-500">Загрузка...</div>
@@ -583,7 +585,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
                 }}
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
               >
-                <option value="">Выберите марку</option>
+                <option value="">Выберите категорию</option>
                 {brands.map((brand) => (
                   <option key={brand.id} value={brand.id}>
                     {brand.cyrillicName || brand.name}
@@ -596,7 +598,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
           {/* Model */}
           <div>
             <label htmlFor="modelId" className="block text-sm font-medium text-slate-700 mb-1">
-              Модель
+              Подкатегория
             </label>
             {loadingModels ? (
               <div className="text-xs text-slate-500">Загрузка...</div>
@@ -611,7 +613,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
                 disabled={!vehicleData.brandId}
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:bg-slate-100"
               >
-                <option value="">Выберите модель</option>
+                <option value="">Выберите подкатегорию</option>
                 {models.map((model) => (
                   <option key={model.id} value={model.id}>
                     {model.cyrillicName || model.name}
@@ -624,7 +626,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
           {/* Year */}
           <div>
             <label htmlFor="year" className="block text-sm font-medium text-slate-700 mb-1">
-              Год выпуска
+              Год набора
             </label>
             <input
               id="year"
@@ -638,10 +640,10 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
             />
           </div>
 
-          {/* License Plate */}
+          {/* Internal Code */}
           <div>
             <label htmlFor="licensePlate" className="block text-sm font-medium text-slate-700 mb-1">
-              Гос. номер
+              Внутренний код
             </label>
             <input
               id="licensePlate"
@@ -650,14 +652,14 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
               onChange={(e) => setVehicleData({ ...vehicleData, licensePlate: e.target.value.toUpperCase() })}
               onBlur={() => handleVehicleLookup('licensePlate')}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-              placeholder="А123БВ 01"
+              placeholder="GR-2026-01"
             />
           </div>
 
           {/* VIN */}
           <div className="col-span-2">
             <label htmlFor="vin" className="block text-sm font-medium text-slate-700 mb-1">
-              VIN
+              Идентификатор
             </label>
             <input
               id="vin"
@@ -667,17 +669,17 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
               onBlur={() => handleVehicleLookup('vin')}
               maxLength={17}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-              placeholder="17 символов"
+              placeholder="До 17 символов"
             />
             <p className="mt-1 text-xs text-slate-500">
-              При вводе VIN или гос. номера проверим, есть ли машина в базе
+              При вводе идентификатора или кода проверим, есть ли профиль в базе
             </p>
           </div>
 
           {/* Color */}
           <div>
             <label htmlFor="color" className="block text-sm font-medium text-slate-700 mb-1">
-              Цвет
+              Метка
             </label>
             <input
               id="color"
@@ -685,14 +687,14 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
               value={vehicleData.color}
               onChange={(e) => setVehicleData({ ...vehicleData, color: e.target.value })}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-              placeholder="Черный"
+              placeholder="Приоритет"
             />
           </div>
 
-          {/* Mileage */}
+          {/* Index */}
           <div>
             <label htmlFor="mileage" className="block text-sm font-medium text-slate-700 mb-1">
-              Пробег (км)
+              Индекс
             </label>
             <input
               id="mileage"
@@ -701,7 +703,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
               onChange={(e) => setVehicleData({ ...vehicleData, mileage: e.target.value ? Number(e.target.value) : null })}
               min={0}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              placeholder="50000"
+              placeholder="1"
             />
           </div>
         </div>
@@ -843,7 +845,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
           </div>
         ) : (
           <div className="text-sm text-slate-500 py-3 text-center bg-slate-50 rounded-lg border border-slate-200">
-            Услуги не выбраны. Сумма заказа будет указана вручную.
+            Услуги не выбраны. Сумма сделки будет указана вручную.
           </div>
         )}
       </div>
@@ -856,7 +858,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
         <select
           id="stage"
           value={formData.stage}
-          onChange={(e) => setFormData({ ...formData, stage: e.target.value })}
+          onChange={(e) => setFormData({ ...formData, stage: e.target.value as DealStageValue })}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
         >
           {DEAL_STAGES.map((stage) => (
@@ -880,7 +882,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
           />
           <p className="mt-1 text-xs text-slate-500">
-            При создании заказа автоматически будет создана запись в календаре.
+            При создании сделки автоматически будет создана запись в календаре.
           </p>
         </div>
       )}
@@ -897,7 +899,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
         />
         <p className="mt-1 text-xs text-slate-500">
-          Заказ может оставаться в стадии «Сервис» до конца гарантийного срока, выручка считается сразу.
+          Сделка может оставаться в стадии «В работе» до конца гарантийного срока, выручка считается сразу.
         </p>
       </div>
 

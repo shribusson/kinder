@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
 
 interface ServiceHistory {
@@ -26,11 +26,7 @@ export default function VehicleHistorySection({ vehicleId }: VehicleHistorySecti
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadHistory();
-  }, [vehicleId]);
-
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`${apiBaseUrl}/vehicles/${vehicleId}/history`, {
@@ -52,7 +48,11 @@ export default function VehicleHistorySection({ vehicleId }: VehicleHistorySecti
     } finally {
       setLoading(false);
     }
-  };
+  }, [vehicleId]);
+
+  useEffect(() => {
+    void loadHistory();
+  }, [loadHistory]);
 
   if (loading) {
     return (

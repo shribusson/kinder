@@ -133,10 +133,10 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
             </dl>
           </div>
 
-          {/* Vehicles */}
+          {/* Profiles */}
           {lead.vehicles && lead.vehicles.length > 0 && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Автомобили клиента</h2>
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">Профили клиента</h2>
               <div className="space-y-3">
                 {lead.vehicles.map((vehicle) => (
                   <div key={vehicle.id} className="rounded-lg border border-slate-200 p-3">
@@ -154,19 +154,19 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
                     <dl className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                       {vehicle.vin && (
                         <div className="sm:col-span-2">
-                          <dt className="text-slate-500">VIN</dt>
+                          <dt className="text-slate-500">Идентификатор</dt>
                           <dd className="font-mono text-slate-800">{vehicle.vin}</dd>
                         </div>
                       )}
                       {vehicle.mileage !== undefined && vehicle.mileage !== null && (
                         <div>
-                          <dt className="text-slate-500">Пробег</dt>
-                          <dd className="font-medium text-slate-900">{vehicle.mileage.toLocaleString('ru-RU')} км</dd>
+                          <dt className="text-slate-500">Индекс</dt>
+                          <dd className="font-medium text-slate-900">{vehicle.mileage.toLocaleString('ru-RU')}</dd>
                         </div>
                       )}
                       {vehicle.color && (
                         <div>
-                          <dt className="text-slate-500">Цвет</dt>
+                          <dt className="text-slate-500">Метка</dt>
                           <dd className="font-medium text-slate-900">{vehicle.color}</dd>
                         </div>
                       )}

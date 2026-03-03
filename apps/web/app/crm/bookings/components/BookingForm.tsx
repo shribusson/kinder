@@ -16,7 +16,7 @@ interface Lead {
 interface Resource {
   id: string;
   name: string;
-  type: string;
+  type: 'specialist' | 'room' | 'equipment' | string;
   isActive: boolean;
 }
 
@@ -44,6 +44,12 @@ const BOOKING_STATUSES = [
   { value: 'CANCELLED', label: 'Отменено' },
   { value: 'NO_SHOW', label: 'Не пришел' },
 ];
+
+const RESOURCE_TYPE_LABELS: Record<string, string> = {
+  specialist: 'Специалист',
+  room: 'Кабинет',
+  equipment: 'Оборудование',
+};
 
 export default function BookingForm({ booking, onSuccess, onCancel }: BookingFormProps) {
   const [formData, setFormData] = useState({
@@ -187,10 +193,10 @@ export default function BookingForm({ booking, onSuccess, onCancel }: BookingFor
         )}
       </div>
 
-      {/* Resource/Specialist selection */}
+      {/* Resource selection */}
       <div>
         <label htmlFor="resourceId" className="block text-sm font-medium text-slate-700 mb-1">
-          Специалист *
+          Ресурс *
         </label>
         {resources.length > 0 ? (
           <select
@@ -200,10 +206,10 @@ export default function BookingForm({ booking, onSuccess, onCancel }: BookingFor
             required={resources.length > 0}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
           >
-            <option value="">Выберите специалиста</option>
-            {resources.filter(r => r.isActive && r.type === 'specialist').map((resource) => (
+            <option value="">Выберите ресурс</option>
+            {resources.filter(r => r.isActive).map((resource) => (
               <option key={resource.id} value={resource.id}>
-                {resource.name}
+                {RESOURCE_TYPE_LABELS[resource.type] || 'Ресурс'} · {resource.name}
               </option>
             ))}
           </select>
@@ -216,10 +222,10 @@ export default function BookingForm({ booking, onSuccess, onCancel }: BookingFor
               onChange={(e) => setFormData({ ...formData, specialist: e.target.value })}
               required
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-              placeholder="Имя специалиста"
+              placeholder="Название ресурса"
             />
             <p className="mt-1 text-xs text-slate-500">
-              Специалисты не настроены. Используйте текстовое поле.
+              Ресурсы не настроены. Используйте текстовое поле.
             </p>
           </>
         )}

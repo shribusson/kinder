@@ -20,7 +20,7 @@ const roleLabels: Record<string, string> = {
   superadmin: 'Суперадмин',
   admin: 'Администратор',
   manager: 'Менеджер',
-  mechanic: 'Механик',
+  mechanic: 'Специалист',
   client: 'Клиент',
 };
 

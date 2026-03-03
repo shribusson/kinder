@@ -3,24 +3,28 @@ import type { Metadata } from "next";
 import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
-  metadataBase: new URL('http://localhost:3002'), // TODO: change to auto shop domain
+  metadataBase: new URL('http://localhost:3000'),
   title: {
-    default: "Автомастерская — профессиональный ремонт автомобилей | Гарантия качества",
-    template: "%s | Автомастерская"
+    default: "Скул-Кидс — школа дополнительного образования для детей",
+    template: "%s | Скул-Кидс"
   },
-  description: "Профессиональный ремонт автомобилей. Диагностика, замена запчастей, техническое обслуживание. Собственный склад запчастей, гарантия на все работы.",
+  description: "Школа дополнительного образования для детей: программы, курсы, расписание, личный кабинет родителя и CRM сопровождение обучения.",
   keywords: [
-    "ремонт автомобилей",
-    "автомастерская",
-    "диагностика автомобилей",
-    "техническое обслуживание",
-    "замена запчастей",
-    "тормозная система",
-    "система охлаждения",
+    "дополнительное образование детей",
+    "детские курсы",
+    "edtech школа",
+    "расписание занятий",
+    "личный кабинет родителя",
+    "детский образовательный центр",
   ],
-  authors: [{ name: "Автомастерская" }],
-  creator: "Автомастерская",
-  publisher: "Автомастерская",
+  authors: [{ name: "Скул-Кидс" }],
+  creator: "Скул-Кидс",
+  publisher: "Скул-Кидс",
+  icons: {
+    icon: '/brand/logo.webp',
+    shortcut: '/brand/logo.webp',
+    apple: '/brand/logo.webp',
+  },
   formatDetection: {
     email: false,
     address: false,
@@ -29,15 +33,15 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "ru_RU",
-    url: "http://localhost:3002",
-    siteName: "Автомастерская",
-    title: "Автомастерская — профессиональный ремонт автомобилей",
-    description: "Профессиональный ремонт и техническое обслуживание автомобилей. Гарантия на все виды работ.",
+    url: "http://localhost:3000",
+    siteName: "Скул-Кидс",
+    title: "Скул-Кидс — школа дополнительного образования",
+    description: "Программы обучения для детей, расписание, материалы и интеграция с CRM.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Автомастерская — профессиональный ремонт",
-    description: "Ремонт и техническое обслуживание автомобилей с гарантией.",
+    title: "Скул-Кидс — дополнительное образование для детей",
+    description: "Современная EdTech-платформа: курсы, прогресс, расписание и поддержка семьи.",
   },
   robots: {
     index: true,
@@ -65,19 +69,18 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "AutoRepair",
-              "name": "Автомастерская",
-              "description": "Профессиональный ремонт и техническое обслуживание автомобилей",
-              "url": "http://localhost:3002",
+              "@type": "EducationalOrganization",
+              "name": "Скул-Кидс",
+              "description": "Школа дополнительного образования для детей",
+              "url": "http://localhost:3000",
               "areaServed": {
                 "@type": "City",
                 "name": "Караганда"
               },
-              "priceRange": "$$",
-              "aggregateRating": {
-                "@type": "AggregateRating",
-                "ratingValue": "4.8",
-                "reviewCount": "1"
+              "educationLevel": "Дополнительное образование",
+              "audience": {
+                "@type": "EducationalAudience",
+                "educationalRole": "student"
               }
             })
           }}

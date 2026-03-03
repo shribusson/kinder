@@ -22,7 +22,7 @@ interface UserModalProps {
 const roles = [
   { value: 'admin', label: 'Администратор' },
   { value: 'manager', label: 'Менеджер' },
-  { value: 'mechanic', label: 'Механик' },
+  { value: 'mechanic', label: 'Специалист' },
   { value: 'client', label: 'Клиент' },
 ];
 

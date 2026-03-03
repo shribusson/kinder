@@ -110,7 +110,7 @@ export function TimerWidget({ timer, onTimerStopped }: TimerWidgetProps) {
       {/* Mobile-first layout */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-gray-600 mb-1">Заказ в работе</p>
+          <p className="text-sm text-gray-600 mb-1">Сделка в работе</p>
           <p className="font-semibold truncate text-gray-900">
             {timer.deal.lead.name}
           </p>

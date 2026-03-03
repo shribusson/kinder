@@ -36,7 +36,7 @@ export function generateWorkOrderHTML(data: WorkOrderData): string {
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Заказ-наряд №${data.orderNumber.toString().padStart(6, '0')}</title>
+    <title>Документ №${data.orderNumber.toString().padStart(6, '0')}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; line-height: 1.4; color: #333; background: white; }
@@ -69,7 +69,7 @@ export function generateWorkOrderHTML(data: WorkOrderData): string {
 <body>
     <div class="container">
         <div class="header">
-            <div class="company-name">${escapeHtml(data.companyName || 'АВТОСЕРВИС')}</div>
+            <div class="company-name">${escapeHtml(data.companyName || 'KINDER SCHOOL')}</div>
             <div class="company-details">
                 ${data.companyInn ? `<div>ИНН: ${escapeHtml(data.companyInn)}</div>` : ''}
                 ${data.companyOkpo ? `<div>ОКПО: ${escapeHtml(data.companyOkpo)}</div>` : ''}
@@ -77,20 +77,20 @@ export function generateWorkOrderHTML(data: WorkOrderData): string {
                 ${data.companyPhone ? `<div>Телефон: ${escapeHtml(data.companyPhone)}</div>` : ''}
             </div>
         </div>
-        <div class="document-title">ЗАКАЗ-НАРЯД</div>
+        <div class="document-title">ДОКУМЕНТ СДЕЛКИ</div>
         <div class="order-number">№ ${data.orderNumber.toString().padStart(6, '0')}</div>
         <div style="text-align: center; font-size: 11px; margin-bottom: 12px;">
             от "${formatDate(new Date(data.date))}"
         </div>
         <div class="section">
-            <div class="section-title">ДАННЫЕ КЛИЕНТА И АВТОМОБИЛЯ</div>
+            <div class="section-title">ДАННЫЕ КЛИЕНТА И ПРОФИЛЯ</div>
             <div class="customer-info">
                 <div class="info-field"><div class="info-label">Клиент:</div><div class="info-value">${escapeHtml(data.customerName)}</div></div>
                 <div class="info-field"><div class="info-label">Телефон:</div><div class="info-value">${escapeHtml(data.customerPhone || '-')}</div></div>
-                <div class="info-field"><div class="info-label">Марка автомобиля:</div><div class="info-value">${escapeHtml(data.carModel || '-')}</div></div>
-                <div class="info-field"><div class="info-label">Гос. номер:</div><div class="info-value">${escapeHtml(data.licensePlate || '-')}</div></div>
-                <div class="info-field"><div class="info-label">VIN:</div><div class="info-value">${escapeHtml(data.vin || '-')}</div></div>
-                <div class="info-field"><div class="info-label">Мастер:</div><div class="info-value">${escapeHtml(data.mechanicName || '-')}</div></div>
+                <div class="info-field"><div class="info-label">Профиль:</div><div class="info-value">${escapeHtml(data.carModel || '-')}</div></div>
+                <div class="info-field"><div class="info-label">Код:</div><div class="info-value">${escapeHtml(data.licensePlate || '-')}</div></div>
+                <div class="info-field"><div class="info-label">Идентификатор:</div><div class="info-value">${escapeHtml(data.vin || '-')}</div></div>
+                <div class="info-field"><div class="info-label">Специалист:</div><div class="info-value">${escapeHtml(data.mechanicName || '-')}</div></div>
             </div>
         </div>
         <div class="section">
@@ -122,7 +122,7 @@ export function generateWorkOrderHTML(data: WorkOrderData): string {
             <div><div class="signature-line"></div><div class="signature-label">Подпись исполнителя (мастера)</div></div>
             <div><div class="signature-line"></div><div class="signature-label">Подпись клиента</div></div>
         </div>
-        <div class="footer">Квитанция является бланком строгой отчетности</div>
+        <div class="footer">Документ сформирован автоматически</div>
     </div>
 </body>
 </html>`;

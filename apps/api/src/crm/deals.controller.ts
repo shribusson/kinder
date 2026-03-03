@@ -85,7 +85,7 @@ export class DealsController {
     if (req.user.role === 'mechanic') {
       assignedResourceId = (await this.getMechanicResourceId(req, membership.accountId)) ?? undefined;
       if (!assignedResourceId) {
-        throw new ForbiddenException('Механик не привязан к активному ресурсу');
+        throw new ForbiddenException('Специалист не привязан к активному ресурсу');
       }
     }
 

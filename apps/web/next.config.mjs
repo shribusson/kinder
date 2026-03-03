@@ -2,11 +2,19 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@kinder/shared'],
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
+  async redirects() {
+    return [
+      {
+        source: '/crm/vehicles',
+        destination: '/crm/profiles',
+        permanent: true,
+      },
+      {
+        source: '/crm/settings/vehicle-brands',
+        destination: '/crm/settings/directories',
+        permanent: true,
+      },
+    ];
   },
 };
 

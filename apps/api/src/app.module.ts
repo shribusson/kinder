@@ -16,6 +16,7 @@ import { WorkOrderModule } from "./workorder/workorder.module";
 import { MechanicModule } from "./mechanic/mechanic.module";
 import { UsersModule } from "./users/users.module";
 import { AccountModule } from "./account/account.module";
+import { ClientModule } from "./client/client.module";
 import { JwtAuthGuard } from "./auth/guards/jwt-auth.guard";
 import { RolesGuard } from "./common/roles.guard";
 
@@ -35,6 +36,7 @@ import { RolesGuard } from "./common/roles.guard";
     MechanicModule,
     UsersModule,
     AccountModule,
+    ClientModule,
     ThrottlerModule.forRoot([{
       ttl: 60000,
       limit: 60,

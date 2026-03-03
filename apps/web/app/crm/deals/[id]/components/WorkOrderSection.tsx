@@ -42,14 +42,14 @@ export function WorkOrderSection({
         setWorkOrder(response.data);
         toast({
           title: 'Успешно',
-          description: 'Заказ-наряд создан',
+          description: 'Документ создан',
         });
       }
     } catch (error) {
       console.error('Error generating work order:', error);
       toast({
         title: 'Ошибка',
-        description: 'Не удалось создать заказ-наряд',
+        description: 'Не удалось создать документ',
         variant: 'destructive',
       });
     } finally {
@@ -72,7 +72,7 @@ export function WorkOrderSection({
     <div className="mt-8 border-t pt-6">
       <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
         <FileText className="w-5 h-5" />
-        Заказ-наряд
+        Документ сделки
       </h3>
 
       {workOrder ? (
@@ -124,9 +124,9 @@ export function WorkOrderSection({
           <div className="flex items-start gap-3 mb-4">
             <AlertCircle className="w-5 h-5 text-gray-500 mt-0.5 flex-shrink-0" />
             <div className="flex-1">
-              <p className="font-medium text-gray-900">Заказ-наряд не создан</p>
+              <p className="font-medium text-gray-900">Документ не создан</p>
               <p className="text-sm text-gray-600 mt-1">
-                Убедитесь, что в настройках указаны реквизиты компании, затем создайте заказ-наряд.
+                Убедитесь, что в настройках указаны реквизиты компании, затем создайте документ.
               </p>
             </div>
           </div>
@@ -144,7 +144,7 @@ export function WorkOrderSection({
             ) : (
               <>
                 <FileText className="w-4 h-4" />
-                Создать заказ-наряд
+                Создать документ
               </>
             )}
           </Button>

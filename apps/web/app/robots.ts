@@ -5,8 +5,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/crm/', '/api/'],
+      disallow: ['/crm/', '/client/', '/api/'],
     },
-    sitemap: 'http://localhost:3002/sitemap.xml',
+    sitemap: 'http://localhost:3000/sitemap.xml',
   }
 }

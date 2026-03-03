@@ -1,10 +1,10 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import Image from "next/image";
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,9 +41,18 @@ function LoginForm() {
         localStorage.setItem('accountId', user.accountId);
       }
 
+      // Разрешаем редирект только на внутренние относительные пути
+      const redirectParam = searchParams.get("redirect");
+      const safeRedirect =
+        redirectParam &&
+        redirectParam.startsWith("/") &&
+        !redirectParam.startsWith("//") &&
+        !redirectParam.includes("://")
+          ? redirectParam
+          : "/crm";
+
       // Full page reload гарантирует что cookie будет отправлен с первым же запросом
-      const redirect = searchParams.get("redirect") || "/crm";
-      window.location.href = redirect;
+      window.location.href = safeRedirect;
     } catch (err: any) {
       setError(err.message || "Ошибка входа");
     } finally {
@@ -105,9 +114,18 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-lg border border-slate-200">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-20 h-20 bg-orange-500 rounded-full mb-4"></div>
-          <h1 className="text-2xl font-bold text-slate-900">Автомастерская</h1>
-          <p className="text-sm text-slate-600 mt-1">Панель управления</p>
+          <div className="relative mb-4 h-20 w-20 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+            <Image
+              src="/brand/logo.webp"
+              alt="Скул-Кидс"
+              fill
+              sizes="80px"
+              className="object-contain p-2"
+              priority
+            />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900">Скул-Кидс</h1>
+          <p className="text-sm text-slate-600 mt-1">CRM-панель управления</p>
         </div>
 
         <Suspense fallback={<div className="text-center">Загрузка...</div>}>

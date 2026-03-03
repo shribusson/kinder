@@ -9,6 +9,11 @@
 - [FINAL_STATUS.md](../../FINAL_STATUS.md)
 - [PRE_PRODUCTION_CHECKLIST.md](../../PRE_PRODUCTION_CHECKLIST.md)
 
+## Новые документы (актуальное расположение)
+
+- [EDTECH_PIVOT_KICKOFF_2026-03-03.md](./EDTECH_PIVOT_KICKOFF_2026-03-03.md)
+- [EDTECH_E2E_CHECK_2026-03-03.md](./EDTECH_E2E_CHECK_2026-03-03.md)
+
 ## План нормализации
 
 1. Новые статусные документы создавать только в `docs/status/`.

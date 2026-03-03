@@ -72,7 +72,7 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
         payload.hourlyRate = formData.hourlyRate;
       }
 
-      // Передать данные для создания аккаунта механика
+      // Передать данные для создания аккаунта специалиста
       if (formData.type === 'specialist' && formData.createUser && (!resource || !resource.user)) {
         payload.username = formData.username || formData.email;
         payload.password = formData.userPassword;
@@ -93,7 +93,7 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
       }
 
       if (!resource && formData.type === 'specialist' && formData.createUser) {
-        toast.success('Ресурс и учётная запись механика успешно созданы!');
+        toast.success('Ресурс и учётная запись специалиста успешно созданы!');
       } else {
         toast.success(resource ? 'Ресурс успешно обновлен!' : 'Ресурс успешно создан!');
       }
@@ -249,7 +249,7 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                     required={formData.createUser}
                     className="w-full rounded-lg border border-blue-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                    placeholder={formData.email || "ivanov_mechanic"}
+                    placeholder={formData.email || "ivanov_specialist"}
                   />
                   <p className="text-xs text-blue-700 mt-1">
                     {formData.email ? `По умолчанию: ${formData.email}` : 'Введите логин для входа'}
@@ -270,7 +270,7 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
                     placeholder="Минимум 6 символов"
                   />
                   <p className="text-xs text-blue-700 mt-1">
-                    Роль: Механик
+                    Роль: Специалист
                   </p>
                 </div>
               </div>

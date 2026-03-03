@@ -80,9 +80,9 @@ export default function WorkOrderSettingsPage() {
   return (
     <div className="max-w-2xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Настройки заказ-наряда</h1>
+        <h1 className="text-3xl font-bold mb-2">Настройки документов</h1>
         <p className="text-gray-600">
-          Укажите реквизиты компании для генерации заказ-нарядов
+          Укажите реквизиты компании для генерации документов
         </p>
       </div>
 
@@ -163,7 +163,7 @@ export default function WorkOrderSettingsPage() {
         <h3 className="font-semibold mb-2 text-blue-900">ℹ️ Информация</h3>
         <p className="text-sm text-blue-800">
           Эти реквизиты будут отображаться в автоматически генерируемых
-          заказ-нарядах. Убедитесь, что все данные заполнены корректно.
+          документах. Убедитесь, что все данные заполнены корректно.
         </p>
       </div>
     </div>

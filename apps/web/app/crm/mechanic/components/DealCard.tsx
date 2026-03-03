@@ -38,8 +38,8 @@ interface DealCardProps {
 const stageLabels: Record<string, string> = {
   diagnostics: 'Контакт',
   planned: 'Запись',
-  in_progress: 'Сервис',
-  ready: 'Сервис',
+  in_progress: 'В работе',
+  ready: 'Готово',
   closed: 'Успех',
   cancelled: 'Провал',
 };
@@ -58,7 +58,7 @@ export function DealCard({ deal, onStartTimer, hasActiveTimer }: DealCardProps) 
     ? `${deal.vehicle.brand.cyrillicName || deal.vehicle.brand.name} ${
         deal.vehicle.model.cyrillicName || deal.vehicle.model.name
       }`
-    : 'Авто не указан';
+    : 'Профиль не указан';
 
   const totalMinutes = deal.timeEntries.reduce(
     (sum, entry) => sum + (entry.durationMinutes || 0),

@@ -7,6 +7,7 @@ import { AnalyticsController } from "./analytics.controller";
 import { IntegrationsController } from "./integrations.controller";
 import { SalesPlansController } from "./sales-plans.controller";
 import { ResourcesController } from "./resources.controller";
+import { EducationController } from "./education.controller";
 import { CrmService } from "./crm.service";
 import { ApiKeyGuard } from "../common/api-key.guard";
 import { RolesGuard } from "../common/roles.guard";
@@ -25,6 +26,7 @@ import { QueuesController } from "../queue/queues.controller";
     IntegrationsController,
     SalesPlansController,
     ResourcesController,
+    EducationController,
     QueuesController,
   ],
   providers: [

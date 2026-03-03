@@ -163,6 +163,131 @@ export class CreateCampaignDto {
   leads!: number;
 }
 
+export class CreateProgramDto {
+  @IsString()
+  @IsNotEmpty({ message: 'Name is required' })
+  @MaxLength(200)
+  name!: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Slug is required' })
+  @MaxLength(120)
+  slug!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  description?: string;
+
+  @IsOptional()
+  isActive?: boolean;
+}
+
+export class CreateCourseDto {
+  @IsUUID('4', { message: 'Invalid program ID format' })
+  @IsNotEmpty({ message: 'Program ID is required' })
+  programId!: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Name is required' })
+  @MaxLength(200)
+  name!: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Slug is required' })
+  @MaxLength(120)
+  slug!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  level?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  ageMin?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  ageMax?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  durationWeeks?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  price?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(10)
+  currency?: string;
+
+  @IsOptional()
+  isActive?: boolean;
+}
+
+export class EnrollFromDealDto {
+  @IsUUID('4', { message: 'Invalid deal ID format' })
+  @IsNotEmpty({ message: 'Deal ID is required' })
+  dealId!: string;
+
+  @IsUUID('4', { message: 'Invalid course ID format' })
+  @IsNotEmpty({ message: 'Course ID is required' })
+  courseId!: string;
+
+  @IsOptional()
+  @IsUUID('4', { message: 'Invalid cohort ID format' })
+  cohortId?: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Parent name is required' })
+  @MaxLength(200)
+  parentName!: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^\+?[1-9]\d{6,14}$/, { message: 'Invalid phone number format' })
+  parentPhone?: string;
+
+  @IsOptional()
+  @IsEmail({}, { message: 'Invalid email format' })
+  parentEmail?: string;
+
+  @IsOptional()
+  @IsUUID('4', { message: 'Invalid parent user ID format' })
+  parentUserId?: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Student first name is required' })
+  @MaxLength(200)
+  studentFirstName!: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Student last name is required' })
+  @MaxLength(200)
+  studentLastName!: string;
+
+  @IsOptional()
+  @IsDateString({}, { message: 'Invalid start date format' })
+  startsAt?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  notes?: string;
+}
+
 // ============================================
 // UPDATE DTOs
 // ============================================

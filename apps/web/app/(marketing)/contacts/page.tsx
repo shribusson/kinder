@@ -20,7 +20,7 @@ export default async function ContactsPage({
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Контакты</h1>
           <p className="text-xl text-gray-600">
-            Свяжитесь с нами удобным способом
+            Свяжитесь с нами, чтобы подобрать программу обучения
           </p>
         </div>
 
@@ -35,13 +35,13 @@ export default async function ContactsPage({
                 <a href="tel:+7" className="text-blue-600 hover:text-blue-700 block mb-1">
                   +7 (___) ___-__-__
                 </a>
-                <p className="text-sm text-gray-600">Пн-Пт: 9:00 - 19:00, Сб: 10:00 - 16:00</p>
+                <p className="text-sm text-gray-600">Пн-Сб: 9:00 - 20:00</p>
               </div>
 
               <div>
                 <h3 className="font-bold text-gray-900 mb-2">Email</h3>
-                <a href="mailto:info@auto-repair.kz" className="text-blue-600 hover:text-blue-700">
-                  info@auto-repair.kz
+                <a href="mailto:hello@kinder-school.kz" className="text-blue-600 hover:text-blue-700">
+                  hello@kinder-school.kz
                 </a>
                 <p className="text-sm text-gray-600">Ответим в течение суток</p>
               </div>
@@ -56,7 +56,7 @@ export default async function ContactsPage({
 
           {/* Contact Form */}
           <div className="bg-white rounded-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Оставьте заявку</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Запрос на консультацию</h2>
 
             {leadStatus === "success" && (
               <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
@@ -101,14 +101,14 @@ export default async function ContactsPage({
 
               <div>
                 <label htmlFor="service" className="block text-sm font-medium text-gray-700 mb-2">
-                  Интересующая услуга
+                  Интересующая программа
                 </label>
                 <select
                   id="service"
                   name="service"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 >
-                  <option value="">Выберите услугу</option>
+                  <option value="">Выберите программу</option>
                   {categories.map((cat) => (
                     <option key={cat.id} value={cat.name}>{cat.name}</option>
                   ))}
@@ -124,7 +124,7 @@ export default async function ContactsPage({
                   name="message"
                   rows={4}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  placeholder="Расскажите о вашей проблеме..."
+                  placeholder="Расскажите о целях и интересах ребенка..."
                 />
               </div>
 

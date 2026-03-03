@@ -28,9 +28,9 @@ export default async function ServicesPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 py-12">
         <div className="text-center mb-16">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Наши услуги</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Образовательные программы</h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Полный спектр услуг по ремонту и обслуживанию автомобилей
+            Направления и курсы дополнительного образования для детей
           </p>
         </div>
 
@@ -49,7 +49,7 @@ export default async function ServicesPage() {
                       )}
                     </div>
                     <p className="text-orange-600 font-bold whitespace-nowrap ml-4">
-                      {service.price ? `${formatPrice(service.price)} руб.${service.unit ? '/' + service.unit : ''}` : service.priceNote || 'по запросу'}
+                      {service.price ? `${formatPrice(service.price)} ₸${service.unit ? '/' + service.unit : ''}` : service.priceNote || 'по запросу'}
                     </p>
                   </div>
                 ))}
@@ -59,7 +59,7 @@ export default async function ServicesPage() {
                 href="/#contact"
                 className="inline-block bg-orange-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-orange-600 transition"
               >
-                Записаться
+                Оставить заявку
               </Link>
             </div>
           ))}

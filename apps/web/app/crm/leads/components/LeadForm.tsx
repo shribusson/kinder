@@ -371,7 +371,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
                 value={formData.utmTerm}
                 onChange={(e) => setFormData({ ...formData, utmTerm: e.target.value })}
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-                placeholder="автомастерская караганда"
+                placeholder="kinder-school-весна"
               />
             </div>
           </div>
@@ -379,11 +379,11 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
       </div>
 
       <div className="border-t border-slate-200 pt-4">
-        <h3 className="text-sm font-semibold text-slate-900 mb-3">Автомобиль клиента (опционально)</h3>
+        <h3 className="text-sm font-semibold text-slate-900 mb-3">Профиль учащегося (опционально)</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label htmlFor="vehicleBrand" className="block text-xs font-medium text-slate-600 mb-1">
-              Марка
+              Категория
             </label>
             <select
               id="vehicleBrand"
@@ -392,7 +392,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
               disabled={loadingBrands}
             >
-              <option value="">{loadingBrands ? 'Загрузка...' : 'Выберите марку'}</option>
+              <option value="">{loadingBrands ? 'Загрузка...' : 'Выберите категорию'}</option>
               {brands.map((brand) => (
                 <option key={brand.id} value={brand.id}>
                   {brand.cyrillicName || brand.name}
@@ -403,7 +403,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
 
           <div>
             <label htmlFor="vehicleModel" className="block text-xs font-medium text-slate-600 mb-1">
-              Модель
+              Подкатегория
             </label>
             <select
               id="vehicleModel"
@@ -412,7 +412,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
               disabled={!vehicleData.brandId || loadingModels}
             >
-              <option value="">{loadingModels ? 'Загрузка...' : 'Выберите модель'}</option>
+              <option value="">{loadingModels ? 'Загрузка...' : 'Выберите подкатегорию'}</option>
               {models.map((model) => (
                 <option key={model.id} value={model.id}>
                   {model.cyrillicName || model.name}
@@ -423,7 +423,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
 
           <div>
             <label htmlFor="vehicleYear" className="block text-xs font-medium text-slate-600 mb-1">
-              Год
+              Год набора
             </label>
             <input
               id="vehicleYear"
@@ -439,7 +439,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
 
           <div>
             <label htmlFor="vehiclePlate" className="block text-xs font-medium text-slate-600 mb-1">
-              Гос. номер
+              Внутренний код
             </label>
             <input
               id="vehiclePlate"
@@ -447,13 +447,13 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
               value={vehicleData.licensePlate}
               onChange={(e) => setVehicleData((prev) => ({ ...prev, licensePlate: e.target.value }))}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-              placeholder="A123BB 01"
+              placeholder="GR-2026-01"
             />
           </div>
 
           <div className="sm:col-span-2">
             <label htmlFor="vehicleVin" className="block text-xs font-medium text-slate-600 mb-1">
-              VIN
+              Идентификатор
             </label>
             <input
               id="vehicleVin"
@@ -461,14 +461,14 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
               value={vehicleData.vin}
               onChange={(e) => setVehicleData((prev) => ({ ...prev, vin: e.target.value.toUpperCase() }))}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-              placeholder="17 символов"
+              placeholder="До 17 символов"
               maxLength={17}
             />
           </div>
 
           <div>
             <label htmlFor="vehicleColor" className="block text-xs font-medium text-slate-600 mb-1">
-              Цвет
+              Метка
             </label>
             <input
               id="vehicleColor"
@@ -476,13 +476,13 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
               value={vehicleData.color}
               onChange={(e) => setVehicleData((prev) => ({ ...prev, color: e.target.value }))}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-              placeholder="Черный"
+              placeholder="Приоритет"
             />
           </div>
 
           <div>
             <label htmlFor="vehicleMileage" className="block text-xs font-medium text-slate-600 mb-1">
-              Пробег (км)
+              Индекс уровня
             </label>
             <input
               id="vehicleMileage"
@@ -491,7 +491,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
               value={vehicleData.mileage}
               onChange={(e) => setVehicleData((prev) => ({ ...prev, mileage: e.target.value }))}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-              placeholder="50000"
+              placeholder="1"
             />
           </div>
         </div>

@@ -19,7 +19,7 @@ export default async function DashboardPage() {
   });
   const metrics = [
     { label: "Лиды", value: summary.leads.toString() },
-    { label: "Заказы", value: summary.deals.toString() },
+    { label: "Сделки", value: summary.deals.toString() },
     { label: "Средний чек", value: `${summary.avgCheck.toLocaleString("ru-RU")} ₸` },
     { label: "План выручки", value: `${summary.revenuePlan.toLocaleString("ru-RU")} ₸` }
   ];
@@ -46,7 +46,10 @@ export default async function DashboardPage() {
             <p className="text-sm font-medium text-orange-900">Лиды</p>
           </a>
           <a href="/crm/deals" className="rounded-xl bg-green-50 p-4 hover:bg-green-100 transition-colors">
-            <p className="text-sm font-medium text-green-900">Заказы</p>
+            <p className="text-sm font-medium text-green-900">Сделки</p>
+          </a>
+          <a href="/crm/education" className="rounded-xl bg-indigo-50 p-4 hover:bg-indigo-100 transition-colors">
+            <p className="text-sm font-medium text-indigo-900">Обучение</p>
           </a>
           <a href="/crm/bookings" className="rounded-xl bg-purple-50 p-4 hover:bg-purple-100 transition-colors">
             <p className="text-sm font-medium text-purple-900">Записи</p>

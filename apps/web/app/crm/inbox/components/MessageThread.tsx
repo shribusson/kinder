@@ -1,6 +1,7 @@
 "use client";
 
 import { IconCheck, IconChecks } from "@tabler/icons-react";
+import Image from "next/image";
 
 interface Message {
   id: string;
@@ -75,10 +76,13 @@ export default function MessageThread({ messages }: MessageThreadProps) {
             {message.mediaFile && (
               <div className="mt-2">
                 {message.mediaFile.mimeType?.startsWith("image/") ? (
-                  <img
+                  <Image
                     src={message.mediaFile.url}
                     alt="Attached media"
-                    className="max-w-full rounded"
+                    width={320}
+                    height={180}
+                    unoptimized
+                    className="h-auto max-w-full rounded"
                   />
                 ) : message.mediaFile.mimeType?.startsWith("video/") ? (
                   <video

@@ -30,7 +30,7 @@ export default async function BookingsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Записи"
-        subtitle="Расписание специалистов и управление приёмами"
+        subtitle="Расписание ресурсов (специалисты, кабинеты, оборудование)"
       />
       <BookingsTable initialBookings={bookings} />
     </div>

@@ -49,7 +49,7 @@ export class CreateResourceDto {
   @IsOptional()
   workingHours?: Record<string, unknown>;
 
-  // Поля для создания аккаунта механика (только для type === 'specialist')
+  // Поля для создания аккаунта специалиста (только для type === 'specialist')
   @IsOptional()
   @IsString()
   @MaxLength(100)
@@ -93,7 +93,7 @@ export class UpdateResourceDto {
   @IsOptional()
   workingHours?: Record<string, unknown>;
 
-  // Поля для создания аккаунта механика
+  // Поля для создания аккаунта специалиста
   @IsOptional()
   @IsString()
   @MaxLength(100)
@@ -157,7 +157,7 @@ export class ResourcesController {
       }
     });
 
-    // Автоматически создать аккаунт механика для specialist
+    // Автоматически создать аккаунт специалиста для specialist
     if (payload.type === 'specialist' && payload.username && payload.password) {
       const passwordHash = await bcrypt.hash(payload.password, 10);
 
@@ -225,7 +225,7 @@ export class ResourcesController {
       }
     });
 
-    // Создать аккаунт механика если запрошено и ещё нет привязки
+    // Создать аккаунт специалиста если запрошено и ещё нет привязки
     if (!resource.userId && payload.username && payload.password) {
       const passwordHash = await bcrypt.hash(payload.password, 10);
 

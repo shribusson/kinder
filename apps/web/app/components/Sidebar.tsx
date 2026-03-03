@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { clsx } from "clsx";
 import { useState, useEffect } from "react";
 import { IconMenu2, IconX } from "@tabler/icons-react";
@@ -9,22 +10,23 @@ const navItems = [
   { label: "Дашборд", href: "/crm", icon: "📊" },
   { label: "Входящие", href: "/crm/inbox", icon: "📬" },
   { label: "Лиды", href: "/crm/leads", icon: "👥" },
-  { label: "Заказы", href: "/crm/deals", icon: "🎯" },
+  { label: "Сделки", href: "/crm/deals", icon: "🎯" },
+  { label: "Обучение", href: "/crm/education", icon: "🎓" },
   { label: "Записи", href: "/crm/bookings", icon: "📅" },
-  { label: "Автомобили", href: "/crm/vehicles", icon: "🚗" },
+  { label: "Карточки", href: "/crm/profiles", icon: "🗂️" },
   { label: "Кампании", href: "/crm/campaigns", icon: "📢" },
   { label: "Аналитика", href: "/crm/analytics", icon: "📈" },
-  { label: "Механик", href: "/crm/mechanic", icon: "🔧" }
+  { label: "Операции", href: "/crm/mechanic", icon: "⚙️" }
 ];
 
 const settingsItems = [
-  { label: "Услуги", href: "/crm/settings/services", icon: "🛠️" },
-  { label: "Марки авто", href: "/crm/settings/vehicle-brands", icon: "🏭" },
+  { label: "Каталог", href: "/crm/settings/services", icon: "🛠️" },
+  { label: "Справочники", href: "/crm/settings/directories", icon: "🏭" },
   { label: "Интеграции", href: "/crm/settings/integrations", icon: "🔌" },
-  { label: "План по выручке", href: "/crm/settings/revenue-plan", icon: "💰" },
+  { label: "План продаж", href: "/crm/settings/revenue-plan", icon: "💰" },
   { label: "Ресурсы", href: "/crm/settings/resources", icon: "⚙️" },
   { label: "Пользователи", href: "/crm/settings/users", icon: "👤" },
-  { label: "Заказ-наряд", href: "/crm/settings/work-order", icon: "📋" }
+  { label: "Документы", href: "/crm/settings/work-order", icon: "📋" }
 ];
 
 export default function Sidebar() {
@@ -52,11 +54,20 @@ export default function Sidebar() {
     )}>
       <div className="flex items-center justify-between gap-3">
         <div className={clsx("flex items-center gap-3", collapsed && "justify-center w-full")}>
-          <div className="h-10 w-10 rounded-xl bg-brand-600 flex-shrink-0"></div>
+          <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-slate-200 bg-white flex-shrink-0">
+            <Image
+              src="/brand/logo.webp"
+              alt="Скул-Кидс"
+              fill
+              sizes="40px"
+              className="object-contain p-1"
+              priority
+            />
+          </div>
           {!collapsed && (
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
-                Автомастерская
+                Скул-Кидс
               </p>
               <h1 className="mt-1 text-lg font-semibold text-slate-900">
                 CRM
@@ -83,7 +94,7 @@ export default function Sidebar() {
           </button>
         )}
       </div>
-      <nav className="flex flex-col gap-2 text-sm">
+      <nav className="min-h-0 flex-1 overflow-y-auto pr-1 flex flex-col gap-2 text-sm">
         {navItems.map((item) => (
           <Link
             key={item.href}

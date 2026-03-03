@@ -4,9 +4,11 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Protect CRM routes
-  if (pathname.startsWith('/crm')) {
-    if (pathname !== '/crm/login') {
+  // Protect CRM and Client routes
+  if (pathname.startsWith('/crm') || pathname.startsWith('/client')) {
+    const isCrmLogin = pathname === '/crm/login';
+
+    if (!isCrmLogin) {
       const token = request.cookies.get('auth_token')?.value;
 
       if (!token) {

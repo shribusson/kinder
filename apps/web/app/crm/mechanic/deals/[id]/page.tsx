@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Loader2, ArrowLeft, Clock, Car, Phone, PlayCircle, Plus, CheckSquare, Upload } from 'lucide-react';
@@ -103,11 +103,7 @@ export default function MechanicDealDetail() {
   });
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadDeal();
-  }, [dealId]);
-
-  const loadDeal = async () => {
+  const loadDeal = useCallback(async () => {
     try {
       const response = await apiCall(`/mechanic/deals/${dealId}`, {
         method: 'GET',
@@ -120,13 +116,17 @@ export default function MechanicDealDetail() {
       console.error('Error loading deal:', error);
       toast({
         title: 'Ошибка',
-        description: 'Не удалось загрузить заказ',
+        description: 'Не удалось загрузить сделку',
         variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [dealId, toast]);
+
+  useEffect(() => {
+    void loadDeal();
+  }, [loadDeal]);
 
   const handleStartTimer = async () => {
     setIsStartingTimer(true);
@@ -179,7 +179,7 @@ export default function MechanicDealDetail() {
     return (
       <div className="flex items-center justify-center min-h-screen p-4">
         <div className="text-center">
-          <p className="text-lg font-semibold text-gray-900">Заказ не найден</p>
+          <p className="text-lg font-semibold text-gray-900">Сделка не найдена</p>
         </div>
       </div>
     );
@@ -329,7 +329,7 @@ export default function MechanicDealDetail() {
           <section className="bg-white rounded-lg border p-4">
             <h2 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <Car className="w-5 h-5" />
-              Автомобиль
+              Профиль
             </h2>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
@@ -338,7 +338,7 @@ export default function MechanicDealDetail() {
               </div>
               {deal.vehicle.licensePlate && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Гос. номер:</span>
+                  <span className="text-gray-600">Код:</span>
                   <span className="font-mono font-medium text-gray-900">
                     {deal.vehicle.licensePlate}
                   </span>
@@ -346,7 +346,7 @@ export default function MechanicDealDetail() {
               )}
               {deal.vehicle.vin && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">VIN:</span>
+                  <span className="text-gray-600">Идентификатор:</span>
                   <span className="font-mono text-xs text-gray-900">
                     {deal.vehicle.vin}
                   </span>
@@ -354,9 +354,9 @@ export default function MechanicDealDetail() {
               )}
               {deal.vehicle.mileage && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Пробег:</span>
+                  <span className="text-gray-600">Индекс:</span>
                   <span className="font-medium text-gray-900">
-                    {deal.vehicle.mileage.toLocaleString()} км
+                    {deal.vehicle.mileage.toLocaleString()}
                   </span>
                 </div>
               )}

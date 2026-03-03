@@ -41,23 +41,23 @@ export default async function HomePage({
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Профессиональный ремонт автомобилей
+            Школа дополнительного образования для детей
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Качественная диагностика, оригинальные запчасти, гарантия на все виды работ
+            Современные программы, опытные преподаватели и прозрачный прогресс обучения
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
             <Link
               href="#contact"
               className="bg-orange-500 text-white px-8 py-4 rounded-lg font-bold hover:bg-orange-600 transition"
             >
-              Записаться на приём
+              Оставить заявку
             </Link>
             <a
               href="tel:+7"
               className="border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-lg font-bold hover:border-orange-500 transition"
             >
-              📞 Позвонить
+              📞 Консультация
             </a>
           </div>
         </div>
@@ -69,23 +69,23 @@ export default async function HomePage({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="text-center">
               <IconShieldCheck className="w-12 h-12 text-orange-500 mx-auto mb-3" stroke={1.5} />
-              <h3 className="font-bold text-gray-900">Гарантия качества</h3>
-              <p className="text-sm text-gray-600">Гарантия на все виды работ</p>
+              <h3 className="font-bold text-gray-900">Проверенные программы</h3>
+              <p className="text-sm text-gray-600">Обновляемые методики обучения</p>
             </div>
             <div className="text-center">
               <IconTruck className="w-12 h-12 text-orange-500 mx-auto mb-3" stroke={1.5} />
-              <h3 className="font-bold text-gray-900">Собственный склад</h3>
-              <p className="text-sm text-gray-600">Оригинальные запчасти</p>
+              <h3 className="font-bold text-gray-900">EdTech-платформа</h3>
+              <p className="text-sm text-gray-600">Материалы, прогресс и расписание онлайн</p>
             </div>
             <div className="text-center">
               <IconUsers className="w-12 h-12 text-orange-500 mx-auto mb-3" stroke={1.5} />
-              <h3 className="font-bold text-gray-900">Опытные мастера</h3>
-              <p className="text-sm text-gray-600">Специалисты высокого уровня</p>
+              <h3 className="font-bold text-gray-900">Сильная команда</h3>
+              <p className="text-sm text-gray-600">Преподаватели и методисты с опытом</p>
             </div>
             <div className="text-center">
               <IconClock className="w-12 h-12 text-orange-500 mx-auto mb-3" stroke={1.5} />
-              <h3 className="font-bold text-gray-900">Удобное расписание</h3>
-              <p className="text-sm text-gray-600">Гибкий график работы</p>
+              <h3 className="font-bold text-gray-900">Гибкое расписание</h3>
+              <p className="text-sm text-gray-600">Очные и онлайн-форматы занятий</p>
             </div>
           </div>
         </div>
@@ -95,9 +95,9 @@ export default async function HomePage({
       <section className="py-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Наши услуги</h2>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Наши программы</h2>
             <p className="text-xl text-gray-600">
-              Полный спектр услуг по ремонту и обслуживанию автомобилей
+              Направления дополнительного образования для разных возрастов
             </p>
           </div>
 
@@ -115,7 +115,7 @@ export default async function HomePage({
                       <Icon className="w-12 h-12 text-orange-500 mx-auto mb-4" stroke={1.5} />
                       <h3 className="text-xl font-bold text-gray-900 mb-2">{category.name}</h3>
                       <p className="text-sm text-gray-600">
-                        {category.services.length} услуг
+                        {category.services.length} курсов
                       </p>
                     </Link>
                   );
@@ -127,7 +127,7 @@ export default async function HomePage({
                   href="/services"
                   className="inline-block bg-orange-500 text-white px-8 py-3 rounded-lg font-bold hover:bg-orange-600 transition"
                 >
-                  Все услуги →
+                  Все программы →
                 </Link>
               </div>
             </>
@@ -143,14 +143,14 @@ export default async function HomePage({
       <section className="py-20 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Как начать</h2>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Как начать обучение</h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
               { num: 1, title: "Оставьте заявку", desc: "Заполните форму или позвоните" },
-              { num: 2, title: "Мы свяжемся с вами", desc: "Обсудим детали вашего заказа" },
-              { num: 3, title: "Начинаем ремонт", desc: "Выполняем работу с гарантией" },
+              { num: 2, title: "Консультация", desc: "Подберем программу под возраст и цели" },
+              { num: 3, title: "Старт обучения", desc: "Формируем маршрут и расписание" },
             ].map((step) => (
               <div key={step.num} className="text-center">
                 <div className="w-12 h-12 bg-orange-500 text-white rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-lg">
@@ -168,9 +168,9 @@ export default async function HomePage({
       <section id="contact" className="py-20">
         <div className="max-w-2xl mx-auto px-4">
           <div className="bg-orange-50 rounded-lg p-12 text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">Записаться на приём</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-6">Запрос на консультацию</h2>
             <p className="text-gray-600 mb-8">
-              Оставьте свои контакты, и мы свяжемся с вами в ближайшее время
+              Оставьте контакты, и мы подберем программу обучения для вашего ребенка
             </p>
 
             {leadStatus === "success" && (
@@ -204,7 +204,7 @@ export default async function HomePage({
                 name="service"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
-                <option value="">Выберите услугу</option>
+                <option value="">Выберите программу</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.name}>{cat.name}</option>
                 ))}
