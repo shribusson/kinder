@@ -157,7 +157,7 @@ export default function DirectoriesPage() {
   };
 
   const deleteBrand = async (id: string, name: string) => {
-    if (!confirm(`Удалить марку "${name}" и все её модели?`)) return;
+    if (!confirm(`Удалить категорию "${name}" и все её подкатегории?`)) return;
     try {
       await fetch(`${apiBaseUrl}/profiles/brands/${id}`, {
         method: 'DELETE',
@@ -247,7 +247,7 @@ export default function DirectoriesPage() {
   };
 
   const deleteModel = async (id: string, name: string) => {
-    if (!confirm(`Удалить модель "${name}"?`)) return;
+    if (!confirm(`Удалить подкатегорию "${name}"?`)) return;
     try {
       await fetch(`${apiBaseUrl}/profiles/models/${id}`, {
         method: 'DELETE',
@@ -273,7 +273,7 @@ export default function DirectoriesPage() {
   if (loading) {
     return (
       <div className="flex flex-col gap-6">
-        <h1 className="text-2xl font-bold text-slate-900">Справочник брендов</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Справочник категорий</h1>
         <p className="text-sm text-slate-500">Загрузка...</p>
       </div>
     );
@@ -285,9 +285,9 @@ export default function DirectoriesPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Справочник брендов</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Справочник категорий</h1>
             <p className="text-sm text-slate-500">
-              {brands.length} брендов, {brands.filter(b => b.popular).length} популярных
+              {brands.length} категорий, {brands.filter(b => b.popular).length} популярных
             </p>
           </div>
           <button
@@ -295,7 +295,7 @@ export default function DirectoriesPage() {
             className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors flex items-center gap-2"
           >
             <IconPlus size={16} />
-            Добавить бренд
+            Добавить категорию
           </button>
         </div>
 
@@ -306,7 +306,7 @@ export default function DirectoriesPage() {
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Поиск бренда..."
+              placeholder="Поиск категории..."
               className="w-full pl-9 pr-3 py-2 border rounded-lg text-sm"
             />
           </div>
@@ -404,7 +404,7 @@ export default function DirectoriesPage() {
                   {modelsLoading ? (
                     <p className="text-sm text-slate-400">Загрузка...</p>
                   ) : models.length === 0 ? (
-                    <p className="text-sm text-slate-400">Нет моделей</p>
+                    <p className="text-sm text-slate-400">Нет подкатегорий</p>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                       {models.map(m => (
@@ -448,7 +448,7 @@ export default function DirectoriesPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <h2 className="text-xl font-bold mb-6">
-              {editingBrand ? 'Редактировать бренд' : 'Новый бренд'}
+              {editingBrand ? 'Редактировать категорию' : 'Новая категория'}
             </h2>
             <div className="space-y-4">
               {!editingBrand && (
@@ -458,18 +458,18 @@ export default function DirectoriesPage() {
                     value={brandForm.id}
                     onChange={e => setBrandForm(f => ({ ...f, id: e.target.value.toUpperCase() }))}
                     className="w-full px-3 py-2 border rounded-md"
-                    placeholder="TOYOTA"
+                    placeholder="CATEGORY_IT"
                   />
                 </div>
               )}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Название (лат) <span className="text-red-500">*</span></label>
+                  <label className="block text-sm font-medium mb-1">Название <span className="text-red-500">*</span></label>
                   <input
                     value={brandForm.name}
                     onChange={e => setBrandForm(f => ({ ...f, name: e.target.value }))}
                     className="w-full px-3 py-2 border rounded-md"
-                    placeholder="Toyota"
+                    placeholder="Робототехника"
                   />
                 </div>
                 <div>
@@ -478,17 +478,17 @@ export default function DirectoriesPage() {
                     value={brandForm.cyrillicName}
                     onChange={e => setBrandForm(f => ({ ...f, cyrillicName: e.target.value }))}
                     className="w-full px-3 py-2 border rounded-md"
-                    placeholder="Тойота"
+                    placeholder="Робототехника"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Страна</label>
+                <label className="block text-sm font-medium mb-1">Группа</label>
                 <input
                   value={brandForm.country}
                   onChange={e => setBrandForm(f => ({ ...f, country: e.target.value }))}
                   className="w-full px-3 py-2 border rounded-md"
-                  placeholder="Япония"
+                  placeholder="STEM"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -519,7 +519,7 @@ export default function DirectoriesPage() {
                   onChange={e => setBrandForm(f => ({ ...f, popular: e.target.checked }))}
                   className="w-4 h-4 rounded"
                 />
-                <label htmlFor="brandPopular" className="text-sm font-medium">Популярный бренд</label>
+                <label htmlFor="brandPopular" className="text-sm font-medium">Популярная категория</label>
               </div>
               <div className="flex gap-3 pt-4">
                 <button
@@ -555,18 +555,18 @@ export default function DirectoriesPage() {
                     value={modelForm.id}
                     onChange={e => setModelForm(f => ({ ...f, id: e.target.value.toUpperCase() }))}
                     className="w-full px-3 py-2 border rounded-md"
-                    placeholder="TOYOTA_CAMRY"
+                    placeholder="IT_JUNIOR"
                   />
                 </div>
               )}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Название (лат) <span className="text-red-500">*</span></label>
+                  <label className="block text-sm font-medium mb-1">Название <span className="text-red-500">*</span></label>
                   <input
                     value={modelForm.name}
                     onChange={e => setModelForm(f => ({ ...f, name: e.target.value }))}
                     className="w-full px-3 py-2 border rounded-md"
-                    placeholder="Camry"
+                    placeholder="Junior"
                   />
                 </div>
                 <div>
