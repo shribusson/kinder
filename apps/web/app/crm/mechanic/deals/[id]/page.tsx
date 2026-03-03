@@ -1,0 +1,603 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Loader2, ArrowLeft, Clock, Car, Phone, PlayCircle, Plus, CheckSquare, Upload } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { apiCall, apiBaseUrl, getAuthHeaders } from '@/lib/api';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+
+interface DealDetails {
+  id: string;
+  title: string;
+  stage: string;
+  amount: number;
+  estimatedHours?: number;
+  totalHoursSpent: number;
+  lead: {
+    name: string;
+    phone?: string;
+    email?: string;
+  };
+  vehicle?: {
+    brand: {
+      cyrillicName?: string;
+      name: string;
+    };
+    model: {
+      cyrillicName?: string;
+      name: string;
+    };
+    year?: number;
+    licensePlate?: string;
+    vin?: string;
+    mileage?: number;
+    serviceHistory: Array<{
+      id: string;
+      serviceDate: string;
+      description: string;
+      cost?: number;
+      mileageAtService?: number;
+    }>;
+  };
+  dealItems: Array<{
+    id: string;
+    quantity: number;
+    unitPrice: number;
+    service: {
+      name: string;
+      category: {
+        name: string;
+      };
+    };
+  }>;
+  timeEntries: Array<{
+    id: string;
+    startedAt: string;
+    endedAt: string | null;
+    durationMinutes: number | null;
+    notes?: string;
+  }>;
+  workLogs: Array<{
+    id: string;
+    title?: string;
+    description?: string;
+    status: string;
+    checklist?: Array<{ text: string; done: boolean }>;
+    createdAt: string;
+    media: Array<{
+      mediaFile: {
+        id: string;
+        url: string;
+        name?: string;
+        mimeType?: string;
+      };
+    }>;
+  }>;
+}
+
+const stageLabels: Record<string, string> = {
+  diagnostics: 'Контакт',
+  planned: 'Запись',
+  in_progress: 'Сервис',
+  ready: 'Сервис',
+  closed: 'Успех',
+  cancelled: 'Провал',
+};
+
+export default function MechanicDealDetail() {
+  const params = useParams();
+  const router = useRouter();
+  const dealId = params.id as string;
+  const [isLoading, setIsLoading] = useState(true);
+  const [deal, setDeal] = useState<DealDetails | null>(null);
+  const [isStartingTimer, setIsStartingTimer] = useState(false);
+  const [showLogForm, setShowLogForm] = useState(false);
+  const [creatingLog, setCreatingLog] = useState(false);
+  const [logForm, setLogForm] = useState({
+    title: '',
+    description: '',
+    checklistText: '',
+  });
+  const { toast } = useToast();
+
+  const loadDeal = useCallback(async () => {
+    try {
+      const response = await apiCall(`/operations/deals/${dealId}`, {
+        method: 'GET',
+      });
+
+      if (response.success) {
+        setDeal(response.data);
+      }
+    } catch (error) {
+      console.error('Error loading deal:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось загрузить сделку',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [dealId, toast]);
+
+  useEffect(() => {
+    void loadDeal();
+  }, [loadDeal]);
+
+  const handleStartTimer = async () => {
+    setIsStartingTimer(true);
+    try {
+      // Get resource ID from dashboard
+      const dashboardResponse = await apiCall('/operations/dashboard', {
+        method: 'GET',
+      });
+
+      if (!dashboardResponse.success) {
+        throw new Error('Failed to get resource ID');
+      }
+
+      const response = await apiCall('/operations/time/start', {
+        method: 'POST',
+        body: {
+          dealId,
+          resourceId: dashboardResponse.data.resource.id,
+        },
+      });
+
+      if (response.success) {
+        toast({
+          title: 'Успешно',
+          description: 'Таймер запущен',
+        });
+        router.push('/crm/operations');
+      }
+    } catch (error: any) {
+      console.error('Error starting timer:', error);
+      toast({
+        title: 'Ошибка',
+        description: error?.response?.data?.message || 'Не удалось запустить таймер',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsStartingTimer(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+      </div>
+    );
+  }
+
+  if (!deal) {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <div className="text-center">
+          <p className="text-lg font-semibold text-gray-900">Сделка не найдена</p>
+        </div>
+      </div>
+    );
+  }
+
+  const carInfo = deal.vehicle
+    ? `${deal.vehicle.brand.cyrillicName || deal.vehicle.brand.name} ${
+        deal.vehicle.model.cyrillicName || deal.vehicle.model.name
+      }${deal.vehicle.year ? ` ${deal.vehicle.year}` : ''}`
+    : 'Не указан';
+
+  const hasActiveTimer = deal.timeEntries.some(entry => !entry.endedAt);
+
+  const handleCreateLog = async () => {
+    setCreatingLog(true);
+    try {
+      const checklist = logForm.checklistText
+        ? logForm.checklistText
+            .split('\n')
+            .map((line) => line.trim())
+            .filter(Boolean)
+            .map((text) => ({ text, done: false }))
+        : undefined;
+
+      const response = await apiCall(`/operations/deals/${dealId}/logs`, {
+        method: 'POST',
+        body: {
+          title: logForm.title || undefined,
+          description: logForm.description || undefined,
+          checklist,
+        },
+      });
+
+      if (response.success) {
+        toast({ title: 'Работа добавлена' });
+        setShowLogForm(false);
+        setLogForm({ title: '', description: '', checklistText: '' });
+        loadDeal();
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Ошибка',
+        description: error?.response?.data?.message || 'Не удалось добавить работу',
+        variant: 'destructive',
+      });
+    } finally {
+      setCreatingLog(false);
+    }
+  };
+
+  const handleUpload = async (logId: string, file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    try {
+      const res = await fetch(`${apiBaseUrl}/operations/logs/${logId}/media`, {
+        method: 'POST',
+        headers: {
+          ...getAuthHeaders(),
+        },
+        body: form,
+      });
+      const data = await res.json();
+      if (data.success) {
+        loadDeal();
+      } else {
+        toast({ title: 'Ошибка загрузки', description: data.error || 'Не удалось загрузить файл', variant: 'destructive' });
+      }
+    } catch (e) {
+      toast({ title: 'Ошибка загрузки', variant: 'destructive' });
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 pb-8">
+      {/* Header */}
+      <div className="bg-white border-b sticky top-0 z-10 shadow-sm">
+        <div className="p-4">
+          <Button
+            variant="ghost"
+            onClick={() => router.back()}
+            className="mb-3 -ml-2 h-10 gap-2 touch-manipulation"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Назад
+          </Button>
+          <h1 className="text-2xl font-bold text-gray-900">{deal.lead.name}</h1>
+          <p className="text-sm text-gray-600 mt-1">
+            Статус: {stageLabels[deal.stage] || deal.stage}
+          </p>
+        </div>
+      </div>
+
+      <div className="p-4 space-y-6">
+        {/* Start Timer Button */}
+        {deal.stage === 'in_progress' && !hasActiveTimer && (
+          <Button
+            onClick={handleStartTimer}
+            disabled={isStartingTimer}
+            className="w-full h-12 gap-2 bg-green-600 hover:bg-green-700 touch-manipulation"
+          >
+            {isStartingTimer ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Запуск...
+              </>
+            ) : (
+              <>
+                <PlayCircle className="w-5 h-5" />
+                Начать работу
+              </>
+            )}
+          </Button>
+        )}
+
+        {/* Actions */}
+        <section className="bg-white rounded-lg border p-4">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-gray-900">Действия</h2>
+            <Button variant="outline" size="sm" onClick={() => setShowLogForm(true)}>
+              <Plus className="w-4 h-4 mr-1" />
+              Добавить работу
+            </Button>
+          </div>
+        </section>
+
+        {/* Customer Info */}
+        <section className="bg-white rounded-lg border p-4">
+          <h2 className="font-semibold text-gray-900 mb-3">Контакты</h2>
+          <div className="space-y-2">
+            <p className="text-gray-900">{deal.lead.name}</p>
+            {deal.lead.phone && (
+              <div className="flex items-center gap-2 text-gray-700">
+                <Phone className="w-4 h-4" />
+                <a href={`tel:${deal.lead.phone}`} className="underline">
+                  {deal.lead.phone}
+                </a>
+              </div>
+            )}
+            {deal.lead.email && (
+              <p className="text-gray-700">{deal.lead.email}</p>
+            )}
+          </div>
+        </section>
+
+        {/* Vehicle Info */}
+        {deal.vehicle && (
+          <section className="bg-white rounded-lg border p-4">
+            <h2 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <Car className="w-5 h-5" />
+              Профиль
+            </h2>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Модель:</span>
+                <span className="font-medium text-gray-900">{carInfo}</span>
+              </div>
+              {deal.vehicle.licensePlate && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Код:</span>
+                  <span className="font-mono font-medium text-gray-900">
+                    {deal.vehicle.licensePlate}
+                  </span>
+                </div>
+              )}
+              {deal.vehicle.vin && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Идентификатор:</span>
+                  <span className="font-mono text-xs text-gray-900">
+                    {deal.vehicle.vin}
+                  </span>
+                </div>
+              )}
+              {deal.vehicle.mileage && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Индекс:</span>
+                  <span className="font-medium text-gray-900">
+                    {deal.vehicle.mileage.toLocaleString()}
+                  </span>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* Work Logs */}
+        <section className="bg-white rounded-lg border p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+              <CheckSquare className="w-5 h-5" />
+              Журнал работ
+            </h2>
+            <span className="text-sm text-gray-500">{deal.workLogs.length}</span>
+          </div>
+          {deal.workLogs.length === 0 && (
+            <p className="text-sm text-gray-500">Ещё нет записей</p>
+          )}
+          {deal.workLogs.map((log) => (
+            <div key={log.id} className="border rounded-lg p-3 space-y-2">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="font-semibold text-gray-900">{log.title || 'Работа'}</p>
+                  <p className="text-xs text-gray-500">
+                    {new Date(log.createdAt).toLocaleString('ru-RU')}
+                  </p>
+                </div>
+                <span className="text-xs px-2 py-1 bg-blue-50 text-blue-800 rounded-full">
+                  {log.status}
+                </span>
+              </div>
+              {log.description && (
+                <p className="text-sm text-gray-800 whitespace-pre-wrap">{log.description}</p>
+              )}
+              {log.checklist && log.checklist.length > 0 && (
+                <div className="space-y-1">
+                  {log.checklist
+                    .slice()
+                    .sort((a, b) => Number(a.done) - Number(b.done))
+                    .map((item, idx) => (
+                      <div key={idx} className="flex items-start gap-2 text-sm">
+                        <input type="checkbox" checked={item.done} readOnly className="mt-1" />
+                        <span className={item.done ? 'line-through text-gray-500' : 'text-gray-900'}>
+                          {item.text}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              )}
+              {log.media && log.media.length > 0 && (
+                <div className="flex gap-2 flex-wrap">
+                  {log.media.map((m) => (
+                    <a
+                      key={m.mediaFile.id}
+                      href={m.mediaFile.url}
+                      target="_blank"
+                      className="text-xs text-blue-700 underline"
+                    >
+                      {m.mediaFile.name || 'Файл'}
+                    </a>
+                  ))}
+                </div>
+              )}
+              <label className="flex items-center gap-2 text-sm text-blue-700 cursor-pointer">
+                <Upload className="w-4 h-4" />
+                <span>Добавить файл</span>
+                <input
+                  type="file"
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files?.[0]) {
+                      handleUpload(log.id, e.target.files[0]);
+                      e.target.value = '';
+                    }
+                  }}
+                />
+              </label>
+            </div>
+          ))}
+        </section>
+
+        {/* Services */}
+        {deal.dealItems.length > 0 && (
+          <section className="bg-white rounded-lg border p-4">
+            <h2 className="font-semibold text-gray-900 mb-3">Услуги</h2>
+            <div className="space-y-3">
+              {deal.dealItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex justify-between items-start pb-3 border-b last:border-0 last:pb-0"
+                >
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">{item.service.name}</p>
+                    <p className="text-sm text-gray-600">{item.service.category.name}</p>
+                  </div>
+                  <div className="text-right ml-4">
+                    <p className="font-semibold text-gray-900">
+                      {(item.unitPrice * item.quantity).toLocaleString()} ₸
+                    </p>
+                    {item.quantity > 1 && (
+                      <p className="text-xs text-gray-600">
+                        {item.quantity} × {item.unitPrice.toLocaleString()} ₸
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+              <div className="pt-3 border-t flex justify-between items-center">
+                <span className="font-semibold text-gray-900">Итого:</span>
+                <span className="text-xl font-bold text-gray-900">
+                  {deal.amount.toLocaleString()} ₸
+                </span>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Time Tracking */}
+        <section className="bg-white rounded-lg border p-4">
+          <h2 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <Clock className="w-5 h-5" />
+            Время работы
+          </h2>
+
+          {deal.estimatedHours && (
+            <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-blue-900">Планируемое время:</span>
+                <span className="font-semibold text-blue-900">
+                  {deal.estimatedHours}ч
+                </span>
+              </div>
+              <div className="flex justify-between items-center mt-1">
+                <span className="text-sm text-blue-900">Фактическое время:</span>
+                <span className="font-semibold text-blue-900">
+                  {deal.totalHoursSpent}ч
+                </span>
+              </div>
+            </div>
+          )}
+
+          {deal.timeEntries.length === 0 ? (
+            <p className="text-gray-500 text-sm">Время еще не засекалось</p>
+          ) : (
+            <div className="space-y-2">
+              {deal.timeEntries.map((entry) => (
+                <div
+                  key={entry.id}
+                  className="flex justify-between items-center p-2 bg-gray-50 rounded"
+                >
+                  <div>
+                    <p className="text-sm text-gray-900">
+                      {new Date(entry.startedAt).toLocaleDateString('ru-RU', {
+                        day: 'numeric',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                    {entry.notes && (
+                      <p className="text-xs text-gray-600">{entry.notes}</p>
+                    )}
+                  </div>
+                  <span className="font-semibold text-gray-900">
+                    {entry.durationMinutes
+                      ? `${Math.round(entry.durationMinutes / 60 * 10) / 10}ч`
+                      : 'Активен'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Service History */}
+        {deal.vehicle && deal.vehicle.serviceHistory.length > 0 && (
+          <section className="bg-white rounded-lg border p-4">
+            <h2 className="font-semibold text-gray-900 mb-3">
+              История обслуживания
+            </h2>
+            <div className="space-y-3">
+              {deal.vehicle.serviceHistory.slice(0, 5).map((entry) => (
+                <div key={entry.id} className="border-b pb-3 last:border-0">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="text-sm text-gray-600">
+                      {new Date(entry.serviceDate).toLocaleDateString('ru-RU')}
+                    </span>
+                    {entry.mileageAtService && (
+                      <span className="text-xs text-gray-500">
+                        {entry.mileageAtService.toLocaleString()} км
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-900">{entry.description}</p>
+                  {entry.cost && (
+                    <p className="text-sm font-semibold text-gray-900 mt-1">
+                      {entry.cost.toLocaleString()} ₸
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+
+      {/* Log form modal */}
+      {showLogForm && (
+        <div className="fixed inset-0 z-30 bg-black/50 flex items-end sm:items-center justify-center p-4">
+          <div className="bg-white w-full sm:max-w-md rounded-2xl shadow-xl p-5 space-y-3">
+            <h3 className="text-lg font-semibold text-gray-900">Новая работа</h3>
+            <Input
+              placeholder="Название"
+              value={logForm.title}
+              onChange={(e) => setLogForm({ ...logForm, title: e.target.value })}
+            />
+            <Textarea
+              placeholder="Описание"
+              rows={3}
+              value={logForm.description}
+              onChange={(e) => setLogForm({ ...logForm, description: e.target.value })}
+            />
+            <Textarea
+              placeholder="Чек-лист: по одной строке на пункт"
+              rows={3}
+              value={logForm.checklistText}
+              onChange={(e) => setLogForm({ ...logForm, checklistText: e.target.value })}
+            />
+            <div className="flex gap-2 pt-2">
+              <Button variant="ghost" className="flex-1" onClick={() => setShowLogForm(false)}>
+                Отмена
+              </Button>
+              <Button className="flex-1 bg-green-600 hover:bg-green-700" onClick={handleCreateLog} disabled={creatingLog}>
+                {creatingLog ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Сохранить
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

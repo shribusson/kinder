@@ -7,10 +7,13 @@ COPY apps/web/package.json ./apps/web/package.json
 COPY packages/shared/package.json ./packages/shared/package.json
 COPY apps/api/prisma ./apps/api/prisma
 
-RUN npm ci --no-audit --no-fund
+RUN npm ci --no-audit --no-fund --ignore-scripts
 
 FROM node:20-alpine AS builder
 WORKDIR /app
+
+# Dummy DATABASE_URL for Prisma generate (doesn't actually connect)
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps ./apps

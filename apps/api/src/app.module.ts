@@ -10,6 +10,15 @@ import { TelephonyModule } from "./telephony/telephony.module";
 import { WhatsAppModule } from "./whatsapp/whatsapp.module";
 import { TelegramModule } from "./telegram/telegram.module";
 import { ConversationsModule } from "./conversations/conversations.module";
+import { ServicesModule } from "./services/services.module";
+import { VehiclesModule } from "./vehicles/vehicles.module";
+import { WorkOrderModule } from "./workorder/workorder.module";
+import { MechanicModule } from "./mechanic/mechanic.module";
+import { UsersModule } from "./users/users.module";
+import { AccountModule } from "./account/account.module";
+import { ClientModule } from "./client/client.module";
+import { JwtAuthGuard } from "./auth/guards/jwt-auth.guard";
+import { RolesGuard } from "./common/roles.guard";
 
 @Module({
   imports: [
@@ -21,17 +30,23 @@ import { ConversationsModule } from "./conversations/conversations.module";
     WhatsAppModule,
     TelegramModule,
     ConversationsModule,
+    ServicesModule,
+    VehiclesModule,
+    WorkOrderModule,
+    MechanicModule,
+    UsersModule,
+    AccountModule,
+    ClientModule,
     ThrottlerModule.forRoot([{
-      ttl: 60000, // 60 seconds
-      limit: 60, // 60 requests per minute
+      ttl: 60000,
+      limit: 60,
     }]),
   ],
   controllers: [HealthController],
   providers: [
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
 export class AppModule {}

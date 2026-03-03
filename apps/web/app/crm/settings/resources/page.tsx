@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { IconPlus, IconEdit, IconTrash, IconUser, IconDoor, IconTool, IconAlertCircle } from '@tabler/icons-react';
 import ResourceModal from './components/ResourceModal';
-import { apiBaseUrl } from '@/app/lib/api';
+import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
 
 interface Resource {
   id: string;
@@ -13,6 +13,8 @@ interface Resource {
   phone?: string;
   isActive: boolean;
   workingHours?: Record<string, any>;
+  userId?: string;
+  user?: { id: string; email: string; firstName: string; lastName: string; role: string; isActive: boolean } | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -37,9 +39,9 @@ export default function ResourcesSettingsPage() {
 
   const fetchResources = async () => {
     try {
-      const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
-      const response = await fetch(`${apiBaseUrl}/crm/resources?accountId=${accountId}`, {
+      const response = await fetch(`${apiBaseUrl}/crm/resources`, {
         cache: 'no-store',
+        headers: getAuthHeaders(),
       });
       if (response.ok) {
         const data = await response.json();
@@ -71,6 +73,7 @@ export default function ResourcesSettingsPage() {
     try {
       const response = await fetch(`${apiBaseUrl}/crm/resources/${id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -92,6 +95,7 @@ export default function ResourcesSettingsPage() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         body: JSON.stringify({
           isActive: !resource.isActive,
@@ -153,7 +157,7 @@ export default function ResourcesSettingsPage() {
           </div>
           <button
             onClick={handleCreateClick}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors flex items-center gap-2"
+            className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors flex items-center gap-2"
           >
             <IconPlus size={16} />
             Добавить ресурс
@@ -167,7 +171,7 @@ export default function ResourcesSettingsPage() {
             <div className="text-xs text-slate-500">Всего</div>
           </div>
           <div className="card text-center">
-            <div className="text-2xl font-bold text-blue-600">{stats.specialists}</div>
+            <div className="text-2xl font-bold text-orange-600">{stats.specialists}</div>
             <div className="text-xs text-slate-500">Специалистов</div>
           </div>
           <div className="card text-center">
@@ -190,7 +194,7 @@ export default function ResourcesSettingsPage() {
             onClick={() => setFilter('all')}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
               filter === 'all'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-orange-600 text-white'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
@@ -200,7 +204,7 @@ export default function ResourcesSettingsPage() {
             onClick={() => setFilter('specialist')}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
               filter === 'specialist'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-orange-600 text-white'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
@@ -210,7 +214,7 @@ export default function ResourcesSettingsPage() {
             onClick={() => setFilter('room')}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
               filter === 'room'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-orange-600 text-white'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
@@ -220,7 +224,7 @@ export default function ResourcesSettingsPage() {
             onClick={() => setFilter('equipment')}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
               filter === 'equipment'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-orange-600 text-white'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
@@ -240,7 +244,7 @@ export default function ResourcesSettingsPage() {
             </p>
             <button
               onClick={handleCreateClick}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
+              className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors inline-flex items-center gap-2"
             >
               <IconPlus size={16} />
               Добавить ресурс
@@ -277,7 +281,7 @@ export default function ResourcesSettingsPage() {
                         onChange={() => handleToggleActive(resource)}
                         className="sr-only peer"
                       />
-                      <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                      <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-600"></div>
                     </label>
                   </div>
 
@@ -303,7 +307,7 @@ export default function ResourcesSettingsPage() {
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={() => handleEditClick(resource)}
-                      className="rounded-lg bg-blue-100 px-3 py-2 text-xs font-medium text-blue-700 hover:bg-blue-200 transition-colors flex items-center justify-center gap-1"
+                      className="rounded-lg bg-orange-100 px-3 py-2 text-xs font-medium text-orange-700 hover:bg-orange-200 transition-colors flex items-center justify-center gap-1"
                     >
                       <IconEdit size={14} />
                       Изменить

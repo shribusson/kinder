@@ -1,0 +1,93 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "build web local",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"build:web"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "start web local",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"-w",
+				"@kinder/web",
+				"start"
+			],
+			"isBackground": true
+		},
+		{
+			"label": "patch-directories-wording",
+			"type": "shell",
+			"command": "node",
+			"args": [
+				"-e",
+				"const fs=require('fs');const p='apps/web/app/crm/settings/directories/page.tsx';let t=fs.readFileSync(p,'utf8');const r=[[\"Справочник брендов\",\"Справочник категорий\"],[\"брендов, \",\"категорий, \"],[\"Добавить бренд\",\"Добавить категорию\"],[\"Поиск бренда...\",\"Поиск категории...\"],[\"Удалить марку \\\"${name}\\\" и все её модели?\",\"Удалить категорию \\\"${name}\\\" и все её подкатегории?\"],[\"Удалить модель \\\"${name}\\\"?\",\"Удалить подкатегорию \\\"${name}\\\"?\"],[\"Нет моделей\",\"Нет подкатегорий\"],[\"Редактировать бренд\",\"Редактировать категорию\"],[\"Новый бренд\",\"Новая категория\"],[\"Популярный бренд\",\"Популярная категория\"],[\"Название (лат)\",\"Название\"],[\"placeholder=\\\"TOYOTA\\\"\",\"placeholder=\\\"CATEGORY_IT\\\"\"],[\"placeholder=\\\"Toyota\\\"\",\"placeholder=\\\"Робототехника\\\"\"],[\"placeholder=\\\"Тойота\\\"\",\"placeholder=\\\"Робототехника\\\"\"],[\"Страна\",\"Группа\"],[\"placeholder=\\\"Япония\\\"\",\"placeholder=\\\"STEM\\\"\"],[\"placeholder=\\\"TOYOTA_CAMRY\\\"\",\"placeholder=\\\"IT_JUNIOR\\\"\"],[\"placeholder=\\\"Camry\\\"\",\"placeholder=\\\"Junior\\\"\"]];let c=0;for(const [a,b] of r){const n=t.split(a).length-1;t=t.split(a).join(b);c+=n;}fs.writeFileSync(p,t);console.log('replacements='+c);"
+			]
+		},
+		{
+			"label": "patch-directories-wording-2",
+			"type": "shell",
+			"command": "python3",
+			"args": [
+				"-c",
+				"from pathlib import Path;p=Path('apps/web/app/crm/settings/directories/page.tsx');t=p.read_text(encoding='utf-8');repl=[('Справочник брендов','Справочник категорий'),('брендов, ','категорий, '),('Добавить бренд','Добавить категорию'),('Поиск бренда...','Поиск категории...'),('Удалить марку \"${name}\" и все её модели?','Удалить категорию \"${name}\" и все её подкатегории?'),('Удалить модель \"${name}\"?','Удалить подкатегорию \"${name}\"?'),('Нет моделей','Нет подкатегорий'),('Редактировать бренд','Редактировать категорию'),('Новый бренд','Новая категория'),('Популярный бренд','Популярная категория'),('Название (лат)','Название'),('placeholder=\"TOYOTA\"','placeholder=\"CATEGORY_IT\"'),('placeholder=\"Toyota\"','placeholder=\"Робототехника\"'),('placeholder=\"Тойота\"','placeholder=\"Робототехника\"'),('Страна','Группа'),('placeholder=\"Япония\"','placeholder=\"STEM\"'),('placeholder=\"TOYOTA_CAMRY\"','placeholder=\"IT_JUNIOR\"'),('placeholder=\"Camry\"','placeholder=\"Junior\"')];c=0\nfor a,b in repl:\n c+=t.count(a);t=t.replace(a,b)\np.write_text(t,encoding='utf-8');print(c)"
+			]
+		},
+		{
+			"label": "run-patch-directories-wording",
+			"type": "shell",
+			"command": "python3",
+			"args": [
+				"scripts/patch_directories_wording.py"
+			]
+		},
+		{
+			"label": "normalize-profile-directories-db",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-f",
+				"docker-compose.yml",
+				"-f",
+				"docker-compose.prod.yml",
+				"exec",
+				"-T",
+				"postgres",
+				"psql",
+				"-U",
+				"postgres",
+				"-d",
+				"kinder_crm",
+				"-f",
+				"/Users/void/kinder/scripts/normalize_profile_directories.sql"
+			]
+		},
+		{
+			"label": "normalize-profile-directories-db-stdin",
+			"type": "shell",
+			"command": "sh",
+			"args": [
+				"-lc",
+				"docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T postgres psql -U postgres -d kinder_crm < scripts/normalize_profile_directories.sql"
+			]
+		},
+		{
+			"label": "rewrite-normalize-sql",
+			"type": "shell",
+			"command": "sh",
+			"args": [
+				"-lc",
+				"cat > scripts/normalize_profile_directories.sql <<'SQL'\nBEGIN;\n\nDO $$\nDECLARE v_count INTEGER;\nBEGIN\n  SELECT COUNT(*) INTO v_count FROM \"Vehicle\";\n\n  IF v_count = 0 THEN\n    DELETE FROM \"VehicleModel\";\n    DELETE FROM \"VehicleBrand\";\n  ELSE\n    DELETE FROM \"VehicleModel\" vm\n    WHERE NOT EXISTS (\n      SELECT 1 FROM \"Vehicle\" v WHERE v.\"modelId\" = vm.id\n    );\n\n    DELETE FROM \"VehicleBrand\" vb\n    WHERE NOT EXISTS (\n      SELECT 1 FROM \"Vehicle\" v WHERE v.\"brandId\" = vb.id\n    );\n  END IF;\nEND $$;\n\nINSERT INTO \"VehicleBrand\" (\n  id, name, \"cyrillicName\", country, popular, \"updatedAt\", \"createdAt\"\n)\nVALUES\n  ('IT', 'IT', 'IT и робототехника', 'STEM', true, NOW(), NOW()),\n  ('LANGUAGE', 'Language', 'Языки и коммуникация', 'Language', true, NOW(), NOW()),\n  ('CREATIVE', 'Creative', 'Творчество и проекты', 'Creative', true, NOW(), NOW()),\n  ('SCIENCE', 'Science', 'Естественные науки', 'STEM', true, NOW(), NOW()),\n  ('MATH', 'Math', 'Математика', 'STEM', true, NOW(), NOW()),\n  ('SPEECH', 'Speech', 'Коммуникация и выступления', 'Soft skills', true, NOW(), NOW()),\n  ('SPORTS', 'Sports', 'Спортивные секции', 'Wellness', true, NOW(), NOW()),\n  ('EARLY', 'Early', 'Раннее развитие', 'Early education', true, NOW(), NOW())\nON CONFLICT (id) DO UPDATE SET\n  name = EXCLUDED.name,\n  \"cyrillicName\" = EXCLUDED.\"cyrillicName\",\n  country = EXCLUDED.country,\n  popular = EXCLUDED.popular,\n  \"updatedAt\" = NOW();\n\nINSERT INTO \"VehicleModel\" (\n  id, \"brandId\", name, \"cyrillicName\", class, \"updatedAt\", \"createdAt\"\n)\nVALUES\n  ('IT_JUNIOR', 'IT', 'Junior', 'Junior', 'A', NOW(), NOW()),\n  ('IT_PYTHON', 'IT', 'Python', 'Python Start', 'B', NOW(), NOW()),\n  ('IT_ROBOTICS', 'IT', 'Robotics', 'Робототехника', 'B', NOW(), NOW()),\n\n  ('LANG_ENGLISH', 'LANGUAGE', 'English', 'Английский', 'A', NOW(), NOW()),\n  ('LANG_KAZAKH', 'LANGUAGE', 'Kazakh', 'Казахский', 'A', NOW(), NOW()),\n  ('LANG_PUBLIC', 'LANGUAGE', 'Public speaking', 'Публичные выступления', 'B', NOW(), NOW()),\n\n  ('CRE_ART', 'CREATIVE', 'Art studio', 'Арт-студия', 'A', NOW(), NOW()),\n  ('CRE_DESIGN', 'CREATIVE', 'Design', 'Дизайн-мышление', 'B', NOW(), NOW()),\n  ('CRE_PROJECT', 'CREATIVE', 'Project lab', 'Проектная мастерская', 'B', NOW(), NOW()),\n\n  ('SCI_BIO', 'SCIENCE', 'Biology', 'Биология', 'A', NOW(), NOW()),\n  ('SCI_CHEM', 'SCIENCE', 'Chemistry', 'Химия', 'B', NOW(), NOW()),\n\n  ('MATH_BASE', 'MATH', 'Base math', 'Базовая математика', 'A', NOW(), NOW()),\n  ('MATH_OLYMPIAD', 'MATH', 'Olympiad', 'Олимпиадная математика', 'B', NOW(), NOW()),\n\n  ('SPEECH_DEBATE', 'SPEECH', 'Debate', 'Дебаты', 'A', NOW(), NOW()),\n  ('SPEECH_COMM', 'SPEECH', 'Communication', 'Коммуникация', 'A', NOW(), NOW()),\n\n  ('SPORTS_GENERAL', 'SPORTS', 'General', 'Общая подготовка', 'A', NOW(), NOW()),\n  ('EARLY_PRESCHOOL', 'EARLY', 'Preschool', 'Подготовка к школе', 'A', NOW(), NOW())\nON CONFLICT (id) DO UPDATE SET\n  \"brandId\" = EXCLUDED.\"brandId\",\n  name = EXCLUDED.name,\n  \"cyrillicName\" = EXCLUDED.\"cyrillicName\",\n  class = EXCLUDED.class,\n  \"updatedAt\" = NOW();\n\nCOMMIT;\nSQL\n"
+			]
+		}
+	]
+}

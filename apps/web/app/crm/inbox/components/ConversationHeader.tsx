@@ -10,6 +10,14 @@ interface ConversationHeaderProps {
     channel: string;
     status: string;
     createdAt: string;
+    metadata?: {
+      chatId?: string;
+      businessConnectionId?: string;
+      conversationType?: string;
+      firstName?: string;
+      lastName?: string;
+      username?: string;
+    };
     lead?: {
       id: string;
       name: string;
@@ -28,7 +36,7 @@ interface ConversationHeaderProps {
 const getChannelIcon = (channel: string) => {
   switch (channel) {
     case "telegram":
-      return <IconBrandTelegram className="w-5 h-5 text-blue-500" />;
+      return <IconBrandTelegram className="w-5 h-5 text-orange-500" />;
     case "whatsapp":
       return <IconBrandWhatsapp className="w-5 h-5 text-green-500" />;
     case "telephony":
@@ -104,10 +112,23 @@ export default function ConversationHeader({
             </div>
             <div>
               <h2 className="text-lg font-semibold text-slate-900">
-                {conversation.lead?.name || "Без контакта"}
+                {conversation.lead?.name
+                  || (conversation.metadata?.firstName
+                    ? `${conversation.metadata.firstName} ${conversation.metadata.lastName || ''}`.trim()
+                    : "Без контакта")}
+                {conversation.metadata?.username && !conversation.lead?.name && (
+                  <span className="ml-2 text-sm font-normal text-slate-400">
+                    @{conversation.metadata.username}
+                  </span>
+                )}
               </h2>
               <p className="text-sm text-slate-500">
                 {getChannelLabel(conversation.channel)}
+                {conversation.metadata?.conversationType === "business" && (
+                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                    Business
+                  </span>
+                )}
               </p>
             </div>
           </div>

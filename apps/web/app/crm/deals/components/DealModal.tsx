@@ -10,6 +10,13 @@ interface Deal {
   stage: string;
   amount: number;
   revenue?: number;
+  estimatedHours?: number;
+  metadata?: {
+    failReason?: string;
+    guaranteeUntil?: string;
+    serviceTimeBudgets?: Array<{ serviceId: string; plannedMinutes: number }>;
+  };
+  dealItems?: Array<{ serviceId: string; quantity: number }>;
   lead?: {
     id: string;
     name: string;
@@ -35,7 +42,7 @@ export default function DealModal({ deal, isOpen, onClose, onSuccess }: DealModa
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={deal ? 'Редактировать сделку' : 'Создать сделку'}
+      title={deal ? 'Редактировать заказ' : 'Создать заказ'}
       size="lg"
     >
       <DealForm deal={deal} onSuccess={handleSuccess} onCancel={onClose} />

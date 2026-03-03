@@ -1,6 +1,7 @@
 "use client";
 
 import { IconCheck, IconChecks } from "@tabler/icons-react";
+import Image from "next/image";
 
 interface Message {
   id: string;
@@ -26,7 +27,7 @@ function getStatusIcon(status: string) {
     case "delivered":
       return <IconChecks className="w-4 h-4" />;
     case "read":
-      return <IconChecks className="w-4 h-4 text-blue-600" />;
+      return <IconChecks className="w-4 h-4 text-orange-600" />;
     default:
       return null;
   }
@@ -60,7 +61,7 @@ export default function MessageThread({ messages }: MessageThreadProps) {
           <div
             className={`max-w-xs lg:max-w-md rounded-lg px-4 py-2 ${
               message.direction === "outbound"
-                ? "bg-blue-600 text-white"
+                ? "bg-orange-600 text-white"
                 : "bg-white text-slate-900 border border-slate-200"
             }`}
           >
@@ -75,10 +76,13 @@ export default function MessageThread({ messages }: MessageThreadProps) {
             {message.mediaFile && (
               <div className="mt-2">
                 {message.mediaFile.mimeType?.startsWith("image/") ? (
-                  <img
+                  <Image
                     src={message.mediaFile.url}
                     alt="Attached media"
-                    className="max-w-full rounded"
+                    width={320}
+                    height={180}
+                    unoptimized
+                    className="h-auto max-w-full rounded"
                   />
                 ) : message.mediaFile.mimeType?.startsWith("video/") ? (
                   <video
@@ -93,8 +97,8 @@ export default function MessageThread({ messages }: MessageThreadProps) {
                     rel="noopener noreferrer"
                     className={`text-sm underline ${
                       message.direction === "outbound"
-                        ? "text-blue-100"
-                        : "text-blue-600"
+                        ? "text-orange-100"
+                        : "text-orange-600"
                     }`}
                   >
                     Загрузить файл
@@ -107,7 +111,7 @@ export default function MessageThread({ messages }: MessageThreadProps) {
             <div
               className={`flex items-center gap-1 mt-1 text-xs ${
                 message.direction === "outbound"
-                  ? "text-blue-100"
+                  ? "text-orange-100"
                   : "text-slate-500"
               }`}
             >

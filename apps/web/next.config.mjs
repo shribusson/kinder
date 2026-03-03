@@ -1,18 +1,31 @@
-import createNextIntlPlugin from 'next-intl/plugin';
-
-const withNextIntl = createNextIntlPlugin('./i18n.ts');
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Speed up production builds by skipping type checking and linting
-  // (These should be done in CI/CD before deployment)
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
+  transpilePackages: ['@kinder/shared'],
+  async redirects() {
+    return [
+      {
+        source: '/crm/vehicles',
+        destination: '/crm/profiles',
+        permanent: true,
+      },
+      {
+        source: '/crm/settings/vehicle-brands',
+        destination: '/crm/settings/directories',
+        permanent: true,
+      },
+      {
+        source: '/crm/mechanic',
+        destination: '/crm/operations',
+        permanent: true,
+      },
+      {
+        source: '/crm/mechanic/deals/:id',
+        destination: '/crm/operations/deals/:id',
+        permanent: true,
+      },
+    ];
   },
 };
 
-export default withNextIntl(nextConfig);
+export default nextConfig;

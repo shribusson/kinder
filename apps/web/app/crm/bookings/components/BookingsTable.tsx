@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { IconEdit, IconTrash, IconCalendar } from '@tabler/icons-react';
 import BookingModal from './BookingModal';
-import { apiBaseUrl } from '@/app/lib/api';
+import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
 
 interface Lead {
   id: string;
@@ -49,11 +49,15 @@ export default function BookingsTable({ initialBookings }: BookingsTableProps) {
   const [selectedBooking, setSelectedBooking] = useState<Booking | undefined>();
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  useEffect(() => {
+    refreshBookings();
+  }, []);
+
   const refreshBookings = async () => {
     try {
-      const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
-      const response = await fetch(`${apiBaseUrl}/crm/bookings?accountId=${accountId}`, {
+      const response = await fetch(`${apiBaseUrl}/crm/bookings`, {
         cache: 'no-store',
+        headers: getAuthHeaders(),
       });
       if (response.ok) {
         const data = await response.json();
@@ -83,6 +87,7 @@ export default function BookingsTable({ initialBookings }: BookingsTableProps) {
     try {
       const response = await fetch(`${apiBaseUrl}/crm/bookings/${id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -124,7 +129,7 @@ export default function BookingsTable({ initialBookings }: BookingsTableProps) {
             </Link>
             <button
               onClick={handleCreateClick}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+              className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors"
             >
               + Создать запись
             </button>
@@ -148,8 +153,8 @@ export default function BookingsTable({ initialBookings }: BookingsTableProps) {
                     isPast
                       ? 'border-slate-200 bg-slate-50'
                       : isToday
-                      ? 'border-blue-200 bg-blue-50'
-                      : 'border-slate-200 bg-white hover:border-blue-300 hover:shadow-sm'
+                      ? 'border-orange-200 bg-orange-50'
+                      : 'border-slate-200 bg-white hover:border-orange-300 hover:shadow-sm'
                   }`}
                 >
                   <div className="flex-1">
@@ -163,7 +168,7 @@ export default function BookingsTable({ initialBookings }: BookingsTableProps) {
                           : booking.status === 'CANCELLED'
                           ? 'bg-red-100 text-red-700'
                           : booking.status === 'CONFIRMED'
-                          ? 'bg-blue-100 text-blue-700'
+                          ? 'bg-orange-100 text-orange-700'
                           : 'bg-slate-100 text-slate-700'
                       }`}>
                         {STATUS_LABELS[booking.status] || booking.status}
@@ -189,7 +194,7 @@ export default function BookingsTable({ initialBookings }: BookingsTableProps) {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleEditClick(booking)}
-                      className="rounded p-2 text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                      className="rounded p-2 text-slate-400 hover:bg-orange-50 hover:text-orange-600 transition-colors"
                       title="Редактировать"
                     >
                       <IconEdit size={18} />

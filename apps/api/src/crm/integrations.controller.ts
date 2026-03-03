@@ -12,9 +12,16 @@ export class IntegrationsController {
   constructor(private crm: CrmService, private prisma: PrismaService) {}
 
   @Get()
-  async list(@Query("accountId") accountId: string) {
+  async list(@Query("accountId") accountId?: string, @Req() req?: AuthenticatedRequest) {
+    let resolvedAccountId = accountId;
+    if (!resolvedAccountId && req?.user?.sub) {
+      const membership = await this.prisma.membership.findFirst({
+        where: { userId: req.user.sub },
+      });
+      resolvedAccountId = membership?.accountId;
+    }
     return this.prisma.integration.findMany({
-      where: { accountId },
+      where: resolvedAccountId ? { accountId: resolvedAccountId } : {},
       select: {
         id: true,
         channel: true,

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { IconPlus, IconEdit, IconTrash, IconTrendingUp, IconAlertCircle } from '@tabler/icons-react';
-import { apiBaseUrl } from '@/app/lib/api';
+import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
 
 interface SalesPlan {
   id: string;
@@ -27,9 +27,9 @@ export default function RevenuePlanPage() {
 
   const fetchPlans = async () => {
     try {
-      const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
-      const response = await fetch(`${apiBaseUrl}/crm/sales-plans?accountId=${accountId}`, {
+      const response = await fetch(`${apiBaseUrl}/crm/sales-plans`, {
         cache: 'no-store',
+        headers: getAuthHeaders(),
       });
       if (response.ok) {
         const data = await response.json();
@@ -49,14 +49,13 @@ export default function RevenuePlanPage() {
     }
 
     try {
-      const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
       const response = await fetch(`${apiBaseUrl}/crm/sales-plans`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         body: JSON.stringify({
-          accountId,
           period: newPlan.period,
           target: parseFloat(newPlan.target),
         }),
@@ -86,6 +85,7 @@ export default function RevenuePlanPage() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         body: JSON.stringify({
           target: parseFloat(editValue),
@@ -113,6 +113,9 @@ export default function RevenuePlanPage() {
     try {
       const response = await fetch(`${apiBaseUrl}/crm/sales-plans/${planId}`, {
         method: 'DELETE',
+        headers: {
+          ...getAuthHeaders(),
+        },
       });
 
       if (!response.ok) {
@@ -149,7 +152,7 @@ export default function RevenuePlanPage() {
         </div>
         <button
           onClick={() => setCreatingPlan(!creatingPlan)}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors flex items-center gap-2"
+          className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors flex items-center gap-2"
         >
           <IconPlus size={16} />
           Добавить план
@@ -158,7 +161,7 @@ export default function RevenuePlanPage() {
 
       {/* Create Form */}
       {creatingPlan && (
-        <div className="card bg-blue-50 border border-blue-200">
+        <div className="card bg-orange-50 border border-orange-200">
           <h3 className="font-semibold text-slate-900 mb-4">Новый план</h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -169,7 +172,7 @@ export default function RevenuePlanPage() {
                 type="month"
                 value={newPlan.period}
                 onChange={(e) => setNewPlan({ ...newPlan, period: e.target.value })}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
               />
             </div>
             <div>
@@ -182,7 +185,7 @@ export default function RevenuePlanPage() {
                 onChange={(e) => setNewPlan({ ...newPlan, target: e.target.value })}
                 min="0"
                 step="1000"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                 placeholder="500000"
               />
             </div>
@@ -190,7 +193,7 @@ export default function RevenuePlanPage() {
           <div className="flex gap-2 mt-4">
             <button
               onClick={handleCreate}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+              className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors"
             >
               Создать
             </button>
@@ -216,7 +219,7 @@ export default function RevenuePlanPage() {
           </p>
           <button
             onClick={() => setCreatingPlan(true)}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
+            className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors inline-flex items-center gap-2"
           >
             <IconPlus size={16} />
             Добавить план
@@ -272,7 +275,7 @@ export default function RevenuePlanPage() {
                           onBlur={() => handleSaveEdit(plan.id)}
                           onKeyDown={(e) => e.key === 'Enter' && handleSaveEdit(plan.id)}
                           autoFocus
-                          className="w-32 rounded border border-blue-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                          className="w-32 rounded border border-orange-300 px-2 py-1 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                         />
                       ) : (
                         <span className="text-sm font-semibold text-slate-900">
@@ -300,7 +303,7 @@ export default function RevenuePlanPage() {
                                 progressPercentage >= 100
                                   ? 'bg-green-500'
                                   : progressPercentage >= 75
-                                  ? 'bg-blue-500'
+                                  ? 'bg-orange-500'
                                   : progressPercentage >= 50
                                   ? 'bg-yellow-500'
                                   : 'bg-orange-500'
@@ -320,7 +323,7 @@ export default function RevenuePlanPage() {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleEdit(plan)}
-                          className="rounded p-1 text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                          className="rounded p-1 text-slate-400 hover:bg-orange-50 hover:text-orange-600 transition-colors"
                           title="Редактировать"
                         >
                           <IconEdit size={18} />
@@ -343,16 +346,16 @@ export default function RevenuePlanPage() {
       )}
 
       {/* Info Section */}
-      <div className="card bg-blue-50 border border-blue-100">
+      <div className="card bg-orange-50 border border-orange-100">
         <div className="flex gap-3">
-          <div className="text-blue-600">
+          <div className="text-orange-600">
             <IconAlertCircle size={20} />
           </div>
           <div>
-            <h3 className="font-semibold text-blue-900 mb-1">
+            <h3 className="font-semibold text-orange-900 mb-1">
               Как работает план по выручке
             </h3>
-            <ul className="text-sm text-blue-800 space-y-1">
+            <ul className="text-sm text-orange-800 space-y-1">
               <li>• Устанавливайте целевые показатели выручки на месяц/квартал/год</li>
               <li>• Фактические значения рассчитываются автоматически из закрытых сделок</li>
               <li>• Прогресс отображается на главной странице дашборда</li>

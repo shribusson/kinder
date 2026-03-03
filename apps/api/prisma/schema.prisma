@@ -16,6 +16,7 @@ enum UserRole {
   superadmin
   admin
   manager
+  mechanic
   client
 }
 
@@ -30,13 +31,12 @@ enum LeadStage {
 }
 
 enum DealStage {
-  new
-  contacted
-  qualified
-  trial_booked
-  attended
-  won
-  lost
+  diagnostics
+  planned
+  in_progress
+  ready
+  closed
+  cancelled
 }
 
 enum InteractionChannel {
@@ -170,18 +170,56 @@ enum ResourceType {
   equipment
 }
 
+enum StudentGender {
+  male
+  female
+  other
+  unspecified
+}
+
+enum CohortStatus {
+  draft
+  planned
+  active
+  completed
+  archived
+}
+
+enum EnrollmentStatus {
+  pending
+  active
+  paused
+  completed
+  canceled
+}
+
+enum AttendanceStatus {
+  present
+  absent
+  late
+  excused
+}
+
+enum SubmissionStatus {
+  draft
+  submitted
+  reviewed
+  returned
+}
+
 // ============================================
 // AUTHENTICATION & TENANCY
 // ============================================
 
 model Account {
-  id        String   @id @default(uuid())
-  name      String
-  domain    String?  @unique
-  plan      String   @default("basic")
-  settings  Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                   String   @id @default(uuid())
+  name                 String
+  domain               String?  @unique
+  plan                 String   @default("basic")
+  settings             Json?
+  workOrderSettings    Json?    // Company details for work orders
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   users         User[]
   memberships   Membership[]
@@ -208,13 +246,31 @@ model Account {
   auditLogs     AuditLog[]
   salesPlans    SalesPlan[]
   resources     Resource[]
+  serviceCategories ServiceCategory[]
+  services      Service[]
+  workOrders    WorkOrder[]
+  timeEntries   TimeEntry[]
+  workLogs      WorkLog[]
+  vehicles      Vehicle[]
+  vehicleServiceHistory VehicleServiceHistory[]
+  families      Family[]
+  students      Student[]
+  programs      Program[]
+  courses       Course[]
+  cohorts       Cohort[]
+  enrollments   Enrollment[]
+  lessons       Lesson[]
+  attendance    Attendance[]
+  materials     LearningMaterial[]
+  assignments   Assignment[]
+  submissions   Submission[]
 
   @@index([domain])
 }
 
 model User {
   id           String   @id @default(uuid())
-  email        String   @unique
+  email        String?  @unique
   passwordHash String
   firstName    String
   lastName     String
@@ -235,6 +291,8 @@ model User {
   orders             Order[]
   accessGrants       AccessGrant[]
   serviceHistory     ServiceHistory[]
+  resource           Resource?
+  familyGuardianships FamilyGuardian[]
 
   @@index([email])
   @@index([accountId])
@@ -320,23 +378,35 @@ model Lead {
 }
 
 model Deal {
-  id        String    @id @default(uuid())
-  accountId String
-  leadId    String
-  title     String
-  stage     DealStage @default(new)
-  amount    Int
-  revenue   Int?
-  metadata  Json?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id                  String    @id @default(uuid())
+  accountId           String
+  leadId              String
+  title               String
+  stage               DealStage @default(diagnostics)
+  amount              Int
+  revenue             Int?
+  assignedResourceId  String?   // Assigned mechanic
+  estimatedHours      Float?    // Time budget
+  vehicleId           String?   // Link to Vehicle (Phase 0)
+  metadata            Json?     // Car details, etc.
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
-  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  lead    Lead    @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  account            Account    @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  lead               Lead       @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  assignedResource   Resource?  @relation("AssignedDeals", fields: [assignedResourceId], references: [id], onDelete: SetNull)
+  vehicle            Vehicle?   @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  workOrder          WorkOrder?
+  dealItems          DealItem[]
+  timeEntries        TimeEntry[]
+  workLogs           WorkLog[]
+  serviceHistories   VehicleServiceHistory[]
 
   @@index([accountId])
   @@index([leadId])
   @@index([stage])
+  @@index([assignedResourceId])
+  @@index([vehicleId])
   @@index([createdAt])
 }
 
@@ -383,18 +453,24 @@ model Campaign {
 model Resource {
   id          String       @id @default(uuid())
   accountId   String
+  userId      String?      @unique
   name        String
   type        ResourceType
   email       String?
   phone       String?
+  hourlyRate  Float?
   isActive    Boolean      @default(true)
   workingHours Json?
   metadata    Json?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
-  account  Account    @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  bookings Booking[]
+  account       Account      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  user          User?        @relation(fields: [userId], references: [id])
+  bookings      Booking[]
+  assignedDeals Deal[]       @relation("AssignedDeals")
+  timeEntries   TimeEntry[]
+  workLogs      WorkLog[]
 
   @@index([accountId])
   @@index([isActive])
@@ -543,6 +619,7 @@ model Message {
   @@index([status])
   @@index([createdAt])
   @@index([externalId])
+  @@index([accountId, externalId])
   @@index([conversationId, direction, readAt])
 }
 
@@ -624,6 +701,7 @@ model MediaFile {
   messages       Message[]
   callRecordings CallRecording[]
   contentItems   ContentItem[]
+  workLogMedia   WorkLogMedia[]
 
   @@index([accountId])
   @@index([storageKey])
@@ -836,6 +914,149 @@ model ServiceHistory {
   @@index([completedAt])
 }
 
+model ServiceCategory {
+  id        String    @id @default(uuid())
+  accountId String
+  name      String
+  slug      String
+  icon      String?
+  sortOrder Int       @default(0)
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  account  Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  services Service[]
+
+  @@unique([accountId, slug])
+  @@index([accountId])
+}
+
+model Service {
+  id          String   @id @default(uuid())
+  categoryId  String
+  accountId   String
+  name        String
+  description String?
+  price       Float?
+  priceNote   String?
+  unit        String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category   ServiceCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  account    Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  dealItems  DealItem[]
+
+  @@unique([categoryId, name])
+  @@index([categoryId])
+  @@index([accountId])
+}
+
+// ============================================
+// DEAL ITEMS & TIME TRACKING
+// ============================================
+
+model DealItem {
+  id        String   @id @default(uuid())
+  dealId    String
+  serviceId String
+  quantity  Int      @default(1)
+  unitPrice Float    // Historical price at time of creation
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  deal    Deal    @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+
+  @@index([dealId])
+  @@index([serviceId])
+}
+
+model TimeEntry {
+  id              String    @id @default(uuid())
+  accountId       String
+  dealId          String
+  resourceId      String
+  startedAt       DateTime
+  endedAt         DateTime?
+  durationMinutes Int?      // Calculated when stopped
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  account  Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  deal     Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([dealId])
+  @@index([resourceId])
+  @@index([startedAt])
+}
+
+model WorkLog {
+  id          String   @id @default(uuid())
+  accountId   String
+  dealId      String
+  resourceId  String
+  title       String?
+  description String?
+  status      String   @default("open")
+  checklist   Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  account  Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  deal     Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  media    WorkLogMedia[]
+
+  @@index([accountId])
+  @@index([dealId])
+  @@index([resourceId])
+  @@index([createdAt])
+}
+
+model WorkLogMedia {
+  id          String   @id @default(uuid())
+  workLogId   String
+  mediaFileId String
+  createdAt   DateTime @default(now())
+
+  workLog   WorkLog   @relation(fields: [workLogId], references: [id], onDelete: Cascade)
+  mediaFile MediaFile @relation(fields: [mediaFileId], references: [id], onDelete: Cascade)
+
+  @@index([workLogId])
+  @@index([mediaFileId])
+}
+
+model WorkOrder {
+  id            String   @id @default(uuid())
+  accountId     String
+  dealId        String   @unique
+  orderNumber   Int
+  generatedAt   DateTime @default(now())
+  pdfUrl        String?
+  customerName  String
+  carModel      String?
+  licensePlate  String?
+  vin           String?
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  deal    Deal    @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([orderNumber])
+  @@index([dealId])
+}
+
 // ============================================
 // EDUCATION & CONTENT
 // ============================================
@@ -920,4 +1141,409 @@ model Webinar {
 
   @@index([productId])
   @@index([scheduledAt])
+}
+
+model Family {
+  id          String   @id @default(uuid())
+  accountId   String
+  name        String
+  phone       String?
+  email       String?
+  notes       String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  account     Account          @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  students    Student[]
+  guardians   FamilyGuardian[]
+  enrollments Enrollment[]
+
+  @@index([accountId])
+  @@index([phone])
+  @@index([email])
+}
+
+model FamilyGuardian {
+  id            String   @id @default(uuid())
+  familyId      String
+  userId        String
+  relationLabel String?
+  isPrimary     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([familyId, userId])
+  @@index([familyId])
+  @@index([userId])
+}
+
+model Student {
+  id           String        @id @default(uuid())
+  accountId    String
+  familyId     String
+  firstName    String
+  lastName     String
+  birthDate    DateTime?
+  gender       StudentGender @default(unspecified)
+  grade        String?
+  schoolName   String?
+  isActive     Boolean       @default(true)
+  metadata     Json?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  account      Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  family       Family        @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  enrollments  Enrollment[]
+  attendance   Attendance[]
+  submissions  Submission[]
+
+  @@index([accountId])
+  @@index([familyId])
+  @@index([lastName, firstName])
+  @@index([isActive])
+}
+
+model Program {
+  id          String   @id @default(uuid())
+  accountId   String
+  name        String
+  slug        String
+  description String?
+  isActive    Boolean  @default(true)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  account Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  courses Course[]
+
+  @@unique([accountId, slug])
+  @@index([accountId])
+  @@index([isActive])
+}
+
+model Course {
+  id            String   @id @default(uuid())
+  accountId     String
+  programId     String
+  name          String
+  slug          String
+  description   String?
+  level         String?
+  ageMin        Int?
+  ageMax        Int?
+  durationWeeks Int?
+  price         Float?
+  currency      String   @default("KZT")
+  isActive      Boolean  @default(true)
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  account     Account            @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  program     Program            @relation(fields: [programId], references: [id], onDelete: Cascade)
+  cohorts     Cohort[]
+  enrollments Enrollment[]
+  lessons     Lesson[]
+  materials   LearningMaterial[]
+  assignments Assignment[]
+
+  @@unique([accountId, slug])
+  @@index([accountId])
+  @@index([programId])
+  @@index([isActive])
+}
+
+model Cohort {
+  id          String       @id @default(uuid())
+  accountId   String
+  courseId    String
+  name        String
+  startsAt    DateTime?
+  endsAt      DateTime?
+  capacity    Int?
+  status      CohortStatus @default(draft)
+  timezone    String?
+  metadata    Json?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  account     Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  course      Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  enrollments Enrollment[]
+  lessons     Lesson[]
+
+  @@index([accountId])
+  @@index([courseId])
+  @@index([status])
+  @@index([startsAt])
+}
+
+model Enrollment {
+  id          String           @id @default(uuid())
+  accountId   String
+  familyId    String?
+  studentId   String
+  courseId    String
+  cohortId    String?
+  leadId      String?
+  dealId      String?
+  status      EnrollmentStatus @default(pending)
+  enrolledAt  DateTime         @default(now())
+  startsAt    DateTime?
+  endsAt      DateTime?
+  notes       String?
+  metadata    Json?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  account Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  family  Family?  @relation(fields: [familyId], references: [id], onDelete: SetNull)
+  student Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  cohort  Cohort?  @relation(fields: [cohortId], references: [id], onDelete: SetNull)
+
+  @@unique([studentId, courseId, cohortId])
+  @@index([accountId])
+  @@index([familyId])
+  @@index([studentId])
+  @@index([courseId])
+  @@index([cohortId])
+  @@index([status])
+}
+
+model Lesson {
+  id          String   @id @default(uuid())
+  accountId   String
+  courseId    String
+  cohortId    String?
+  title       String
+  description String?
+  startsAt    DateTime
+  endsAt      DateTime?
+  room        String?
+  isPublished Boolean  @default(false)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  account     Account            @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  course      Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  cohort      Cohort?            @relation(fields: [cohortId], references: [id], onDelete: SetNull)
+  attendance  Attendance[]
+  materials   LearningMaterial[]
+  assignments Assignment[]
+
+  @@index([accountId])
+  @@index([courseId])
+  @@index([cohortId])
+  @@index([startsAt])
+}
+
+model Attendance {
+  id          String           @id @default(uuid())
+  accountId   String
+  studentId   String
+  lessonId    String
+  status      AttendanceStatus @default(absent)
+  markedAt    DateTime?
+  notes       String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  lesson  Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, lessonId])
+  @@index([accountId])
+  @@index([studentId])
+  @@index([lessonId])
+  @@index([status])
+}
+
+model LearningMaterial {
+  id          String   @id @default(uuid())
+  accountId   String
+  courseId    String
+  lessonId    String?
+  title       String
+  description String?
+  contentUrl  String?
+  order       Int      @default(0)
+  isPublished Boolean  @default(false)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  course  Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lesson  Lesson? @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+
+  @@index([accountId])
+  @@index([courseId])
+  @@index([lessonId])
+  @@index([order])
+}
+
+model Assignment {
+  id          String   @id @default(uuid())
+  accountId   String
+  courseId    String
+  lessonId    String?
+  title       String
+  description String?
+  dueAt       DateTime?
+  maxScore    Float?
+  isPublished Boolean  @default(false)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  account     Account      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lesson      Lesson?      @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  submissions Submission[]
+
+  @@index([accountId])
+  @@index([courseId])
+  @@index([lessonId])
+  @@index([dueAt])
+}
+
+model Submission {
+  id           String           @id @default(uuid())
+  accountId    String
+  assignmentId String
+  studentId    String
+  status       SubmissionStatus @default(draft)
+  submittedAt  DateTime?
+  score        Float?
+  feedback     String?
+  payload      Json?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  account    Account    @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student    Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, studentId])
+  @@index([accountId])
+  @@index([assignmentId])
+  @@index([studentId])
+  @@index([status])
+}
+
+// ============================================
+// VEHICLE DATABASE MODELS (Phase 0)
+// ============================================
+
+model VehicleBrand {
+  id            String   @id // "TOYOTA", "BMW", etc. (from cars-base.ru)
+  name          String   // Latin name
+  cyrillicName  String?  // Cyrillic name
+  numericId     Int?     // cars-base.ru numeric ID
+  country       String?
+  popular       Boolean  @default(false)
+  yearFrom      Int?
+  yearTo        Int?
+  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now())
+
+  models        VehicleModel[]
+  vehicles      Vehicle[]
+
+  @@index([popular])
+  @@index([name])
+}
+
+model VehicleModel {
+  id            String   @id // "TOYOTA_CAMRY", "BMW_X5", etc.
+  brandId       String
+  name          String   // Latin name
+  cyrillicName  String?  // Cyrillic name
+  class         String?  // Vehicle class (A, B, C, D, E, S, etc.)
+  yearFrom      Int?
+  yearTo        Int?
+  technicalData Json?    // Future: technical specs from TecAlliance/AutoData
+  partsData     Json?    // Future: parts catalog data
+  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now())
+
+  brand         VehicleBrand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  vehicles      Vehicle[]
+  externalIds   VehicleExternalId[]
+
+  @@index([brandId])
+  @@index([name])
+}
+
+model Vehicle {
+  id              String   @id @default(uuid())
+  accountId       String
+  brandId         String
+  modelId         String
+  year            Int?
+  vin             String?
+  licensePlate    String?
+  color           String?
+  mileage         Int?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  account         Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  brand           VehicleBrand  @relation(fields: [brandId], references: [id], onDelete: Restrict)
+  model           VehicleModel  @relation(fields: [modelId], references: [id], onDelete: Restrict)
+  deals           Deal[]
+  serviceHistory  VehicleServiceHistory[]
+
+  @@unique([accountId, vin])
+  @@unique([accountId, licensePlate])
+  @@index([accountId])
+  @@index([brandId])
+  @@index([modelId])
+  @@index([vin])
+  @@index([licensePlate])
+}
+
+model VehicleServiceHistory {
+  id              String   @id @default(uuid())
+  accountId       String
+  vehicleId       String
+  dealId          String?
+  serviceDate     DateTime
+  mileageAtService Int?
+  description     String
+  notes           String?
+  cost            Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  account         Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  vehicle         Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  deal            Deal?    @relation(fields: [dealId], references: [id], onDelete: SetNull)
+
+  @@index([accountId])
+  @@index([vehicleId])
+  @@index([dealId])
+  @@index([serviceDate])
+}
+
+model VehicleExternalId {
+  id            String   @id @default(uuid())
+  modelId       String
+  source        String   // "tecalliance", "autodata", etc.
+  externalId    String   // ID in external system
+  createdAt     DateTime @default(now())
+
+  model         VehicleModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@unique([source, externalId])
+  @@index([modelId])
 }

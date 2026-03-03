@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import Modal from '@/app/components/Modal';
-import { apiBaseUrl } from '@/app/lib/api';
+import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
 
 interface Resource {
   id: string;
@@ -11,8 +11,11 @@ interface Resource {
   type: 'specialist' | 'room' | 'equipment';
   email?: string;
   phone?: string;
+  hourlyRate?: number;
   isActive: boolean;
   workingHours?: Record<string, any>;
+  userId?: string;
+  user?: { id: string; email: string; firstName: string; lastName: string; role: string; isActive: boolean } | null;
 }
 
 interface ResourceModalProps {
@@ -34,7 +37,11 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
     type: resource?.type || 'specialist',
     email: resource?.email || '',
     phone: resource?.phone || '',
+    hourlyRate: resource?.hourlyRate || 0,
     isActive: resource?.isActive ?? true,
+    createUser: false,
+    username: '',
+    userPassword: '',
   });
 
   const [loading, setLoading] = useState(false);
@@ -59,17 +66,23 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
         isActive: formData.isActive,
       };
 
-      if (!resource) {
-        payload.accountId = accountId;
-      }
-
       if (formData.email) payload.email = formData.email;
       if (formData.phone) payload.phone = formData.phone;
+      if (formData.type === 'specialist' && formData.hourlyRate) {
+        payload.hourlyRate = formData.hourlyRate;
+      }
+
+      // Передать данные для создания аккаунта специалиста
+      if (formData.type === 'specialist' && formData.createUser && (!resource || !resource.user)) {
+        payload.username = formData.username || formData.email;
+        payload.password = formData.userPassword;
+      }
 
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         body: JSON.stringify(payload),
       });
@@ -79,7 +92,12 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
         throw new Error(errorData.message || 'Ошибка сохранения');
       }
 
-      toast.success(resource ? 'Ресурс успешно обновлен!' : 'Ресурс успешно создан!');
+      if (!resource && formData.type === 'specialist' && formData.createUser) {
+        toast.success('Ресурс и учётная запись специалиста успешно созданы!');
+      } else {
+        toast.success(resource ? 'Ресурс успешно обновлен!' : 'Ресурс успешно создан!');
+      }
+
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -110,8 +128,8 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            placeholder="Логопед Айгуль"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+            placeholder="Мастер Виктор"
           />
         </div>
 
@@ -124,7 +142,7 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
             id="type"
             value={formData.type}
             onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
           >
             {RESOURCE_TYPES.map((type) => (
               <option key={type.value} value={type.value}>
@@ -145,7 +163,7 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
               placeholder="specialist@example.com"
             />
           </div>
@@ -162,9 +180,101 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
               placeholder="+7 (XXX) XXX-XX-XX"
             />
+          </div>
+        )}
+
+        {/* Hourly Rate (for specialists) */}
+        {formData.type === 'specialist' && (
+          <div>
+            <label htmlFor="hourlyRate" className="block text-sm font-medium text-slate-700 mb-1">
+              Цена/час (₸) *
+            </label>
+            <input
+              id="hourlyRate"
+              type="number"
+              value={formData.hourlyRate}
+              onChange={(e) => setFormData({ ...formData, hourlyRate: Number(e.target.value) })}
+              onInput={(e) => {
+                const target = e.target as HTMLInputElement;
+                target.value = target.value.replace(/^0+(?=\d)/, '');
+              }}
+              required
+              min="0"
+              step="100"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              placeholder="5000"
+            />
+          </div>
+        )}
+
+        {/* Show linked user info */}
+        {resource?.user && formData.type === 'specialist' && (
+          <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+            <p className="text-sm font-medium text-green-900">Привязанный аккаунт</p>
+            <p className="text-sm text-green-700 mt-1">
+              {resource.user.email} ({resource.user.firstName} {resource.user.lastName}) — {resource.user.isActive ? 'Активен' : 'Неактивен'}
+            </p>
+          </div>
+        )}
+
+        {/* Create User Account (for specialists without linked user) */}
+        {formData.type === 'specialist' && (!resource || !resource.user) && (
+          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 space-y-3">
+            <div className="flex items-center gap-3">
+              <input
+                id="createUser"
+                type="checkbox"
+                checked={formData.createUser}
+                onChange={(e) => setFormData({ ...formData, createUser: e.target.checked })}
+                className="w-4 h-4 text-blue-600 bg-slate-100 border-slate-300 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              <label htmlFor="createUser" className="text-sm font-medium text-blue-900">
+                Создать учётную запись для входа в систему
+              </label>
+            </div>
+
+            {formData.createUser && (
+              <div className="space-y-3">
+                <div>
+                  <label htmlFor="username" className="block text-sm font-medium text-blue-900 mb-1">
+                    Логин *
+                  </label>
+                  <input
+                    id="username"
+                    type="text"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    required={formData.createUser}
+                    className="w-full rounded-lg border border-blue-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    placeholder={formData.email || "ivanov_specialist"}
+                  />
+                  <p className="text-xs text-blue-700 mt-1">
+                    {formData.email ? `По умолчанию: ${formData.email}` : 'Введите логин для входа'}
+                  </p>
+                </div>
+                <div>
+                  <label htmlFor="userPassword" className="block text-sm font-medium text-blue-900 mb-1">
+                    Пароль для входа *
+                  </label>
+                  <input
+                    id="userPassword"
+                    type="password"
+                    value={formData.userPassword}
+                    onChange={(e) => setFormData({ ...formData, userPassword: e.target.value })}
+                    required={formData.createUser}
+                    minLength={6}
+                    className="w-full rounded-lg border border-blue-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    placeholder="Минимум 6 символов"
+                  />
+                  <p className="text-xs text-blue-700 mt-1">
+                    Роль: Специалист
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -175,7 +285,7 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
             type="checkbox"
             checked={formData.isActive}
             onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-            className="w-4 h-4 text-blue-600 bg-slate-100 border-slate-300 rounded focus:ring-blue-500 focus:ring-2"
+            className="w-4 h-4 text-orange-600 bg-slate-100 border-slate-300 rounded focus:ring-orange-500 focus:ring-2"
           />
           <label htmlFor="isActive" className="text-sm font-medium text-slate-700">
             Ресурс активен и доступен для бронирования
@@ -194,7 +304,7 @@ export default function ResourceModal({ resource, isOpen, onClose, onSuccess }: 
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Сохранение...' : 'Сохранить'}
           </button>

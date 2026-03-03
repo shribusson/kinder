@@ -113,6 +113,25 @@ export interface TelegramMessage {
   caption?: string;
 }
 
+export interface TelegramBusinessConnection {
+  id: string;
+  user: TelegramUser;
+  user_chat_id: number;
+  date: number;
+  can_reply: boolean;
+  is_enabled: boolean;
+}
+
+export interface TelegramBusinessMessage extends TelegramMessage {
+  business_connection_id: string;
+}
+
+export interface TelegramDeletedBusinessMessages {
+  business_connection_id: string;
+  chat: TelegramChat;
+  message_ids: number[];
+}
+
 export interface TelegramUpdate {
   update_id: number;
   message?: TelegramMessage;
@@ -123,6 +142,10 @@ export interface TelegramUpdate {
     message?: TelegramMessage;
     data?: string;
   };
+  business_connection?: TelegramBusinessConnection;
+  business_message?: TelegramBusinessMessage;
+  edited_business_message?: TelegramBusinessMessage;
+  deleted_business_messages?: TelegramDeletedBusinessMessages;
 }
 
 /**

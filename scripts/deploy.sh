@@ -19,7 +19,7 @@ NC='\033[0m'
 cd /opt/kinder
 
 # Step 1: Verify .env.production exists
-echo -e "${YELLOW}[1/7] Checking environment...${NC}"
+echo -e "${YELLOW}[1/8] Checking environment...${NC}"
 if [ ! -f .env.production ]; then
     echo -e "${RED}✗ .env.production not found! Run generate-secrets.sh first.${NC}"
     exit 1
@@ -27,20 +27,25 @@ fi
 echo -e "${GREEN}✓ Environment file found${NC}"
 
 # Step 2: Load environment variables
-echo -e "${YELLOW}[2/7] Loading environment variables...${NC}"
+echo -e "${YELLOW}[2/8] Loading environment variables...${NC}"
 set -a
 source .env.production
 set +a
 echo -e "${GREEN}✓ Environment loaded${NC}"
 
-# Step 3: Build and start containers
-echo -e "${YELLOW}[3/7] Building and starting containers...${NC}"
+# Step 3: Stop running containers
+echo -e "${YELLOW}[3/8] Stopping running containers...${NC}"
+docker compose -f docker-compose.yml -f docker-compose.prod.yml down --remove-orphans
+echo -e "${GREEN}✓ Previous containers stopped${NC}"
+
+# Step 4: Build and start containers
+echo -e "${YELLOW}[4/8] Building and starting containers...${NC}"
 docker compose -f docker-compose.yml -f docker-compose.prod.yml build --no-cache
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 echo -e "${GREEN}✓ Containers started${NC}"
 
-# Step 4: Wait for services to be healthy
-echo -e "${YELLOW}[4/7] Waiting for services to be ready...${NC}"
+# Step 5: Wait for services to be healthy
+echo -e "${YELLOW}[5/8] Waiting for services to be ready...${NC}"
 echo "Waiting 30 seconds for PostgreSQL to initialize..."
 sleep 30
 
@@ -58,13 +63,13 @@ until docker exec kinder_redis redis-cli -a ${REDIS_PASSWORD} ping 2>/dev/null |
 done
 echo -e "${GREEN}✓ Redis ready${NC}"
 
-# Step 5: Run database migrations
-echo -e "${YELLOW}[5/7] Running database migrations...${NC}"
-docker exec kinder_api npx prisma migrate deploy
+# Step 6: Run database migrations
+echo -e "${YELLOW}[6/8] Running database migrations...${NC}"
+docker exec kinder_api sh -lc "cd /app/apps/api && npx prisma migrate deploy"
 echo -e "${GREEN}✓ Migrations completed${NC}"
 
-# Step 6: Create MinIO buckets
-echo -e "${YELLOW}[6/7] Setting up MinIO buckets...${NC}"
+# Step 7: Create MinIO buckets
+echo -e "${YELLOW}[7/8] Setting up MinIO buckets...${NC}"
 
 # Install mc if not present
 if ! command -v mc &> /dev/null; then
@@ -85,15 +90,15 @@ docker exec kinder_minio mc mb local/kinder-media --ignore-existing 2>/dev/null 
 docker exec kinder_minio mc mb local/kinder-backups --ignore-existing 2>/dev/null || true
 echo -e "${GREEN}✓ MinIO buckets created${NC}"
 
-# Step 7: Verify deployment
-echo -e "${YELLOW}[7/7] Verifying deployment...${NC}"
+# Step 8: Verify deployment
+echo -e "${YELLOW}[8/8] Verifying deployment...${NC}"
 
 # Check all containers
 echo "Container status:"
 docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
 
 # Check API health (internal)
-API_HEALTH=$(docker exec kinder_api curl -sf http://localhost:3001/health 2>/dev/null || echo "FAILED")
+API_HEALTH=$(docker exec kinder_api node -e "fetch('http://localhost:3001/health').then(r=>{if(!r.ok)process.exit(1);console.log('OK')}).catch(()=>process.exit(1))" 2>/dev/null || echo "FAILED")
 if [ "$API_HEALTH" != "FAILED" ]; then
     echo -e "${GREEN}✓ API health check passed${NC}"
 else

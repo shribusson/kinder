@@ -1,6 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { InteractionChannel } from '@prisma/client';
+import { TelegramService } from '../telegram/telegram.service';
 
 export interface GetConversationsOptions {
   accountId: string;
@@ -16,7 +17,11 @@ export interface GetConversationsOptions {
 export class ConversationsService {
   private readonly logger = new Logger(ConversationsService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(forwardRef(() => TelegramService))
+    private readonly telegramService: TelegramService,
+  ) {}
 
   /**
    * Get unread message count for a conversation
@@ -291,8 +296,36 @@ export class ConversationsService {
       data: { lastMessageAt: new Date() },
     });
 
-    // TODO: Queue message for delivery to appropriate channel (Telegram, WhatsApp, etc.)
-    this.logger.debug(`Message queued for delivery: ${message.id}`);
+    // Deliver message to appropriate channel
+    const conversation = await this.prisma.conversation.findUnique({
+      where: { id: conversationId },
+    });
+
+    if (conversation?.channel === InteractionChannel.telegram) {
+      const meta = conversation.metadata as any;
+      const chatId = meta?.chatId;
+
+      if (chatId) {
+        const integration = await this.prisma.integration.findFirst({
+          where: {
+            accountId,
+            channel: InteractionChannel.telegram,
+            status: 'active',
+          },
+        });
+
+        if (integration) {
+          try {
+            await this.telegramService.sendMessage(integration.id, chatId, {
+              text,
+              businessConnectionId: meta?.businessConnectionId,
+            });
+          } catch (error) {
+            this.logger.error(`Failed to deliver message via Telegram: ${error}`);
+          }
+        }
+      }
+    }
 
     return message;
   }

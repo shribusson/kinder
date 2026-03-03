@@ -1,11 +1,10 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,14 +29,30 @@ function LoginForm() {
         throw new Error(data.message || "Неверный email или пароль");
       }
 
-      const { access_token } = await response.json();
+      const data = await response.json();
+      const { accessToken, refreshToken, user } = data;
 
-      // Сохраняем токен в cookie
-      document.cookie = `auth_token=${access_token}; path=/; max-age=86400`; // 24 часа
+      // Сохраняем токены в cookie (7 дней)
+      document.cookie = `auth_token=${accessToken}; path=/; max-age=604800`;
+      document.cookie = `refresh_token=${refreshToken}; path=/; max-age=604800`;
 
-      // Редирект на исходную страницу или дашборд
-      const redirect = searchParams.get("redirect") || "/crm";
-      router.push(redirect);
+      // Сохраняем accountId в localStorage
+      if (user?.accountId) {
+        localStorage.setItem('accountId', user.accountId);
+      }
+
+      // Разрешаем редирект только на внутренние относительные пути
+      const redirectParam = searchParams.get("redirect");
+      const safeRedirect =
+        redirectParam &&
+        redirectParam.startsWith("/") &&
+        !redirectParam.startsWith("//") &&
+        !redirectParam.includes("://")
+          ? redirectParam
+          : "/crm";
+
+      // Full page reload гарантирует что cookie будет отправлен с первым же запросом
+      window.location.href = safeRedirect;
     } catch (err: any) {
       setError(err.message || "Ошибка входа");
     } finally {
@@ -57,8 +72,8 @@ function LoginForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="admin@schoolkids.kz"
+          className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          placeholder="admin@kinder.kz"
         />
       </div>
 
@@ -72,7 +87,7 @@ function LoginForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           placeholder="••••••••"
         />
       </div>
@@ -86,7 +101,7 @@ function LoginForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="w-full py-2.5 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {loading ? "Вход..." : "Войти"}
       </button>
@@ -99,16 +114,18 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-lg border border-slate-200">
         <div className="flex flex-col items-center mb-8">
-          <Image
-            src="/brand-logo.png"
-            alt="School Kids"
-            width={80}
-            height={80}
-            priority
-            className="rounded-full mb-4"
-          />
-          <h1 className="text-2xl font-bold text-slate-900">School Kids CRM</h1>
-          <p className="text-sm text-slate-600 mt-1">Вход для администраторов</p>
+          <div className="relative mb-4 h-20 w-20 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+            <Image
+              src="/brand/logo.webp"
+              alt="Скул-Кидс"
+              fill
+              sizes="80px"
+              className="object-contain p-2"
+              priority
+            />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900">Скул-Кидс</h1>
+          <p className="text-sm text-slate-600 mt-1">CRM-панель управления</p>
         </div>
 
         <Suspense fallback={<div className="text-center">Загрузка...</div>}>

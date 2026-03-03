@@ -2,13 +2,64 @@
 
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { apiBaseUrl } from '@/app/lib/api';
+import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
+import { normalizeCrmEditableStage } from '@kinder/shared';
 
 interface Lead {
   id: string;
   name: string;
   phone?: string;
   email?: string;
+}
+
+interface Brand {
+  id: string;
+  name: string;
+  cyrillicName?: string;
+  popular: boolean;
+}
+
+interface Model {
+  id: string;
+  name: string;
+  cyrillicName?: string;
+  class?: string;
+}
+
+interface Vehicle {
+  id: string;
+  brandId: string;
+  modelId: string;
+  year?: number;
+  vin?: string;
+  licensePlate?: string;
+  color?: string;
+  mileage?: number;
+  brand?: Brand;
+  model?: Model;
+}
+
+interface Service {
+  id: string;
+  name: string;
+  description?: string;
+  price?: number;
+  unit?: string;
+  isActive?: boolean;
+  sortOrder?: number;
+  category?: {
+    id: string;
+    name: string;
+    sortOrder?: number;
+    isActive?: boolean;
+  };
+}
+
+interface ServiceSelection {
+  serviceId: string;
+  quantity: number;
+  plannedMinutes: number;
+  service?: Service;
 }
 
 interface Deal {
@@ -18,7 +69,19 @@ interface Deal {
   stage: string;
   amount: number;
   revenue?: number;
+  estimatedHours?: number;
+  metadata?: {
+    failReason?: string;
+    guaranteeUntil?: string;
+    serviceTimeBudgets?: Array<{ serviceId: string; plannedMinutes: number }>;
+  };
+  dealItems?: Array<{
+    serviceId: string;
+    quantity: number;
+  }>;
   lead?: Lead;
+  vehicleId?: string;
+  vehicle?: Vehicle;
 }
 
 interface DealFormProps {
@@ -28,22 +91,40 @@ interface DealFormProps {
 }
 
 const DEAL_STAGES = [
-  { value: 'new', label: 'Новая' },
-  { value: 'contacted', label: 'Контакт установлен' },
-  { value: 'qualified', label: 'Квалифицирована' },
-  { value: 'trial_booked', label: 'Записан на пробное' },
-  { value: 'attended', label: 'Посетил' },
-  { value: 'won', label: 'Выиграна' },
-  { value: 'lost', label: 'Проиграна' },
-];
+  { value: 'diagnostics', label: 'Контакт' },
+  { value: 'planned', label: 'Запись' },
+  { value: 'in_progress', label: 'Сервис' },
+  { value: 'closed', label: 'Успех (скрытая)' },
+  { value: 'cancelled', label: 'Провал (скрытая)' },
+] as const;
+
+type DealStageValue = (typeof DEAL_STAGES)[number]['value'];
+
+function formatDateForInput(value?: string): string {
+  if (!value) return '';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return parsed.toISOString().slice(0, 10);
+}
+
+function getDefaultBookingDateTimeInput(): string {
+  const date = new Date();
+  date.setHours(date.getHours() + 1, 0, 0, 0);
+  const offsetMs = date.getTimezoneOffset() * 60 * 1000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+}
 
 export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
   const [formData, setFormData] = useState({
     leadId: deal?.leadId || '',
     title: deal?.title || '',
-    stage: deal?.stage || 'new',
+    stage: normalizeCrmEditableStage(deal?.stage),
     amount: deal?.amount || 0,
     revenue: deal?.revenue || 0,
+    estimatedHours: deal?.estimatedHours || 0,
+    failReason: deal?.metadata?.failReason || '',
+    guaranteeUntil: formatDateForInput(deal?.metadata?.guaranteeUntil),
+    bookingScheduledAt: getDefaultBookingDateTimeInput(),
   });
 
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -51,12 +132,33 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
   const [loadingLeads, setLoadingLeads] = useState(true);
   const [error, setError] = useState('');
 
+  // Vehicle state
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [models, setModels] = useState<Model[]>([]);
+  const [loadingBrands, setLoadingBrands] = useState(true);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [vehicleData, setVehicleData] = useState({
+    brandId: deal?.vehicle?.brandId || '',
+    modelId: deal?.vehicle?.modelId || '',
+    year: deal?.vehicle?.year || null as number | null,
+    vin: deal?.vehicle?.vin || '',
+    licensePlate: deal?.vehicle?.licensePlate || '',
+    color: deal?.vehicle?.color || '',
+    mileage: deal?.vehicle?.mileage || null as number | null,
+  });
+  const [existingVehicle, setExistingVehicle] = useState<Vehicle | null>(null);
+
+  // Services state
+  const [availableServices, setAvailableServices] = useState<Service[]>([]);
+  const [loadingServices, setLoadingServices] = useState(true);
+  const [selectedServices, setSelectedServices] = useState<ServiceSelection[]>([]);
+
   useEffect(() => {
     const fetchLeads = async () => {
       try {
-        const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
-        const response = await fetch(`${apiBaseUrl}/crm/leads?accountId=${accountId}`, {
+        const response = await fetch(`${apiBaseUrl}/crm/leads`, {
           cache: 'no-store',
+          headers: getAuthHeaders(),
         });
         if (response.ok) {
           const data = await response.json();
@@ -72,13 +174,247 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
     fetchLeads();
   }, []);
 
+  // Load brands on mount
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const response = await fetch(`${apiBaseUrl}/profiles/brands`, {
+          headers: getAuthHeaders(),
+          cache: 'no-store',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setBrands(data.data);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch brands:', err);
+      } finally {
+        setLoadingBrands(false);
+      }
+    };
+
+    fetchBrands();
+  }, []);
+
+  // Load models when brand selected
+  useEffect(() => {
+    if (!vehicleData.brandId) {
+      setModels([]);
+      return;
+    }
+
+    const fetchModels = async () => {
+      setLoadingModels(true);
+      try {
+        const response = await fetch(
+          `${apiBaseUrl}/profiles/brands/${vehicleData.brandId}/models`,
+          {
+            headers: getAuthHeaders(),
+            cache: 'no-store',
+          }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setModels(data.data);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch models:', err);
+      } finally {
+        setLoadingModels(false);
+      }
+    };
+
+    fetchModels();
+  }, [vehicleData.brandId]);
+
+  // Load available services
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const response = await fetch(`${apiBaseUrl}/services`, {
+          headers: getAuthHeaders(),
+          cache: 'no-store',
+        });
+        if (response.ok) {
+          const services = (await response.json()) as Service[];
+          const activeServices = services.filter((service) => {
+            const serviceActive = service.isActive !== false;
+            const categoryActive = service.category?.isActive !== false;
+            return serviceActive && categoryActive;
+          });
+          setAvailableServices(activeServices);
+        }
+      } catch (err) {
+        console.error('Failed to fetch services:', err);
+      } finally {
+        setLoadingServices(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
+
+  useEffect(() => {
+    if (!deal?.dealItems || deal.dealItems.length === 0) return;
+    if (selectedServices.length > 0) return;
+
+    const budgetsMap = new Map(
+      (deal.metadata?.serviceTimeBudgets || []).map((item) => [item.serviceId, item.plannedMinutes]),
+    );
+
+    setSelectedServices(
+      deal.dealItems.map((item) => ({
+        serviceId: item.serviceId,
+        quantity: item.quantity,
+        plannedMinutes: budgetsMap.get(item.serviceId) || 0,
+      })),
+    );
+  }, [deal, selectedServices.length]);
+
+  const groupedServices = availableServices.reduce((acc, service) => {
+    const categoryId = service.category?.id || 'uncategorized';
+    const categoryName = service.category?.name || 'Без категории';
+
+    if (!acc[categoryId]) {
+      acc[categoryId] = {
+        id: categoryId,
+        name: categoryName,
+        sortOrder: service.category?.sortOrder ?? Number.MAX_SAFE_INTEGER,
+        services: [],
+      };
+    }
+
+    acc[categoryId].services.push(service);
+    return acc;
+  }, {} as Record<string, { id: string; name: string; sortOrder: number; services: Service[] }>);
+
+  const sortedCategoryGroups = Object.values(groupedServices)
+    .map((group) => ({
+      ...group,
+      services: group.services.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
+    }))
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+
+  // Auto-calculate total amount from selected services
+  useEffect(() => {
+    const total = selectedServices.reduce((sum, item) => {
+      const service = availableServices.find(s => s.id === item.serviceId);
+      const unitPrice = service?.price || 0;
+      return sum + (unitPrice * item.quantity);
+    }, 0);
+
+    setFormData(prev => ({ ...prev, amount: total }));
+  }, [selectedServices, availableServices]);
+
+  useEffect(() => {
+    const totalPlannedMinutes = selectedServices.reduce(
+      (sum, item) => sum + (item.plannedMinutes * item.quantity),
+      0,
+    );
+
+    if (totalPlannedMinutes <= 0) return;
+
+    const estimatedHours = Math.round((totalPlannedMinutes / 60) * 10) / 10;
+    setFormData((prev) => {
+      if (prev.estimatedHours === estimatedHours) return prev;
+      return { ...prev, estimatedHours };
+    });
+  }, [selectedServices]);
+
+  // Add service to selection
+  const handleAddService = (serviceId: string) => {
+    if (!serviceId) return;
+    if (selectedServices.some(s => s.serviceId === serviceId)) {
+      toast.error('Услуга уже добавлена');
+      return;
+    }
+
+    setSelectedServices([...selectedServices, { serviceId, quantity: 1, plannedMinutes: 0 }]);
+  };
+
+  // Update service quantity
+  const handleUpdateQuantity = (serviceId: string, quantity: number) => {
+    if (quantity < 1) return;
+    setSelectedServices(prev =>
+      prev.map(item =>
+        item.serviceId === serviceId ? { ...item, quantity } : item
+      )
+    );
+  };
+
+  const handleUpdatePlannedMinutes = (serviceId: string, plannedMinutes: number) => {
+    if (plannedMinutes < 0) return;
+    setSelectedServices((prev) =>
+      prev.map((item) =>
+        item.serviceId === serviceId ? { ...item, plannedMinutes } : item,
+      ),
+    );
+  };
+
+  // Remove service from selection
+  const handleRemoveService = (serviceId: string) => {
+    setSelectedServices(prev => prev.filter(item => item.serviceId !== serviceId));
+  };
+
+  // Check if vehicle exists by VIN or license plate
+  const handleVehicleLookup = async (field: 'vin' | 'licensePlate') => {
+    const value = field === 'vin' ? vehicleData.vin : vehicleData.licensePlate;
+    if (!value || value.length < 3) {
+      setExistingVehicle(null);
+      return;
+    }
+
+    try {
+      const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
+      const endpoint = field === 'vin' ? 'vin' : 'plate';
+      const response = await fetch(
+        `${apiBaseUrl}/profiles/lookup/${endpoint}/${encodeURIComponent(value)}`,
+        {
+          headers: {
+            ...getAuthHeaders(),
+            'x-account-id': accountId || '',
+          },
+          cache: 'no-store',
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          const vehicle = data.data;
+          setExistingVehicle(vehicle);
+          setVehicleData({
+            brandId: vehicle.brandId,
+            modelId: vehicle.modelId,
+            year: vehicle.year,
+            vin: vehicle.vin || '',
+            licensePlate: vehicle.licensePlate || '',
+            color: vehicle.color || '',
+            mileage: vehicle.mileage,
+          });
+          toast.success('Профиль найден в базе!');
+        } else {
+          setExistingVehicle(null);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to lookup vehicle:', err);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
+      if (formData.stage === 'cancelled' && !formData.failReason.trim()) {
+        throw new Error('Для стадии "Провал" нужно указать причину');
+      }
 
       const url = deal
         ? `${apiBaseUrl}/crm/deals/${deal.id}`
@@ -92,18 +428,62 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
         amount: Number(formData.amount),
       };
 
-      if (!deal) {
-        payload.accountId = accountId;
-      }
-
       if (formData.revenue) {
         payload.revenue = Number(formData.revenue);
+      }
+
+      if (formData.estimatedHours) {
+        payload.estimatedHours = Number(formData.estimatedHours);
+      }
+
+      if (formData.stage === 'cancelled') {
+        payload.failReason = formData.failReason.trim();
+      }
+
+      if (formData.guaranteeUntil) {
+        payload.guaranteeUntil = new Date(`${formData.guaranteeUntil}T23:59:59.999Z`).toISOString();
+      }
+
+      if (!deal && formData.bookingScheduledAt) {
+        payload.bookingScheduledAt = new Date(formData.bookingScheduledAt).toISOString();
+      }
+
+      // Add vehicle data if provided
+      if (vehicleData.brandId && vehicleData.modelId) {
+        payload.vehicleData = {
+          brandId: vehicleData.brandId,
+          modelId: vehicleData.modelId,
+          year: vehicleData.year || undefined,
+          vin: vehicleData.vin || undefined,
+          licensePlate: vehicleData.licensePlate || undefined,
+          color: vehicleData.color || undefined,
+          mileage: vehicleData.mileage || undefined,
+        };
+      }
+
+      // Add services if selected
+      if (selectedServices.length > 0) {
+        payload.services = selectedServices.map(item => ({
+          serviceId: item.serviceId,
+          quantity: item.quantity,
+        }));
+
+        const budgets = selectedServices
+          .filter((item) => item.plannedMinutes > 0)
+          .map((item) => ({
+            serviceId: item.serviceId,
+            plannedMinutes: item.plannedMinutes,
+          }));
+        if (budgets.length > 0) {
+          payload.serviceTimeBudgets = budgets;
+        }
       }
 
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         body: JSON.stringify(payload),
       });
@@ -113,7 +493,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
         throw new Error(errorData.message || 'Ошибка сохранения');
       }
 
-      toast.success(deal ? 'Сделка успешно обновлена!' : 'Сделка успешно создана!');
+      toast.success(deal ? 'Заказ успешно обновлён!' : 'Заказ успешно создан!');
       onSuccess();
     } catch (err: any) {
       const errorMessage = err.message || 'Произошла ошибка';
@@ -140,7 +520,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
             onChange={(e) => setFormData({ ...formData, leadId: e.target.value })}
             required
             disabled={!!deal} // Can't change lead after creation
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-100"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:bg-slate-100"
           >
             <option value="">Выберите лида</option>
             {leads.map((lead) => (
@@ -168,9 +548,306 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           required
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-          placeholder="Курс логопедии 10 занятий"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+          placeholder="Пробный урок по робототехнике"
         />
+      </div>
+
+      {/* Profile Information Section */}
+      <div className="border-t border-slate-200 pt-4">
+        <h3 className="text-sm font-semibold text-slate-900 mb-3">Информация о профиле</h3>
+
+        {existingVehicle && (
+          <div className="mb-3 rounded-lg bg-green-50 border border-green-200 px-3 py-2 text-sm text-green-700">
+            ✓ Профиль найден в базе: {existingVehicle.brand?.cyrillicName || existingVehicle.brand?.name} {existingVehicle.model?.cyrillicName || existingVehicle.model?.name}
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-3">
+          {/* Brand */}
+          <div>
+            <label htmlFor="brandId" className="block text-sm font-medium text-slate-700 mb-1">
+              Категория
+            </label>
+            {loadingBrands ? (
+              <div className="text-xs text-slate-500">Загрузка...</div>
+            ) : (
+              <select
+                id="brandId"
+                value={vehicleData.brandId}
+                onChange={(e) => {
+                  setVehicleData({
+                    ...vehicleData,
+                    brandId: e.target.value,
+                    modelId: '', // Reset model when brand changes
+                  });
+                  setExistingVehicle(null);
+                }}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+              >
+                <option value="">Выберите категорию</option>
+                {brands.map((brand) => (
+                  <option key={brand.id} value={brand.id}>
+                    {brand.cyrillicName || brand.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          {/* Model */}
+          <div>
+            <label htmlFor="modelId" className="block text-sm font-medium text-slate-700 mb-1">
+              Подкатегория
+            </label>
+            {loadingModels ? (
+              <div className="text-xs text-slate-500">Загрузка...</div>
+            ) : (
+              <select
+                id="modelId"
+                value={vehicleData.modelId}
+                onChange={(e) => {
+                  setVehicleData({ ...vehicleData, modelId: e.target.value });
+                  setExistingVehicle(null);
+                }}
+                disabled={!vehicleData.brandId}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:bg-slate-100"
+              >
+                <option value="">Выберите подкатегорию</option>
+                {models.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.cyrillicName || model.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          {/* Year */}
+          <div>
+            <label htmlFor="year" className="block text-sm font-medium text-slate-700 mb-1">
+              Год набора
+            </label>
+            <input
+              id="year"
+              type="number"
+              value={vehicleData.year || ''}
+              onChange={(e) => setVehicleData({ ...vehicleData, year: e.target.value ? Number(e.target.value) : null })}
+              min={1950}
+              max={new Date().getFullYear() + 1}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              placeholder="2020"
+            />
+          </div>
+
+          {/* Internal Code */}
+          <div>
+            <label htmlFor="licensePlate" className="block text-sm font-medium text-slate-700 mb-1">
+              Внутренний код
+            </label>
+            <input
+              id="licensePlate"
+              type="text"
+              value={vehicleData.licensePlate}
+              onChange={(e) => setVehicleData({ ...vehicleData, licensePlate: e.target.value.toUpperCase() })}
+              onBlur={() => handleVehicleLookup('licensePlate')}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+              placeholder="GR-2026-01"
+            />
+          </div>
+
+          {/* VIN */}
+          <div className="col-span-2">
+            <label htmlFor="vin" className="block text-sm font-medium text-slate-700 mb-1">
+              Идентификатор
+            </label>
+            <input
+              id="vin"
+              type="text"
+              value={vehicleData.vin}
+              onChange={(e) => setVehicleData({ ...vehicleData, vin: e.target.value.toUpperCase() })}
+              onBlur={() => handleVehicleLookup('vin')}
+              maxLength={17}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+              placeholder="До 17 символов"
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              При вводе идентификатора или кода проверим, есть ли профиль в базе
+            </p>
+          </div>
+
+          {/* Color */}
+          <div>
+            <label htmlFor="color" className="block text-sm font-medium text-slate-700 mb-1">
+              Метка
+            </label>
+            <input
+              id="color"
+              type="text"
+              value={vehicleData.color}
+              onChange={(e) => setVehicleData({ ...vehicleData, color: e.target.value })}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+              placeholder="Приоритет"
+            />
+          </div>
+
+          {/* Index */}
+          <div>
+            <label htmlFor="mileage" className="block text-sm font-medium text-slate-700 mb-1">
+              Индекс
+            </label>
+            <input
+              id="mileage"
+              type="number"
+              value={vehicleData.mileage || ''}
+              onChange={(e) => setVehicleData({ ...vehicleData, mileage: e.target.value ? Number(e.target.value) : null })}
+              min={0}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              placeholder="1"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Services Selection Section */}
+      <div className="border-t border-slate-200 pt-4">
+        <h3 className="text-sm font-semibold text-slate-900 mb-3">Услуги</h3>
+
+        {/* Service selector */}
+        <div className="mb-3">
+          <label htmlFor="serviceSelect" className="block text-sm font-medium text-slate-700 mb-1">
+            Добавить услугу
+          </label>
+          {loadingServices ? (
+            <div className="text-xs text-slate-500">Загрузка услуг...</div>
+          ) : (
+            <select
+              id="serviceSelect"
+              onChange={(e) => {
+                handleAddService(e.target.value);
+                e.target.value = ''; // Reset select
+              }}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+            >
+              <option value="">Выберите услугу...</option>
+              {sortedCategoryGroups.map((group) => (
+                <optgroup key={group.id} label={group.name}>
+                  {group.services.map((service) => (
+                    <option key={service.id} value={service.id}>
+                      {service.name} {service.price ? `— ${service.price.toLocaleString('ru-RU')} ₸` : ''}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          )}
+        </div>
+
+        {/* Selected services list */}
+        {selectedServices.length > 0 ? (
+          <div className="space-y-2">
+            <div className="text-xs font-medium text-slate-600 mb-2">
+              Выбранные услуги ({selectedServices.length})
+            </div>
+            {selectedServices.map((item) => {
+              const service = availableServices.find(s => s.id === item.serviceId);
+              if (!service) return null;
+
+              const unitPrice = service.price || 0;
+              const total = unitPrice * item.quantity;
+              const totalPlannedHours = Math.round(((item.plannedMinutes * item.quantity) / 60) * 10) / 10;
+
+              return (
+                <div
+                  key={item.serviceId}
+                  className="flex items-start gap-3 p-3 rounded-lg border border-slate-200 bg-slate-50"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm text-slate-900 truncate">
+                      {service.name}
+                    </div>
+                    <div className="text-xs text-slate-500 mb-2">
+                      {unitPrice.toLocaleString('ru-RU')} ₸ {service.unit ? `за ${service.unit}` : ''}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-slate-600">План, мин/ед:</label>
+                      <input
+                        type="number"
+                        value={item.plannedMinutes}
+                        onChange={(e) => handleUpdatePlannedMinutes(item.serviceId, parseInt(e.target.value) || 0)}
+                        min={0}
+                        className="w-20 rounded border border-slate-300 px-2 py-1 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <span className="text-xs text-slate-500">
+                        План-факт: {totalPlannedHours.toLocaleString('ru-RU')}ч / —
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateQuantity(item.serviceId, item.quantity - 1)}
+                      disabled={item.quantity <= 1}
+                      className="w-7 h-7 rounded flex items-center justify-center bg-white border border-slate-300 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed text-slate-700"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      value={item.quantity}
+                      onChange={(e) => handleUpdateQuantity(item.serviceId, parseInt(e.target.value) || 1)}
+                      min={1}
+                      className="w-16 text-center rounded border border-slate-300 px-2 py-1 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateQuantity(item.serviceId, item.quantity + 1)}
+                      className="w-7 h-7 rounded flex items-center justify-center bg-white border border-slate-300 hover:bg-slate-100 text-slate-700"
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <div className="text-sm font-semibold text-slate-900 w-24 text-right">
+                    {total.toLocaleString('ru-RU')} ₸
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveService(item.serviceId)}
+                    className="w-7 h-7 rounded flex items-center justify-center text-red-600 hover:bg-red-50"
+                    title="Удалить"
+                  >
+                    ×
+                  </button>
+                </div>
+              );
+            })}
+
+            {/* Total */}
+            <div className="flex items-center justify-between pt-3 border-t border-slate-200">
+              <div>
+                <div className="text-sm font-semibold text-slate-900">Итого:</div>
+                <div className="text-xs text-slate-500">
+                  План-факт времени: {(
+                    Math.round((selectedServices.reduce((sum, item) => sum + (item.plannedMinutes * item.quantity), 0) / 60) * 10) / 10
+                  ).toLocaleString('ru-RU')}ч / —
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-bold text-orange-600">
+                  {formData.amount.toLocaleString('ru-RU')} ₸
+                </div>
+                <div className="text-xs text-slate-500">Факт: —</div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="text-sm text-slate-500 py-3 text-center bg-slate-50 rounded-lg border border-slate-200">
+            Услуги не выбраны. Сумма сделки будет указана вручную.
+          </div>
+        )}
       </div>
 
       {/* Stage */}
@@ -181,8 +858,8 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
         <select
           id="stage"
           value={formData.stage}
-          onChange={(e) => setFormData({ ...formData, stage: e.target.value })}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          onChange={(e) => setFormData({ ...formData, stage: e.target.value as DealStageValue })}
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
         >
           {DEAL_STAGES.map((stage) => (
             <option key={stage.value} value={stage.value}>
@@ -191,6 +868,76 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
           ))}
         </select>
       </div>
+
+      {!deal && (
+        <div>
+          <label htmlFor="bookingScheduledAt" className="block text-sm font-medium text-slate-700 mb-1">
+            Дата и время записи
+          </label>
+          <input
+            id="bookingScheduledAt"
+            type="datetime-local"
+            value={formData.bookingScheduledAt}
+            onChange={(e) => setFormData({ ...formData, bookingScheduledAt: e.target.value })}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+          />
+          <p className="mt-1 text-xs text-slate-500">
+            При создании сделки автоматически будет создана запись в календаре.
+          </p>
+        </div>
+      )}
+
+      <div>
+        <label htmlFor="guaranteeUntil" className="block text-sm font-medium text-slate-700 mb-1">
+          Гарантия до
+        </label>
+        <input
+          id="guaranteeUntil"
+          type="date"
+          value={formData.guaranteeUntil}
+          onChange={(e) => setFormData({ ...formData, guaranteeUntil: e.target.value })}
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+        />
+        <p className="mt-1 text-xs text-slate-500">
+          Сделка может оставаться в стадии «В работе» до конца гарантийного срока, выручка считается сразу.
+        </p>
+      </div>
+
+      <div>
+        <label htmlFor="estimatedHours" className="block text-sm font-medium text-slate-700 mb-1">
+          План времени (часы)
+        </label>
+        <input
+          id="estimatedHours"
+          type="number"
+          value={formData.estimatedHours}
+          onChange={(e) => setFormData({ ...formData, estimatedHours: Number(e.target.value) || 0 })}
+          min={0}
+          step={0.1}
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          placeholder="2.5"
+        />
+        <p className="mt-1 text-xs text-slate-500">
+          Если задан бюджет времени по услугам, поле считается автоматически. Можно скорректировать вручную.
+        </p>
+      </div>
+
+      {formData.stage === 'cancelled' && (
+        <div>
+          <label htmlFor="failReason" className="block text-sm font-medium text-slate-700 mb-1">
+            Причина провала *
+          </label>
+          <textarea
+            id="failReason"
+            value={formData.failReason}
+            onChange={(e) => setFormData({ ...formData, failReason: e.target.value })}
+            required
+            rows={3}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+            placeholder="Например: клиент отказался по цене"
+          />
+        </div>
+      )}
 
       {/* Amount */}
       <div>
@@ -202,12 +949,24 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
           type="number"
           value={formData.amount}
           onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
+          onInput={(e) => {
+            const target = e.target as HTMLInputElement;
+            target.value = target.value.replace(/^0+(?=\d)/, '');
+          }}
           required
           min="0"
           step="1"
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          readOnly={selectedServices.length > 0}
+          className={`w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+            selectedServices.length > 0 ? 'bg-slate-100 cursor-not-allowed' : ''
+          }`}
           placeholder="50000"
         />
+        {selectedServices.length > 0 && (
+          <p className="mt-1 text-xs text-slate-500">
+            Сумма рассчитывается автоматически из выбранных услуг
+          </p>
+        )}
       </div>
 
       {/* Revenue */}
@@ -220,13 +979,17 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
           type="number"
           value={formData.revenue}
           onChange={(e) => setFormData({ ...formData, revenue: Number(e.target.value) })}
+          onInput={(e) => {
+            const target = e.target as HTMLInputElement;
+            target.value = target.value.replace(/^0+(?=\d)/, '');
+          }}
           min="0"
           step="1"
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           placeholder="45000"
         />
         <p className="mt-1 text-xs text-slate-500">
-          Заполните это поле когда сделка будет закрыта
+          Заполняйте, когда выручка уже зафиксирована (можно ещё на стадии «Сервис»)
         </p>
       </div>
 
@@ -242,7 +1005,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
         <button
           type="submit"
           disabled={loading || loadingLeads}
-          className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
+          className="flex-1 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? 'Сохранение...' : 'Сохранить'}
         </button>

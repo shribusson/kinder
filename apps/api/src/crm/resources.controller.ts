@@ -1,24 +1,109 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req } from "@nestjs/common";
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsEmail,
+  IsEnum,
+  IsNumber,
+  IsBoolean,
+  Min,
+  MinLength,
+  MaxLength,
+  Matches,
+} from 'class-validator';
 import { CrmService } from "./crm.service";
 import { Roles } from "../common/roles.decorator";
 import { PrismaService } from "../prisma.service";
 import { AuthenticatedRequest } from "../common/types/request.types";
+import * as bcrypt from 'bcrypt';
 
 export class CreateResourceDto {
+  @IsString()
+  @IsNotEmpty({ message: 'Name is required' })
+  @MaxLength(200)
   name!: string;
-  type!: "specialist" | "room" | "equipment";
+
+  @IsEnum(['specialist', 'room', 'equipment'], { message: 'Invalid resource type' })
+  @IsNotEmpty({ message: 'Type is required' })
+  type!: 'specialist' | 'room' | 'equipment';
+
+  @IsOptional()
+  @IsEmail({}, { message: 'Invalid email format' })
   email?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^\+?[1-9]\d{6,14}$/, { message: 'Invalid phone number format' })
   phone?: string;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'Hourly rate must be a number' })
+  @Min(0, { message: 'Hourly rate must be positive' })
+  hourlyRate?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+
+  @IsOptional()
   workingHours?: Record<string, unknown>;
+
+  // Поля для создания аккаунта специалиста (только для type === 'specialist')
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  username?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(6, { message: 'Password must be at least 6 characters' })
+  @MaxLength(100)
+  password?: string;
 }
 
 export class UpdateResourceDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
   name?: string;
-  type?: "specialist" | "room" | "equipment";
+
+  @IsOptional()
+  @IsEnum(['specialist', 'room', 'equipment'], { message: 'Invalid resource type' })
+  type?: 'specialist' | 'room' | 'equipment';
+
+  @IsOptional()
+  @IsEmail({}, { message: 'Invalid email format' })
   email?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^\+?[1-9]\d{6,14}$/, { message: 'Invalid phone number format' })
   phone?: string;
-  workingHours?: Record<string, unknown>;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'Hourly rate must be a number' })
+  @Min(0, { message: 'Hourly rate must be positive' })
+  hourlyRate?: number;
+
+  @IsOptional()
+  @IsBoolean()
   isActive?: boolean;
+
+  @IsOptional()
+  workingHours?: Record<string, unknown>;
+
+  // Поля для создания аккаунта специалиста
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  username?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(6, { message: 'Password must be at least 6 characters' })
+  @MaxLength(100)
+  password?: string;
 }
 
 @Controller("crm/resources")
@@ -28,9 +113,17 @@ export class ResourcesController {
   ) {}
 
   @Get()
-  async list(@Query("accountId") accountId: string) {
+  async list(@Query("accountId") accountId?: string, @Req() req?: AuthenticatedRequest) {
+    let resolvedAccountId = accountId;
+    if (!resolvedAccountId && req?.user?.sub) {
+      const membership = await this.prisma.membership.findFirst({
+        where: { userId: req.user.sub },
+      });
+      resolvedAccountId = membership?.accountId;
+    }
     return this.prisma.resource.findMany({
-      where: { accountId },
+      where: resolvedAccountId ? { accountId: resolvedAccountId } : {},
+      include: { user: { select: { id: true, email: true, firstName: true, lastName: true, role: true, isActive: true } } },
       orderBy: { name: "asc" }
     });
   }
@@ -38,7 +131,8 @@ export class ResourcesController {
   @Get(":id")
   async getOne(@Param("id") id: string) {
     return this.prisma.resource.findUnique({
-      where: { id }
+      where: { id },
+      include: { user: { select: { id: true, email: true, firstName: true, lastName: true, role: true, isActive: true } } },
     });
   }
 
@@ -57,9 +151,45 @@ export class ResourcesController {
         type: payload.type,
         email: payload.email,
         phone: payload.phone,
+        hourlyRate: payload.hourlyRate,
+        isActive: payload.isActive ?? true,
         workingHours: payload.workingHours as any,
       }
     });
+
+    // Автоматически создать аккаунт специалиста для specialist
+    if (payload.type === 'specialist' && payload.username && payload.password) {
+      const passwordHash = await bcrypt.hash(payload.password, 10);
+
+      const user = await this.prisma.user.create({
+        data: {
+          email: payload.username,
+          passwordHash,
+          firstName: payload.name.split(' ')[0] || payload.name,
+          lastName: payload.name.split(' ').slice(1).join(' ') || '',
+          phone: payload.phone,
+          role: 'mechanic',
+          accountId: membership.accountId,
+          isActive: true,
+        },
+      });
+
+      // Связать пользователя с ресурсом
+      await this.prisma.resource.update({
+        where: { id: resource.id },
+        data: { userId: user.id },
+      });
+
+      // Создать Membership для связи user с account
+      await this.prisma.membership.create({
+        data: {
+          userId: user.id,
+          accountId: membership.accountId,
+          role: 'mechanic',
+          permissions: {},
+        },
+      });
+    }
 
     await this.prisma.auditLog.create({
       data: {
@@ -76,7 +206,7 @@ export class ResourcesController {
 
   @Patch(":id")
   @Roles("admin", "manager")
-  async update(@Param("id") id: string, @Body() payload: UpdateResourceDto) {
+  async update(@Param("id") id: string, @Body() payload: UpdateResourceDto, @Req() req: AuthenticatedRequest) {
     const resource = await this.prisma.resource.findUnique({
       where: { id }
     });
@@ -89,10 +219,43 @@ export class ResourcesController {
         type: payload.type,
         email: payload.email,
         phone: payload.phone,
-        workingHours: payload.workingHours as any,
+        hourlyRate: payload.hourlyRate,
         isActive: payload.isActive,
+        workingHours: payload.workingHours as any,
       }
     });
+
+    // Создать аккаунт специалиста если запрошено и ещё нет привязки
+    if (!resource.userId && payload.username && payload.password) {
+      const passwordHash = await bcrypt.hash(payload.password, 10);
+
+      const user = await this.prisma.user.create({
+        data: {
+          email: payload.username,
+          passwordHash,
+          firstName: (payload.name || resource.name).split(' ')[0] || resource.name,
+          lastName: (payload.name || resource.name).split(' ').slice(1).join(' ') || '',
+          phone: payload.phone || resource.phone,
+          role: 'mechanic',
+          accountId: resource.accountId,
+          isActive: true,
+        },
+      });
+
+      await this.prisma.resource.update({
+        where: { id },
+        data: { userId: user.id },
+      });
+
+      await this.prisma.membership.create({
+        data: {
+          userId: user.id,
+          accountId: resource.accountId,
+          role: 'mechanic',
+          permissions: {},
+        },
+      });
+    }
 
     await this.prisma.auditLog.create({
       data: {

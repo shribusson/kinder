@@ -9,6 +9,7 @@ import {
   IsEnum,
   IsDateString,
   IsObject,
+  IsArray,
   MaxLength,
   Matches,
   Min,
@@ -42,6 +43,18 @@ export class CreateLeadDto {
   @IsOptional()
   @IsObject()
   utm?: Record<string, string | undefined>;
+
+  @IsOptional()
+  @IsObject()
+  vehicleData?: {
+    brandId: string;
+    modelId: string;
+    year?: number;
+    vin?: string;
+    licensePlate?: string;
+    color?: string;
+    mileage?: number;
+  };
 }
 
 export class CreateDealDto {
@@ -61,6 +74,49 @@ export class CreateDealDto {
   @IsNumber({}, { message: 'Amount must be a number' })
   @Min(0, { message: 'Amount must be positive' })
   amount!: number;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'Revenue must be a number' })
+  @Min(0, { message: 'Revenue must be positive' })
+  revenue?: number;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'Estimated hours must be a number' })
+  @Min(0, { message: 'Estimated hours must be positive' })
+  estimatedHours?: number;
+
+  @IsOptional()
+  @IsObject()
+  vehicleData?: {
+    brandId: string;
+    modelId: string;
+    year?: number;
+    vin?: string;
+    licensePlate?: string;
+    color?: string;
+    mileage?: number;
+  };
+
+  @IsOptional()
+  @IsArray()
+  services?: Array<{ serviceId: string; quantity: number }>;
+
+  @IsOptional()
+  @IsArray()
+  serviceTimeBudgets?: Array<{ serviceId: string; plannedMinutes: number }>;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  failReason?: string;
+
+  @IsOptional()
+  @IsDateString({}, { message: 'Invalid guarantee date format' })
+  guaranteeUntil?: string;
+
+  @IsOptional()
+  @IsDateString({}, { message: 'Invalid booking date format' })
+  bookingScheduledAt?: string;
 }
 
 export class CreateBookingDto {
@@ -72,6 +128,10 @@ export class CreateBookingDto {
   @IsNotEmpty({ message: 'Specialist is required' })
   @MaxLength(200)
   specialist!: string;
+
+  @IsOptional()
+  @IsString()
+  resourceId?: string;
 
   @IsDateString({}, { message: 'Invalid date format' })
   @IsNotEmpty({ message: 'Scheduled date is required' })
@@ -101,6 +161,131 @@ export class CreateCampaignDto {
   @IsNumber({}, { message: 'Leads count must be a number' })
   @Min(0, { message: 'Leads count must be positive' })
   leads!: number;
+}
+
+export class CreateProgramDto {
+  @IsString()
+  @IsNotEmpty({ message: 'Name is required' })
+  @MaxLength(200)
+  name!: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Slug is required' })
+  @MaxLength(120)
+  slug!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  description?: string;
+
+  @IsOptional()
+  isActive?: boolean;
+}
+
+export class CreateCourseDto {
+  @IsUUID('4', { message: 'Invalid program ID format' })
+  @IsNotEmpty({ message: 'Program ID is required' })
+  programId!: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Name is required' })
+  @MaxLength(200)
+  name!: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Slug is required' })
+  @MaxLength(120)
+  slug!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  level?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  ageMin?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  ageMax?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  durationWeeks?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  price?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(10)
+  currency?: string;
+
+  @IsOptional()
+  isActive?: boolean;
+}
+
+export class EnrollFromDealDto {
+  @IsUUID('4', { message: 'Invalid deal ID format' })
+  @IsNotEmpty({ message: 'Deal ID is required' })
+  dealId!: string;
+
+  @IsUUID('4', { message: 'Invalid course ID format' })
+  @IsNotEmpty({ message: 'Course ID is required' })
+  courseId!: string;
+
+  @IsOptional()
+  @IsUUID('4', { message: 'Invalid cohort ID format' })
+  cohortId?: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Parent name is required' })
+  @MaxLength(200)
+  parentName!: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^\+?[1-9]\d{6,14}$/, { message: 'Invalid phone number format' })
+  parentPhone?: string;
+
+  @IsOptional()
+  @IsEmail({}, { message: 'Invalid email format' })
+  parentEmail?: string;
+
+  @IsOptional()
+  @IsUUID('4', { message: 'Invalid parent user ID format' })
+  parentUserId?: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Student first name is required' })
+  @MaxLength(200)
+  studentFirstName!: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Student last name is required' })
+  @MaxLength(200)
+  studentLastName!: string;
+
+  @IsOptional()
+  @IsDateString({}, { message: 'Invalid start date format' })
+  startsAt?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  notes?: string;
 }
 
 // ============================================
@@ -134,6 +319,18 @@ export class UpdateLeadDto {
   @IsOptional()
   @IsObject()
   utm?: Record<string, string | undefined>;
+
+  @IsOptional()
+  @IsObject()
+  vehicleData?: {
+    brandId: string;
+    modelId: string;
+    year?: number;
+    vin?: string;
+    licensePlate?: string;
+    color?: string;
+    mileage?: number;
+  };
 }
 
 export class UpdateDealDto {
@@ -155,6 +352,44 @@ export class UpdateDealDto {
   @IsNumber({}, { message: 'Revenue must be a number' })
   @Min(0, { message: 'Revenue must be positive' })
   revenue?: number;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'Estimated hours must be a number' })
+  @Min(0, { message: 'Estimated hours must be positive' })
+  estimatedHours?: number;
+
+  @IsOptional()
+  @IsObject()
+  vehicleData?: {
+    brandId: string;
+    modelId: string;
+    year?: number;
+    vin?: string;
+    licensePlate?: string;
+    color?: string;
+    mileage?: number;
+  };
+
+  @IsOptional()
+  @IsArray()
+  services?: Array<{ serviceId: string; quantity: number }>;
+
+  @IsOptional()
+  @IsArray()
+  serviceTimeBudgets?: Array<{ serviceId: string; plannedMinutes: number }>;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  failReason?: string;
+
+  @IsOptional()
+  @IsDateString({}, { message: 'Invalid guarantee date format' })
+  guaranteeUntil?: string;
+
+  @IsOptional()
+  @IsDateString({}, { message: 'Invalid booking date format' })
+  bookingScheduledAt?: string;
 }
 
 export class UpdateBookingDto {

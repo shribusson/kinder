@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req, Res } from "@nestjs/common";
+import { Body, Controller, Delete, ForbiddenException, Get, Param, Patch, Post, Put, Query, Req, Res } from "@nestjs/common";
 import { Response } from "express";
 import { CrmService } from "./crm.service";
 import { CreateDealDto, UpdateDealDto } from "./dto";
@@ -14,14 +14,50 @@ export class DealsController {
     private prisma: PrismaService,
   ) {}
 
+  private async getAccountId(req: AuthenticatedRequest): Promise<string> {
+    const membership = await this.prisma.membership.findFirst({
+      where: { userId: req.user.sub },
+    });
+    if (!membership) throw new Error('No account');
+    return membership.accountId;
+  }
+
+  private async getMechanicResourceId(req: AuthenticatedRequest, accountId: string): Promise<string | null> {
+    const resourceByUser = await this.prisma.resource.findFirst({
+      where: {
+        accountId,
+        userId: req.user.sub,
+        type: 'specialist',
+        isActive: true,
+      },
+      select: { id: true },
+    });
+    if (resourceByUser) return resourceByUser.id;
+
+    if (!req.user.email) return null;
+
+    const resourceByEmail = await this.prisma.resource.findFirst({
+      where: {
+        accountId,
+        email: req.user.email,
+        type: 'specialist',
+        isActive: true,
+      },
+      select: { id: true },
+    });
+    return resourceByEmail?.id ?? null;
+  }
+
   @Get()
-  list(@Query("q") search?: string, @Query("stage") stage?: string) {
-    return this.crm.listDeals(search, stage as never);
+  async list(@Req() req: AuthenticatedRequest, @Query("q") search?: string, @Query("stage") stage?: string) {
+    const accountId = await this.getAccountId(req);
+    return this.crm.listDeals(accountId, search, stage as never);
   }
 
   @Get("export")
-  async export(@Res() res: Response) {
-    const deals = await this.crm.listDeals();
+  async export(@Req() req: AuthenticatedRequest, @Res() res: Response) {
+    const accountId = await this.getAccountId(req);
+    const deals = await this.crm.listDeals(accountId);
     const csv = toCsv(
       deals.map((deal) => ({
         id: deal.id,
@@ -38,13 +74,26 @@ export class DealsController {
   }
 
   @Post()
-  @Roles("admin", "manager")
+  @Roles("admin", "manager", "mechanic")
   async create(@Body() payload: CreateDealDto, @Req() req: AuthenticatedRequest) {
     const membership = await this.prisma.membership.findFirst({
       where: { userId: req.user.sub },
     });
     if (!membership) throw new Error('No account');
-    return this.crm.createDeal({ ...payload, accountId: membership.accountId });
+
+    let assignedResourceId: string | undefined;
+    if (req.user.role === 'mechanic') {
+      assignedResourceId = (await this.getMechanicResourceId(req, membership.accountId)) ?? undefined;
+      if (!assignedResourceId) {
+        throw new ForbiddenException('Специалист не привязан к активному ресурсу');
+      }
+    }
+
+    return this.crm.createDeal({
+      ...payload,
+      accountId: membership.accountId,
+      assignedResourceId,
+    });
   }
 
   @Get(":id")
@@ -66,7 +115,7 @@ export class DealsController {
 
   @Put(":id/stage")
   @Roles("admin", "manager")
-  async updateStage(@Param("id") id: string, @Body() payload: { stage: string }) {
-    return this.crm.updateDealStage(id, payload.stage as never);
+  async updateStage(@Param("id") id: string, @Body() payload: { stage: string; failReason?: string }) {
+    return this.crm.updateDealStage(id, payload.stage as never, payload.failReason);
   }
 }

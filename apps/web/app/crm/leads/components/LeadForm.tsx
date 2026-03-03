@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { apiBaseUrl } from '@/app/lib/api';
+import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
 
 interface Lead {
   id: string;
@@ -18,6 +18,18 @@ interface Lead {
   utmTerm?: string;
 }
 
+interface VehicleBrand {
+  id: string;
+  name: string;
+  cyrillicName?: string;
+}
+
+interface VehicleModel {
+  id: string;
+  name: string;
+  cyrillicName?: string;
+}
+
 interface LeadFormProps {
   lead?: Lead;
   onSuccess: () => void;
@@ -28,8 +40,8 @@ const LEAD_STAGES = [
   { value: 'new', label: 'Новый' },
   { value: 'contacted', label: 'Связались' },
   { value: 'qualified', label: 'Квалифицирован' },
-  { value: 'trial_booked', label: 'Записан на пробное' },
-  { value: 'attended', label: 'Посетил' },
+  { value: 'trial_booked', label: 'Записан на диагностику' },
+  { value: 'attended', label: 'Диагностика проведена' },
   { value: 'won', label: 'Выигран' },
   { value: 'lost', label: 'Потерян' },
 ];
@@ -58,10 +70,76 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
     utmContent: lead?.utmContent || '',
     utmTerm: lead?.utmTerm || '',
   });
+  const [vehicleData, setVehicleData] = useState({
+    brandId: '',
+    modelId: '',
+    year: '',
+    vin: '',
+    licensePlate: '',
+    color: '',
+    mileage: '',
+  });
+  const [brands, setBrands] = useState<VehicleBrand[]>([]);
+  const [models, setModels] = useState<VehicleModel[]>([]);
+  const [loadingBrands, setLoadingBrands] = useState(false);
+  const [loadingModels, setLoadingModels] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showUtm, setShowUtm] = useState(false);
+
+  useEffect(() => {
+    const fetchBrands = async () => {
+      setLoadingBrands(true);
+      try {
+        const response = await fetch(`${apiBaseUrl}/profiles/brands`, {
+          headers: getAuthHeaders(),
+          cache: 'no-store',
+        });
+
+        if (!response.ok) return;
+        const data = await response.json();
+        if (data.success) {
+          setBrands(data.data);
+        }
+      } catch (fetchError) {
+        console.error('Failed to fetch brands:', fetchError);
+      } finally {
+        setLoadingBrands(false);
+      }
+    };
+
+    fetchBrands();
+  }, []);
+
+  useEffect(() => {
+    if (!vehicleData.brandId) {
+      setModels([]);
+      return;
+    }
+
+    const fetchModels = async () => {
+      setLoadingModels(true);
+      try {
+        const response = await fetch(`${apiBaseUrl}/profiles/brands/${vehicleData.brandId}/models`, {
+          headers: getAuthHeaders(),
+          cache: 'no-store',
+        });
+
+        if (!response.ok) return;
+        const data = await response.json();
+        if (data.success) {
+          setModels(data.data);
+        }
+      } catch (fetchError) {
+        console.error('Failed to fetch models:', fetchError);
+      } finally {
+        setLoadingModels(false);
+      }
+    };
+
+    fetchModels();
+  }, [vehicleData.brandId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,8 +147,6 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
     setError('');
 
     try {
-      const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
-
       const url = lead
         ? `${apiBaseUrl}/crm/leads/${lead.id}`
         : `${apiBaseUrl}/crm/leads`;
@@ -81,10 +157,6 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
         source: formData.source,
         stage: formData.stage,
       };
-
-      if (!lead) {
-        payload.accountId = accountId;
-      }
 
       if (formData.phone) payload.phone = formData.phone;
       if (formData.email) payload.email = formData.email;
@@ -100,10 +172,23 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
         };
       }
 
+      if (vehicleData.brandId && vehicleData.modelId) {
+        payload.vehicleData = {
+          brandId: vehicleData.brandId,
+          modelId: vehicleData.modelId,
+          year: vehicleData.year ? Number(vehicleData.year) : undefined,
+          vin: vehicleData.vin || undefined,
+          licensePlate: vehicleData.licensePlate || undefined,
+          color: vehicleData.color || undefined,
+          mileage: vehicleData.mileage ? Number(vehicleData.mileage) : undefined,
+        };
+      }
+
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         body: JSON.stringify(payload),
       });
@@ -137,7 +222,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           required
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
           placeholder="Иван Иванов"
         />
       </div>
@@ -152,7 +237,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
           type="tel"
           value={formData.phone}
           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
           placeholder="+7 (XXX) XXX-XX-XX"
         />
       </div>
@@ -167,7 +252,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
           type="email"
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
           placeholder="example@mail.com"
         />
       </div>
@@ -182,7 +267,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
           value={formData.source}
           onChange={(e) => setFormData({ ...formData, source: e.target.value })}
           required
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
         >
           <option value="">Выберите источник</option>
           {LEAD_SOURCES.map((source) => (
@@ -202,7 +287,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
           id="stage"
           value={formData.stage}
           onChange={(e) => setFormData({ ...formData, stage: e.target.value })}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
         >
           {LEAD_STAGES.map((stage) => (
             <option key={stage.value} value={stage.value}>
@@ -233,7 +318,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
                 type="text"
                 value={formData.utmSource}
                 onChange={(e) => setFormData({ ...formData, utmSource: e.target.value })}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                 placeholder="google, instagram, direct"
               />
             </div>
@@ -246,7 +331,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
                 type="text"
                 value={formData.utmMedium}
                 onChange={(e) => setFormData({ ...formData, utmMedium: e.target.value })}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                 placeholder="cpc, social, email"
               />
             </div>
@@ -259,7 +344,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
                 type="text"
                 value={formData.utmCampaign}
                 onChange={(e) => setFormData({ ...formData, utmCampaign: e.target.value })}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                 placeholder="spring_promo"
               />
             </div>
@@ -272,7 +357,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
                 type="text"
                 value={formData.utmContent}
                 onChange={(e) => setFormData({ ...formData, utmContent: e.target.value })}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                 placeholder="banner_1"
               />
             </div>
@@ -285,12 +370,131 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
                 type="text"
                 value={formData.utmTerm}
                 onChange={(e) => setFormData({ ...formData, utmTerm: e.target.value })}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                placeholder="логопед караганда"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                placeholder="kinder-school-весна"
               />
             </div>
           </div>
         )}
+      </div>
+
+      <div className="border-t border-slate-200 pt-4">
+        <h3 className="text-sm font-semibold text-slate-900 mb-3">Профиль учащегося (опционально)</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="vehicleBrand" className="block text-xs font-medium text-slate-600 mb-1">
+              Категория
+            </label>
+            <select
+              id="vehicleBrand"
+              value={vehicleData.brandId}
+              onChange={(e) => setVehicleData((prev) => ({ ...prev, brandId: e.target.value, modelId: '' }))}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+              disabled={loadingBrands}
+            >
+              <option value="">{loadingBrands ? 'Загрузка...' : 'Выберите категорию'}</option>
+              {brands.map((brand) => (
+                <option key={brand.id} value={brand.id}>
+                  {brand.cyrillicName || brand.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="vehicleModel" className="block text-xs font-medium text-slate-600 mb-1">
+              Подкатегория
+            </label>
+            <select
+              id="vehicleModel"
+              value={vehicleData.modelId}
+              onChange={(e) => setVehicleData((prev) => ({ ...prev, modelId: e.target.value }))}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+              disabled={!vehicleData.brandId || loadingModels}
+            >
+              <option value="">{loadingModels ? 'Загрузка...' : 'Выберите подкатегорию'}</option>
+              {models.map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.cyrillicName || model.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="vehicleYear" className="block text-xs font-medium text-slate-600 mb-1">
+              Год набора
+            </label>
+            <input
+              id="vehicleYear"
+              type="number"
+              min="1900"
+              max={new Date().getFullYear() + 1}
+              value={vehicleData.year}
+              onChange={(e) => setVehicleData((prev) => ({ ...prev, year: e.target.value }))}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+              placeholder="2020"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="vehiclePlate" className="block text-xs font-medium text-slate-600 mb-1">
+              Внутренний код
+            </label>
+            <input
+              id="vehiclePlate"
+              type="text"
+              value={vehicleData.licensePlate}
+              onChange={(e) => setVehicleData((prev) => ({ ...prev, licensePlate: e.target.value }))}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+              placeholder="GR-2026-01"
+            />
+          </div>
+
+          <div className="sm:col-span-2">
+            <label htmlFor="vehicleVin" className="block text-xs font-medium text-slate-600 mb-1">
+              Идентификатор
+            </label>
+            <input
+              id="vehicleVin"
+              type="text"
+              value={vehicleData.vin}
+              onChange={(e) => setVehicleData((prev) => ({ ...prev, vin: e.target.value.toUpperCase() }))}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+              placeholder="До 17 символов"
+              maxLength={17}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="vehicleColor" className="block text-xs font-medium text-slate-600 mb-1">
+              Метка
+            </label>
+            <input
+              id="vehicleColor"
+              type="text"
+              value={vehicleData.color}
+              onChange={(e) => setVehicleData((prev) => ({ ...prev, color: e.target.value }))}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+              placeholder="Приоритет"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="vehicleMileage" className="block text-xs font-medium text-slate-600 mb-1">
+              Индекс уровня
+            </label>
+            <input
+              id="vehicleMileage"
+              type="number"
+              min="0"
+              value={vehicleData.mileage}
+              onChange={(e) => setVehicleData((prev) => ({ ...prev, mileage: e.target.value }))}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+              placeholder="1"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Error message */}
@@ -305,7 +509,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
         <button
           type="submit"
           disabled={loading}
-          className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
+          className="flex-1 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? 'Сохранение...' : 'Сохранить'}
         </button>

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { apiBaseUrl } from '@/app/lib/api';
+import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
 
 interface Lead {
   id: string;
@@ -16,7 +16,7 @@ interface Lead {
 interface Resource {
   id: string;
   name: string;
-  type: string;
+  type: 'specialist' | 'room' | 'equipment' | string;
   isActive: boolean;
 }
 
@@ -45,6 +45,12 @@ const BOOKING_STATUSES = [
   { value: 'NO_SHOW', label: 'Не пришел' },
 ];
 
+const RESOURCE_TYPE_LABELS: Record<string, string> = {
+  specialist: 'Специалист',
+  room: 'Кабинет',
+  equipment: 'Оборудование',
+};
+
 export default function BookingForm({ booking, onSuccess, onCancel }: BookingFormProps) {
   const [formData, setFormData] = useState({
     leadId: booking?.leadId || '',
@@ -59,15 +65,23 @@ export default function BookingForm({ booking, onSuccess, onCancel }: BookingFor
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
+        const headers = getAuthHeaders();
 
         const [leadsResponse, resourcesResponse] = await Promise.all([
-          fetch(`${apiBaseUrl}/crm/leads?accountId=${accountId}`, { cache: 'no-store' }),
-          fetch(`${apiBaseUrl}/crm/resources?accountId=${accountId}`, { cache: 'no-store' }),
+          fetch(`${apiBaseUrl}/crm/leads`, { cache: 'no-store', headers }),
+          fetch(`${apiBaseUrl}/crm/resources`, { cache: 'no-store', headers }),
         ]);
 
         if (leadsResponse.ok) {
@@ -108,10 +122,6 @@ export default function BookingForm({ booking, onSuccess, onCancel }: BookingFor
         status: formData.status,
       };
 
-      if (!booking) {
-        payload.accountId = accountId;
-      }
-
       // Use resourceId if available, otherwise fall back to specialist string
       if (formData.resourceId) {
         payload.resourceId = formData.resourceId;
@@ -125,6 +135,7 @@ export default function BookingForm({ booking, onSuccess, onCancel }: BookingFor
         method,
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         body: JSON.stringify(payload),
       });
@@ -166,7 +177,7 @@ export default function BookingForm({ booking, onSuccess, onCancel }: BookingFor
           onChange={(e) => setFormData({ ...formData, leadId: e.target.value })}
           required
           disabled={!!booking} // Can't change lead after creation
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-100"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:bg-slate-100"
         >
           <option value="">Выберите клиента</option>
           {leads.map((lead) => (
@@ -182,10 +193,10 @@ export default function BookingForm({ booking, onSuccess, onCancel }: BookingFor
         )}
       </div>
 
-      {/* Resource/Specialist selection */}
+      {/* Resource selection */}
       <div>
         <label htmlFor="resourceId" className="block text-sm font-medium text-slate-700 mb-1">
-          Специалист *
+          Ресурс *
         </label>
         {resources.length > 0 ? (
           <select
@@ -193,12 +204,12 @@ export default function BookingForm({ booking, onSuccess, onCancel }: BookingFor
             value={formData.resourceId}
             onChange={(e) => setFormData({ ...formData, resourceId: e.target.value })}
             required={resources.length > 0}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
           >
-            <option value="">Выберите специалиста</option>
-            {resources.filter(r => r.isActive && r.type === 'specialist').map((resource) => (
+            <option value="">Выберите ресурс</option>
+            {resources.filter(r => r.isActive).map((resource) => (
               <option key={resource.id} value={resource.id}>
-                {resource.name}
+                {RESOURCE_TYPE_LABELS[resource.type] || 'Ресурс'} · {resource.name}
               </option>
             ))}
           </select>
@@ -210,11 +221,11 @@ export default function BookingForm({ booking, onSuccess, onCancel }: BookingFor
               value={formData.specialist}
               onChange={(e) => setFormData({ ...formData, specialist: e.target.value })}
               required
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              placeholder="Имя специалиста"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+              placeholder="Название ресурса"
             />
             <p className="mt-1 text-xs text-slate-500">
-              Специалисты не настроены. Используйте текстовое поле.
+              Ресурсы не настроены. Используйте текстовое поле.
             </p>
           </>
         )}
@@ -225,20 +236,32 @@ export default function BookingForm({ booking, onSuccess, onCancel }: BookingFor
         <label htmlFor="scheduledAt" className="block text-sm font-medium text-slate-700 mb-1">
           Дата и время *
         </label>
-        <DatePicker
-          id="scheduledAt"
-          selected={formData.scheduledAt}
-          onChange={(date: Date | null) => date && setFormData({ ...formData, scheduledAt: date })}
-          showTimeSelect
-          timeFormat="HH:mm"
-          timeIntervals={15}
-          dateFormat="dd.MM.yyyy HH:mm"
-          minDate={new Date()}
-          timeCaption="Время"
-          required
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-          wrapperClassName="w-full"
-        />
+        {isMobile ? (
+          <input
+            id="scheduledAt"
+            type="datetime-local"
+            value={new Date(formData.scheduledAt.getTime() - formData.scheduledAt.getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
+            min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
+            onChange={(e) => setFormData({ ...formData, scheduledAt: new Date(e.target.value) })}
+            required
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 min-h-[44px]"
+          />
+        ) : (
+          <DatePicker
+            id="scheduledAt"
+            selected={formData.scheduledAt}
+            onChange={(date: Date | null) => date && setFormData({ ...formData, scheduledAt: date })}
+            showTimeSelect
+            timeFormat="HH:mm"
+            timeIntervals={15}
+            dateFormat="dd.MM.yyyy HH:mm"
+            minDate={new Date()}
+            timeCaption="Время"
+            required
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+            wrapperClassName="w-full"
+          />
+        )}
         <p className="mt-1 text-xs text-slate-500">
           Выберите дату и время приёма
         </p>
@@ -253,7 +276,7 @@ export default function BookingForm({ booking, onSuccess, onCancel }: BookingFor
           id="status"
           value={formData.status}
           onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
         >
           {BOOKING_STATUSES.map((status) => (
             <option key={status.value} value={status.value}>
@@ -275,7 +298,7 @@ export default function BookingForm({ booking, onSuccess, onCancel }: BookingFor
         <button
           type="submit"
           disabled={loading}
-          className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
+          className="flex-1 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? 'Сохранение...' : 'Сохранить'}
         </button>

@@ -7,6 +7,11 @@ import { QUEUE_NAMES } from '../queue/queue.constants';
 import { Telegraf, Context } from 'telegraf';
 import { Message } from 'telegraf/types';
 import { InteractionChannel, IntegrationStatus, ConversationStatus, MessageDirection, MessageStatus } from '@prisma/client';
+import {
+  TelegramBusinessConnection,
+  TelegramBusinessMessage,
+  TelegramDeletedBusinessMessages,
+} from '../common/types/request.types';
 
 export interface SendMessageOptions {
   accountId: string;
@@ -74,7 +79,13 @@ export class TelegramService implements OnModuleInit {
     if (config.useWebhook) {
       // Webhook mode (recommended for production)
       const webhookUrl = `${process.env.API_URL}/telegram/webhook/${integrationId}`;
-      await bot.telegram.setWebhook(webhookUrl);
+      await bot.telegram.setWebhook(webhookUrl, {
+        allowed_updates: [
+          'message', 'edited_message', 'callback_query',
+          'business_connection', 'business_message',
+          'edited_business_message', 'deleted_business_messages',
+        ] as any,
+      });
       this.logger.log(`Telegram bot ${integrationId} webhook set: ${webhookUrl}`);
     } else {
       // Polling mode (for development)
@@ -354,7 +365,7 @@ export class TelegramService implements OnModuleInit {
   async sendMessage(
     integrationId: string,
     chatId: string | number,
-    options: { text?: string; photo?: string; video?: string; document?: string; audio?: string; replyToMessageId?: number }
+    options: { text?: string; photo?: string; video?: string; document?: string; audio?: string; replyToMessageId?: number; businessConnectionId?: string }
   ): Promise<{ messageId: string }> {
     // Get Telegram integration
     const integration = await this.prisma.integration.findUnique({
@@ -388,6 +399,15 @@ export class TelegramService implements OnModuleInit {
       });
     }
 
+    // Auto-detect businessConnectionId from conversation metadata
+    let businessConnectionId = options.businessConnectionId;
+    if (!businessConnectionId) {
+      const meta = conversation.metadata as any;
+      if (meta?.businessConnectionId) {
+        businessConnectionId = meta.businessConnectionId;
+      }
+    }
+
     // Create message record
     const message = await this.prisma.message.create({
       data: {
@@ -396,6 +416,7 @@ export class TelegramService implements OnModuleInit {
         direction: MessageDirection.outbound,
         content: options.text || '[Media]',
         status: MessageStatus.pending,
+        metadata: businessConnectionId ? { businessConnectionId } : undefined,
       },
     });
 
@@ -410,9 +431,10 @@ export class TelegramService implements OnModuleInit {
       document: options.document,
       audio: options.audio,
       replyToMessageId: options.replyToMessageId,
+      businessConnectionId,
     });
 
-    this.logger.log(`Telegram message queued: ${message.id}`);
+    this.logger.log(`Telegram message queued: ${message.id}${businessConnectionId ? ' (business)' : ''}`);
 
     return { messageId: message.id };
   }
@@ -445,30 +467,37 @@ export class TelegramService implements OnModuleInit {
     try {
       let result: Message;
 
+      // Build extra params for business connection + reply
+      const extra: any = {};
+      if (options.businessConnectionId) {
+        extra.business_connection_id = options.businessConnectionId;
+      }
+      if (options.replyToMessageId) {
+        extra.reply_parameters = { message_id: options.replyToMessageId };
+      }
+
       if (options.photo) {
         result = await bot.telegram.sendPhoto(chatId, options.photo, {
           caption: options.text,
-          reply_parameters: options.replyToMessageId ? { message_id: options.replyToMessageId } : undefined,
+          ...extra,
         });
       } else if (options.video) {
         result = await bot.telegram.sendVideo(chatId, options.video, {
           caption: options.text,
-          reply_parameters: options.replyToMessageId ? { message_id: options.replyToMessageId } : undefined,
+          ...extra,
         });
       } else if (options.document) {
         result = await bot.telegram.sendDocument(chatId, options.document, {
           caption: options.text,
-          reply_parameters: options.replyToMessageId ? { message_id: options.replyToMessageId } : undefined,
+          ...extra,
         });
       } else if (options.audio) {
         result = await bot.telegram.sendAudio(chatId, options.audio, {
           caption: options.text,
-          reply_parameters: options.replyToMessageId ? { message_id: options.replyToMessageId } : undefined,
+          ...extra,
         });
       } else {
-        result = await bot.telegram.sendMessage(chatId, options.text, {
-          reply_parameters: options.replyToMessageId ? { message_id: options.replyToMessageId } : undefined,
-        });
+        result = await bot.telegram.sendMessage(chatId, options.text, extra);
       }
 
       // Update message with external ID
@@ -480,7 +509,9 @@ export class TelegramService implements OnModuleInit {
         },
       });
 
-      this.logger.log(`Telegram message sent: ${messageId} -> ${result.message_id}`);
+      this.logger.log(
+        `Telegram message sent: ${messageId} -> ${result.message_id}${options.businessConnectionId ? ' (via business)' : ''}`,
+      );
     } catch (error) {
       this.logger.error(`Failed to send Telegram message ${messageId}:`, error);
 
@@ -571,6 +602,255 @@ export class TelegramService implements OnModuleInit {
       this.logger.log(`Manager notification sent via integration ${integrationId}`);
     } catch (error) {
       this.logger.error('Failed to send manager notification:', error);
+    }
+  }
+
+  // =========================================
+  // Telegram Business Account handlers
+  // =========================================
+
+  /**
+   * Handle business_connection update — store connection info
+   */
+  async handleBusinessConnection(
+    integrationId: string,
+    accountId: string,
+    connection: TelegramBusinessConnection,
+  ): Promise<void> {
+    try {
+      const integration = await this.prisma.integration.findUnique({
+        where: { id: integrationId },
+      });
+
+      if (!integration) {
+        this.logger.warn(`Integration ${integrationId} not found for business connection`);
+        return;
+      }
+
+      const settings = (integration.settings as any) || {};
+      const businessConnections = settings.businessConnections || {};
+
+      if (connection.is_enabled) {
+        businessConnections[connection.id] = {
+          id: connection.id,
+          userId: connection.user.id,
+          userChatId: connection.user_chat_id,
+          username: connection.user.username,
+          firstName: connection.user.first_name,
+          lastName: connection.user.last_name,
+          canReply: connection.can_reply,
+          isEnabled: true,
+          connectedAt: new Date(connection.date * 1000).toISOString(),
+        };
+        this.logger.log(
+          `Business connection established: ${connection.id} (user: ${connection.user.first_name} @${connection.user.username})`,
+        );
+      } else {
+        if (businessConnections[connection.id]) {
+          businessConnections[connection.id].isEnabled = false;
+          businessConnections[connection.id].disconnectedAt = new Date().toISOString();
+        }
+        this.logger.log(`Business connection disabled: ${connection.id}`);
+      }
+
+      await this.prisma.integration.update({
+        where: { id: integrationId },
+        data: {
+          settings: { ...settings, businessConnections },
+        },
+      });
+    } catch (error) {
+      this.logger.error('Error handling business connection:', error);
+    }
+  }
+
+  /**
+   * Handle incoming business message (customer chatting with business account)
+   */
+  async handleBusinessMessage(
+    integrationId: string,
+    accountId: string,
+    message: TelegramBusinessMessage,
+  ): Promise<void> {
+    try {
+      const chatId = message.chat.id.toString();
+      const from = message.from;
+      const businessConnectionId = message.business_connection_id;
+
+      // Find or create conversation keyed by chatId + businessConnectionId
+      let conversation = await this.prisma.conversation.findFirst({
+        where: {
+          accountId,
+          channel: InteractionChannel.telegram,
+          AND: [
+            { metadata: { path: ['chatId'], equals: chatId } },
+            { metadata: { path: ['businessConnectionId'], equals: businessConnectionId } },
+          ],
+        },
+      });
+
+      if (!conversation) {
+        conversation = await this.prisma.conversation.create({
+          data: {
+            account: { connect: { id: accountId } },
+            channel: InteractionChannel.telegram,
+            status: ConversationStatus.open,
+            metadata: {
+              chatId,
+              username: from?.username,
+              firstName: from?.first_name,
+              lastName: from?.last_name,
+              businessConnectionId,
+              conversationType: 'business',
+            },
+          },
+        });
+      }
+
+      // Extract content
+      let content = '';
+      let mediaFileId: string | null = null;
+
+      if (message.text) {
+        content = message.text;
+      } else if (message.photo && message.photo.length > 0) {
+        const photo = message.photo[message.photo.length - 1];
+        content = message.caption || '[Photo]';
+        mediaFileId = photo.file_id;
+      } else if (message.video) {
+        content = message.caption || '[Video]';
+        mediaFileId = message.video.file_id;
+      } else if (message.document) {
+        content = message.document.file_name || '[Document]';
+        mediaFileId = message.document.file_id;
+      } else if (message.voice) {
+        content = '[Voice message]';
+        mediaFileId = message.voice.file_id;
+      } else if (message.audio) {
+        content = '[Audio]';
+        mediaFileId = message.audio.file_id;
+      }
+
+      // Create message record
+      const msg = await this.prisma.message.create({
+        data: {
+          conversation: { connect: { id: conversation.id } },
+          account: { connect: { id: accountId } },
+          externalId: message.message_id.toString(),
+          direction: MessageDirection.inbound,
+          content,
+          metadata: {
+            from: {
+              id: from?.id,
+              username: from?.username,
+              first_name: from?.first_name,
+              last_name: from?.last_name,
+            },
+            fileId: mediaFileId,
+            businessConnectionId,
+          },
+          status: MessageStatus.delivered,
+        },
+      });
+
+      // Update conversation lastMessageAt
+      await this.prisma.conversation.update({
+        where: { id: conversation.id },
+        data: { lastMessageAt: new Date() },
+      });
+
+      // Download media if present
+      if (mediaFileId) {
+        await this.downloadMedia(integrationId, accountId, mediaFileId, msg.id);
+      }
+
+      this.logger.log(
+        `Business message received: ${message.message_id} from chat ${chatId} (connection: ${businessConnectionId})`,
+      );
+    } catch (error) {
+      this.logger.error('Error handling business message:', error);
+    }
+  }
+
+  /**
+   * Handle edited business message
+   */
+  async handleEditedBusinessMessage(
+    integrationId: string,
+    accountId: string,
+    message: TelegramBusinessMessage,
+  ): Promise<void> {
+    try {
+      const existingMessage = await this.prisma.message.findFirst({
+        where: {
+          accountId,
+          externalId: message.message_id.toString(),
+        },
+      });
+
+      if (!existingMessage) {
+        this.logger.warn(`Edited business message not found: ${message.message_id}`);
+        return;
+      }
+
+      let content = message.text || message.caption || existingMessage.content;
+
+      await this.prisma.message.update({
+        where: { id: existingMessage.id },
+        data: {
+          content,
+          metadata: {
+            ...(existingMessage.metadata as any),
+            editedAt: new Date().toISOString(),
+          },
+        },
+      });
+
+      this.logger.log(`Business message edited: ${message.message_id}`);
+    } catch (error) {
+      this.logger.error('Error handling edited business message:', error);
+    }
+  }
+
+  /**
+   * Handle deleted business messages
+   */
+  async handleDeletedBusinessMessages(
+    integrationId: string,
+    accountId: string,
+    deleted: TelegramDeletedBusinessMessages,
+  ): Promise<void> {
+    try {
+      const messageIds = deleted.message_ids.map(id => id.toString());
+
+      const messages = await this.prisma.message.findMany({
+        where: {
+          accountId,
+          externalId: { in: messageIds },
+        },
+      });
+
+      for (const msg of messages) {
+        const meta = (msg.metadata as any) || {};
+        if (meta.businessConnectionId === deleted.business_connection_id) {
+          await this.prisma.message.update({
+            where: { id: msg.id },
+            data: {
+              metadata: {
+                ...meta,
+                deletedAt: new Date().toISOString(),
+                deletedFromBusiness: true,
+              },
+            },
+          });
+        }
+      }
+
+      this.logger.log(
+        `Business messages deleted: ${messageIds.join(', ')} (connection: ${deleted.business_connection_id})`,
+      );
+    } catch (error) {
+      this.logger.error('Error handling deleted business messages:', error);
     }
   }
 

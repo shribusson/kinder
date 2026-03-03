@@ -36,6 +36,8 @@ describe('CampaignsController', () => {
     accountId: 'account-123',
   };
 
+  const mockReq = { user: { sub: 'user-123' } } as any;
+
   beforeEach(async () => {
     crmService = {
       listCampaigns: jest.fn().mockResolvedValue([mockCampaign]),
@@ -65,10 +67,10 @@ describe('CampaignsController', () => {
 
   describe('list', () => {
     it('should return list of campaigns', async () => {
-      const result = await controller.list();
+      const result = await controller.list(mockReq);
 
       expect(result).toEqual([mockCampaign]);
-      expect(crmService.listCampaigns).toHaveBeenCalled();
+      expect(crmService.listCampaigns).toHaveBeenCalledWith('account-123');
     });
   });
 

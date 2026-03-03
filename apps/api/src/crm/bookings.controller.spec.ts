@@ -37,6 +37,8 @@ describe('BookingsController', () => {
     accountId: 'account-123',
   };
 
+  const mockReq = { user: { sub: 'user-123' } } as any;
+
   beforeEach(async () => {
     crmService = {
       listBookings: jest.fn().mockResolvedValue([mockBooking]),
@@ -66,10 +68,10 @@ describe('BookingsController', () => {
 
   describe('list', () => {
     it('should return list of bookings', async () => {
-      const result = await controller.list();
+      const result = await controller.list(mockReq);
 
       expect(result).toEqual([mockBooking]);
-      expect(crmService.listBookings).toHaveBeenCalled();
+      expect(crmService.listBookings).toHaveBeenCalledWith('account-123');
     });
   });
 

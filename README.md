@@ -33,6 +33,14 @@ Complete business management platform featuring:
 - **Full channel sync**: Telegram, WhatsApp, telephony, social media, ad platforms
 - **Production monitoring**: Prometheus, Grafana, Loki, Sentry
 
+## 📚 Documentation Hub
+
+- **Единый индекс документации**: [docs/README.md](docs/README.md)
+- **Roadmap развития платформы**: [docs/PLATFORM_ROADMAP_2026.md](docs/PLATFORM_ROADMAP_2026.md)
+- **Аудит общего кода**: [docs/SHARED_CODE_AUDIT.md](docs/SHARED_CODE_AUDIT.md)
+- **Правила порядка в корне**: [docs/ROOT_GUIDELINES.md](docs/ROOT_GUIDELINES.md)
+- **Статусные документы**: [docs/status/README.md](docs/status/README.md)
+
 ---
 
 ## 📋 Requirements

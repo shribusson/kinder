@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { IconEdit, IconTrash } from '@tabler/icons-react';
 import LeadModal from '../../components/LeadModal';
-import { apiBaseUrl } from '@/app/lib/api';
+import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
 
 interface Lead {
   id: string;
@@ -38,6 +38,7 @@ export default function LeadDetailActions({ lead }: LeadDetailActionsProps) {
     try {
       const response = await fetch(`${apiBaseUrl}/crm/leads/${lead.id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -62,7 +63,7 @@ export default function LeadDetailActions({ lead }: LeadDetailActionsProps) {
       <div className="flex items-center gap-2">
         <button
           onClick={() => setIsModalOpen(true)}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors flex items-center gap-2"
+          className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors flex items-center gap-2"
         >
           <IconEdit size={16} />
           Редактировать

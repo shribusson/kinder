@@ -39,6 +39,8 @@ describe('LeadsController', () => {
     accountId: 'account-123',
   };
 
+  const mockReq = { user: { sub: 'user-123' } } as any;
+
   beforeEach(async () => {
     crmService = {
       listLeads: jest.fn().mockResolvedValue([mockLead]),
@@ -68,28 +70,28 @@ describe('LeadsController', () => {
 
   describe('list', () => {
     it('should return list of leads', async () => {
-      const result = await controller.list();
+      const result = await controller.list(mockReq);
 
       expect(result).toEqual([mockLead]);
-      expect(crmService.listLeads).toHaveBeenCalledWith(undefined, undefined, undefined);
+      expect(crmService.listLeads).toHaveBeenCalledWith('account-123', undefined, undefined, undefined);
     });
 
     it('should filter by search query', async () => {
-      await controller.list('test');
+      await controller.list(mockReq, 'test');
 
-      expect(crmService.listLeads).toHaveBeenCalledWith('test', undefined, undefined);
+      expect(crmService.listLeads).toHaveBeenCalledWith('account-123', 'test', undefined, undefined);
     });
 
     it('should filter by source', async () => {
-      await controller.list(undefined, 'website');
+      await controller.list(mockReq, undefined, 'website');
 
-      expect(crmService.listLeads).toHaveBeenCalledWith(undefined, 'website', undefined);
+      expect(crmService.listLeads).toHaveBeenCalledWith('account-123', undefined, 'website', undefined);
     });
 
     it('should filter by stage', async () => {
-      await controller.list(undefined, undefined, 'qualified');
+      await controller.list(mockReq, undefined, undefined, 'qualified');
 
-      expect(crmService.listLeads).toHaveBeenCalledWith(undefined, undefined, 'qualified');
+      expect(crmService.listLeads).toHaveBeenCalledWith('account-123', undefined, undefined, 'qualified');
     });
   });
 
@@ -100,7 +102,7 @@ describe('LeadsController', () => {
         send: jest.fn(),
       };
 
-      await controller.export(mockRes as any);
+      await controller.export(mockReq, mockRes as any);
 
       expect(mockRes.setHeader).toHaveBeenCalledWith('Content-Type', 'text/csv');
       expect(mockRes.setHeader).toHaveBeenCalledWith(
@@ -113,7 +115,6 @@ describe('LeadsController', () => {
 
   describe('create', () => {
     it('should create a new lead', async () => {
-      const req = { user: { sub: 'user-123' } };
       const payload = {
         name: 'New Lead',
         phone: '+77009876543',
@@ -121,7 +122,7 @@ describe('LeadsController', () => {
         source: 'telegram',
       };
 
-      const result = await controller.create(payload, req as any);
+      const result = await controller.create(payload, mockReq);
 
       expect(result).toEqual(mockLead);
       expect(crmService.createLead).toHaveBeenCalledWith({
@@ -133,13 +134,12 @@ describe('LeadsController', () => {
     it('should throw error when no membership found', async () => {
       prismaService.membership.findFirst.mockResolvedValue(null);
 
-      const req = { user: { sub: 'user-123' } };
       const payload = {
         name: 'New Lead',
         source: 'website',
       };
 
-      await expect(controller.create(payload, req as any)).rejects.toThrow('No account found');
+      await expect(controller.create(payload, mockReq)).rejects.toThrow('No account found');
     });
   });
 });

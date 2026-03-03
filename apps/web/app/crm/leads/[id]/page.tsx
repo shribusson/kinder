@@ -23,6 +23,23 @@ interface Lead {
     title: string;
     stage: string;
     amount: number;
+    vehicleId?: string | null;
+  }>;
+  vehicles?: Array<{
+    id: string;
+    year?: number;
+    vin?: string;
+    licensePlate?: string;
+    color?: string;
+    mileage?: number;
+    brand: {
+      name: string;
+      cyrillicName?: string;
+    };
+    model: {
+      name: string;
+      cyrillicName?: string;
+    };
   }>;
   bookings?: Array<{
     id: string;
@@ -36,8 +53,8 @@ const STAGE_LABELS: Record<string, string> = {
   new: 'Новый',
   contacted: 'Связались',
   qualified: 'Квалифицирован',
-  trial_booked: 'Записан на пробное',
-  attended: 'Посетил',
+  trial_booked: 'Записан на диагностику',
+  attended: 'Диагностика проведена',
   won: 'Выигран',
   lost: 'Потерян',
 };
@@ -94,7 +111,7 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
                     Телефон
                   </dt>
                   <dd className="font-medium text-slate-900">
-                    <a href={`tel:${lead.phone}`} className="hover:text-blue-600">
+                    <a href={`tel:${lead.phone}`} className="hover:text-orange-600">
                       {lead.phone}
                     </a>
                   </dd>
@@ -107,7 +124,7 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
                     Email
                   </dt>
                   <dd className="font-medium text-slate-900">
-                    <a href={`mailto:${lead.email}`} className="hover:text-blue-600">
+                    <a href={`mailto:${lead.email}`} className="hover:text-orange-600">
                       {lead.email}
                     </a>
                   </dd>
@@ -115,6 +132,50 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
               )}
             </dl>
           </div>
+
+          {/* Profiles */}
+          {lead.vehicles && lead.vehicles.length > 0 && (
+            <div className="card">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">Профили клиента</h2>
+              <div className="space-y-3">
+                {lead.vehicles.map((vehicle) => (
+                  <div key={vehicle.id} className="rounded-lg border border-slate-200 p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="font-medium text-slate-900">
+                        {vehicle.brand.cyrillicName || vehicle.brand.name} {vehicle.model.cyrillicName || vehicle.model.name}
+                        {vehicle.year ? ` ${vehicle.year}` : ''}
+                      </div>
+                      {vehicle.licensePlate && (
+                        <span className="rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
+                          {vehicle.licensePlate}
+                        </span>
+                      )}
+                    </div>
+                    <dl className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                      {vehicle.vin && (
+                        <div className="sm:col-span-2">
+                          <dt className="text-slate-500">Идентификатор</dt>
+                          <dd className="font-mono text-slate-800">{vehicle.vin}</dd>
+                        </div>
+                      )}
+                      {vehicle.mileage !== undefined && vehicle.mileage !== null && (
+                        <div>
+                          <dt className="text-slate-500">Индекс</dt>
+                          <dd className="font-medium text-slate-900">{vehicle.mileage.toLocaleString('ru-RU')}</dd>
+                        </div>
+                      )}
+                      {vehicle.color && (
+                        <div>
+                          <dt className="text-slate-500">Метка</dt>
+                          <dd className="font-medium text-slate-900">{vehicle.color}</dd>
+                        </div>
+                      )}
+                    </dl>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* UTM Data */}
           {(lead.utmSource || lead.utmMedium || lead.utmCampaign || lead.utmContent || lead.utmTerm) && (
@@ -164,7 +225,7 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
                   <Link
                     key={deal.id}
                     href={`/crm/deals/${deal.id}`}
-                    className="block p-3 rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                    className="block p-3 rounded-lg border border-slate-200 hover:border-orange-300 hover:bg-orange-50 transition-colors"
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -204,7 +265,7 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
                           ? 'bg-green-100 text-green-700'
                           : booking.status === 'CANCELLED'
                           ? 'bg-red-100 text-red-700'
-                          : 'bg-blue-100 text-blue-700'
+                          : 'bg-orange-100 text-orange-700'
                       }`}>
                         {booking.status}
                       </span>
@@ -237,7 +298,7 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
                       : lead.stage === 'lost'
                       ? 'bg-red-100 text-red-700'
                       : lead.stage === 'new'
-                      ? 'bg-blue-100 text-blue-700'
+                      ? 'bg-orange-100 text-orange-700'
                       : 'bg-slate-100 text-slate-700'
                   }`}>
                     {STAGE_LABELS[lead.stage] || lead.stage}
