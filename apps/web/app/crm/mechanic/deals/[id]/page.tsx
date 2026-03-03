@@ -105,7 +105,7 @@ export default function MechanicDealDetail() {
 
   const loadDeal = useCallback(async () => {
     try {
-      const response = await apiCall(`/mechanic/deals/${dealId}`, {
+      const response = await apiCall(`/operations/deals/${dealId}`, {
         method: 'GET',
       });
 
@@ -132,7 +132,7 @@ export default function MechanicDealDetail() {
     setIsStartingTimer(true);
     try {
       // Get resource ID from dashboard
-      const dashboardResponse = await apiCall('/mechanic/dashboard', {
+      const dashboardResponse = await apiCall('/operations/dashboard', {
         method: 'GET',
       });
 
@@ -140,7 +140,7 @@ export default function MechanicDealDetail() {
         throw new Error('Failed to get resource ID');
       }
 
-      const response = await apiCall('/mechanic/time/start', {
+      const response = await apiCall('/operations/time/start', {
         method: 'POST',
         body: {
           dealId,
@@ -153,7 +153,7 @@ export default function MechanicDealDetail() {
           title: 'Успешно',
           description: 'Таймер запущен',
         });
-        router.push('/crm/mechanic');
+        router.push('/crm/operations');
       }
     } catch (error: any) {
       console.error('Error starting timer:', error);
@@ -204,7 +204,7 @@ export default function MechanicDealDetail() {
             .map((text) => ({ text, done: false }))
         : undefined;
 
-      const response = await apiCall(`/mechanic/deals/${dealId}/logs`, {
+      const response = await apiCall(`/operations/deals/${dealId}/logs`, {
         method: 'POST',
         body: {
           title: logForm.title || undefined,
@@ -234,7 +234,7 @@ export default function MechanicDealDetail() {
     const form = new FormData();
     form.append('file', file);
     try {
-      const res = await fetch(`${apiBaseUrl}/mechanic/logs/${logId}/media`, {
+      const res = await fetch(`${apiBaseUrl}/operations/logs/${logId}/media`, {
         method: 'POST',
         headers: {
           ...getAuthHeaders(),

@@ -26,6 +26,27 @@ interface Service {
   isActive: boolean;
 }
 
+const CATEGORY_ICON_MAP: Record<string, string> = {
+  it: '💻',
+  language: '🗣️',
+  creative: '🎨',
+  brake: '💻',
+  coolant: '🗣️',
+  heater: '🎨',
+};
+
+function getCategoryIcon(icon?: string) {
+  if (!icon) return null;
+
+  const mapped = CATEGORY_ICON_MAP[icon];
+  if (mapped) return mapped;
+
+  const hasLatinOrCyrillic = /[a-zA-Zа-яА-Я]/.test(icon);
+  if (hasLatinOrCyrillic) return null;
+
+  return icon;
+}
+
 export default function ServicesSettingsPage() {
   const [categories, setCategories] = useState<ServiceCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -308,7 +329,7 @@ export default function ServicesSettingsPage() {
                     }
                     <div>
                       <h3 className="font-semibold text-slate-900">
-                        {cat.icon && <span className="mr-2">{cat.icon}</span>}
+                        {getCategoryIcon(cat.icon) && <span className="mr-2">{getCategoryIcon(cat.icon)}</span>}
                         {cat.name}
                       </h3>
                       <p className="text-xs text-slate-500">{cat.services.length} услуг</p>

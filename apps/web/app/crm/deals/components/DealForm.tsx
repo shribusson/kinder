@@ -178,7 +178,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
   useEffect(() => {
     const fetchBrands = async () => {
       try {
-        const response = await fetch(`${apiBaseUrl}/vehicles/brands`, {
+        const response = await fetch(`${apiBaseUrl}/profiles/brands`, {
           headers: getAuthHeaders(),
           cache: 'no-store',
         });
@@ -209,7 +209,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
       setLoadingModels(true);
       try {
         const response = await fetch(
-          `${apiBaseUrl}/vehicles/brands/${vehicleData.brandId}/models`,
+          `${apiBaseUrl}/profiles/brands/${vehicleData.brandId}/models`,
           {
             headers: getAuthHeaders(),
             cache: 'no-store',
@@ -372,7 +372,7 @@ export default function DealForm({ deal, onSuccess, onCancel }: DealFormProps) {
       const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
       const endpoint = field === 'vin' ? 'vin' : 'plate';
       const response = await fetch(
-        `${apiBaseUrl}/vehicles/lookup/${endpoint}/${encodeURIComponent(value)}`,
+        `${apiBaseUrl}/profiles/lookup/${endpoint}/${encodeURIComponent(value)}`,
         {
           headers: {
             ...getAuthHeaders(),

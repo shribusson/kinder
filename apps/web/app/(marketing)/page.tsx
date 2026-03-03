@@ -22,6 +22,9 @@ interface ServiceCategory {
 }
 
 const ICON_MAP: Record<string, React.ComponentType<any>> = {
+  it: IconTruck,
+  language: IconUsers,
+  creative: IconShieldCheck,
   brake: IconTruck,
   coolant: IconTruck,
   heater: IconTruck,
@@ -105,7 +108,7 @@ export default async function HomePage({
             <>
               <div className="grid md:grid-cols-3 gap-6 mb-12">
                 {categories.map((category) => {
-                  const Icon = ICON_MAP[category.icon || 'brake'] || IconTruck;
+                  const Icon = ICON_MAP[category.icon || 'it'] || IconTruck;
                   return (
                     <Link
                       key={category.id}

@@ -92,7 +92,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
     const fetchBrands = async () => {
       setLoadingBrands(true);
       try {
-        const response = await fetch(`${apiBaseUrl}/vehicles/brands`, {
+        const response = await fetch(`${apiBaseUrl}/profiles/brands`, {
           headers: getAuthHeaders(),
           cache: 'no-store',
         });
@@ -121,7 +121,7 @@ export default function LeadForm({ lead, onSuccess, onCancel }: LeadFormProps) {
     const fetchModels = async () => {
       setLoadingModels(true);
       try {
-        const response = await fetch(`${apiBaseUrl}/vehicles/brands/${vehicleData.brandId}/models`, {
+        const response = await fetch(`${apiBaseUrl}/profiles/brands/${vehicleData.brandId}/models`, {
           headers: getAuthHeaders(),
           cache: 'no-store',
         });

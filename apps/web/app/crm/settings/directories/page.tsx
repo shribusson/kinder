@@ -57,7 +57,7 @@ export default function DirectoriesPage() {
 
   const fetchBrands = async () => {
     try {
-      const res = await fetch(`${apiBaseUrl}/vehicles/brands`, {
+      const res = await fetch(`${apiBaseUrl}/profiles/brands`, {
         headers: getAuthHeaders(),
         cache: 'no-store',
       });
@@ -75,7 +75,7 @@ export default function DirectoriesPage() {
   const fetchModels = async (brandId: string) => {
     setModelsLoading(true);
     try {
-      const res = await fetch(`${apiBaseUrl}/vehicles/brands/${brandId}/models`, {
+      const res = await fetch(`${apiBaseUrl}/profiles/brands/${brandId}/models`, {
         headers: getAuthHeaders(),
         cache: 'no-store',
       });
@@ -136,8 +136,8 @@ export default function DirectoriesPage() {
       }
 
       const url = editingBrand
-        ? `${apiBaseUrl}/vehicles/brands/${editingBrand.id}`
-        : `${apiBaseUrl}/vehicles/brands`;
+        ? `${apiBaseUrl}/profiles/brands/${editingBrand.id}`
+        : `${apiBaseUrl}/profiles/brands`;
       const res = await fetch(url, {
         method: editingBrand ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
@@ -159,7 +159,7 @@ export default function DirectoriesPage() {
   const deleteBrand = async (id: string, name: string) => {
     if (!confirm(`Удалить марку "${name}" и все её модели?`)) return;
     try {
-      await fetch(`${apiBaseUrl}/vehicles/brands/${id}`, {
+      await fetch(`${apiBaseUrl}/profiles/brands/${id}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
       });
@@ -176,7 +176,7 @@ export default function DirectoriesPage() {
 
   const togglePopular = async (brand: Brand) => {
     try {
-      await fetch(`${apiBaseUrl}/vehicles/brands/${brand.id}`, {
+      await fetch(`${apiBaseUrl}/profiles/brands/${brand.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ popular: !brand.popular }),
@@ -226,8 +226,8 @@ export default function DirectoriesPage() {
       }
 
       const url = editingModel
-        ? `${apiBaseUrl}/vehicles/models/${editingModel.id}`
-        : `${apiBaseUrl}/vehicles/models`;
+        ? `${apiBaseUrl}/profiles/models/${editingModel.id}`
+        : `${apiBaseUrl}/profiles/models`;
       const res = await fetch(url, {
         method: editingModel ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
@@ -249,7 +249,7 @@ export default function DirectoriesPage() {
   const deleteModel = async (id: string, name: string) => {
     if (!confirm(`Удалить модель "${name}"?`)) return;
     try {
-      await fetch(`${apiBaseUrl}/vehicles/models/${id}`, {
+      await fetch(`${apiBaseUrl}/profiles/models/${id}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
       });

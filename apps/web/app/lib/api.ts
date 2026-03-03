@@ -4,7 +4,7 @@ const publicBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 export const apiBaseUrl =
   typeof window === "undefined"
     ? serverBaseUrl
-    : publicBaseUrl ?? "http://localhost:3001";
+    : publicBaseUrl ?? "/api";
 
 function getCookie(name: string): string | undefined {
   if (typeof window === "undefined") return undefined;

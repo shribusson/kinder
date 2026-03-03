@@ -158,44 +158,56 @@ async function main() {
   // Create service categories and services
   const category1 = await prisma.serviceCategory.upsert({
     where: { accountId_slug: { accountId: account.id, slug: 'it-i-robototexnika' } },
-    update: {},
+    update: {
+      name: 'IT и робототехника',
+      icon: 'it',
+      sortOrder: 0,
+    },
     create: {
       accountId: account.id,
       name: 'IT и робототехника',
       slug: 'it-i-robototexnika',
-      icon: 'brake',
+      icon: 'it',
       sortOrder: 0,
     },
   });
 
   const category2 = await prisma.serviceCategory.upsert({
     where: { accountId_slug: { accountId: account.id, slug: 'yazyki-i-kommunikaciya' } },
-    update: {},
+    update: {
+      name: 'Языки и коммуникация',
+      icon: 'language',
+      sortOrder: 1,
+    },
     create: {
       accountId: account.id,
       name: 'Языки и коммуникация',
       slug: 'yazyki-i-kommunikaciya',
-      icon: 'coolant',
+      icon: 'language',
       sortOrder: 1,
     },
   });
 
   const category3 = await prisma.serviceCategory.upsert({
     where: { accountId_slug: { accountId: account.id, slug: 'tvorchestvo-i-proekty' } },
-    update: {},
+    update: {
+      name: 'Творчество и проекты',
+      icon: 'creative',
+      sortOrder: 2,
+    },
     create: {
       accountId: account.id,
       name: 'Творчество и проекты',
       slug: 'tvorchestvo-i-proekty',
-      icon: 'heater',
+      icon: 'creative',
       sortOrder: 2,
     },
   });
 
   console.log('✅ Created 3 service categories');
 
-  // Brake system services
-  const brakeServices = [
+  // IT и робототехника
+  const itServices = [
     { name: 'Робототехника Junior (7-9 лет)', price: 28000, unit: 'месяц', priceNote: '₸/месяц' },
     { name: 'Python Start (10-12 лет)', price: 32000, unit: 'месяц' },
     { name: 'GameDev основы', price: 35000, unit: 'месяц' },
@@ -207,21 +219,21 @@ async function main() {
     { name: 'Клуб олимпиадного программирования', price: 45000, unit: 'месяц' },
   ];
 
-  for (let i = 0; i < brakeServices.length; i++) {
+  for (let i = 0; i < itServices.length; i++) {
     await prisma.service.upsert({
-      where: { categoryId_name: { categoryId: category1.id, name: brakeServices[i].name } },
+      where: { categoryId_name: { categoryId: category1.id, name: itServices[i].name } },
       update: {},
       create: {
         categoryId: category1.id,
         accountId: account.id,
-        ...brakeServices[i],
+        ...itServices[i],
         sortOrder: i,
       },
     });
   }
 
-  // Cooling system services
-  const coolingServices = [
+  // Языки и коммуникация
+  const languageServices = [
     { name: 'Английский Kids A1', price: 26000, unit: 'месяц' },
     { name: 'Английский Kids A2', price: 29000, unit: 'месяц' },
     { name: 'Разговорный клуб', price: 18000, unit: 'месяц' },
@@ -233,14 +245,14 @@ async function main() {
     { name: 'Грамматика без стресса', price: 19500, unit: 'месяц' },
   ];
 
-  for (let i = 0; i < coolingServices.length; i++) {
+  for (let i = 0; i < languageServices.length; i++) {
     await prisma.service.upsert({
-      where: { categoryId_name: { categoryId: category2.id, name: coolingServices[i].name } },
+      where: { categoryId_name: { categoryId: category2.id, name: languageServices[i].name } },
       update: {},
       create: {
         categoryId: category2.id,
         accountId: account.id,
-        ...coolingServices[i],
+        ...languageServices[i],
         sortOrder: i,
       },
     });

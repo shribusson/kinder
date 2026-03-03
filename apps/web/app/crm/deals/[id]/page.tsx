@@ -236,7 +236,7 @@ export default async function DealDetailPage({ params }: { params: { id: string 
               Ведение журнала работ, чек-листы и медиа выполняются в карточке специалиста.
             </p>
             <Link
-              href={`/crm/mechanic/deals/${deal.id}`}
+              href={`/crm/operations/deals/${deal.id}`}
               className="inline-flex rounded-lg bg-orange-100 px-3 py-2 text-sm font-medium text-orange-700 hover:bg-orange-200 transition-colors"
             >
               Открыть журнал работ

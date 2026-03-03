@@ -1,6 +1,17 @@
 # Development configuration - HTTP only
 http://localhost {
-    handle /api/* {
+    handle_path /api/* {
+        reverse_proxy api:3001
+    }
+    handle {
+        reverse_proxy web:3000
+    }
+}
+
+https://localhost {
+    tls internal
+
+    handle_path /api/* {
         reverse_proxy api:3001
     }
     handle {

@@ -31,7 +31,7 @@ export default function MechanicDashboard() {
 
   const loadDashboard = useCallback(async () => {
     try {
-      const response = await apiCall('/mechanic/dashboard', {
+      const response = await apiCall('/operations/dashboard', {
         method: 'GET',
       });
 
@@ -64,7 +64,7 @@ export default function MechanicDashboard() {
     if (!dashboard?.resource) return;
 
     try {
-      const response = await apiCall('/mechanic/time/start', {
+      const response = await apiCall('/operations/time/start', {
         method: 'POST',
         body: {
           dealId,
@@ -116,7 +116,7 @@ export default function MechanicDashboard() {
             Не удалось загрузить данные
           </p>
           <p className="text-sm text-gray-600 mt-2">
-            Убедитесь, что вы авторизованы как специалист
+            Убедитесь, что вы авторизованы в рабочем кабинете
           </p>
         </div>
       </div>
@@ -144,7 +144,7 @@ export default function MechanicDashboard() {
           <h1 className="text-2xl font-bold text-gray-900">
             Привет, {dashboard.resource.name}!
           </h1>
-          <p className="text-gray-600">Ваши заказы на сегодня</p>
+          <p className="text-gray-600">Ваши задачи на сегодня</p>
         </div>
 
         {/* Today's Stats - Horizontal scroll on mobile */}
@@ -178,7 +178,7 @@ export default function MechanicDashboard() {
           </h2>
           {dashboard.assignedDeals.length === 0 ? (
             <div className="bg-white border rounded-lg p-8 text-center">
-              <p className="text-gray-500">У вас пока нет назначенных сделок</p>
+              <p className="text-gray-500">У вас пока нет назначенных задач</p>
             </div>
           ) : (
             <div className="space-y-3">

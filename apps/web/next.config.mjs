@@ -14,6 +14,16 @@ const nextConfig = {
         destination: '/crm/settings/directories',
         permanent: true,
       },
+      {
+        source: '/crm/mechanic',
+        destination: '/crm/operations',
+        permanent: true,
+      },
+      {
+        source: '/crm/mechanic/deals/:id',
+        destination: '/crm/operations/deals/:id',
+        permanent: true,
+      },
     ];
   },
 };

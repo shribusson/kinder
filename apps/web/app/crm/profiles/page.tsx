@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { IconSearch, IconCar, IconHistory, IconPlus, IconTrash } from '@tabler/icons-react';
+import { IconSearch, IconUser, IconHistory, IconPlus, IconTrash } from '@tabler/icons-react';
 import { apiBaseUrl, getAuthHeaders } from '@/app/lib/api';
 import Link from 'next/link';
 
-interface Vehicle {
+interface ProfileRecord {
   id: string;
   brandId: string;
   modelId: string;
@@ -30,13 +30,13 @@ interface HistoryEntry {
   deal?: { id: string; title: string; stage: string };
 }
 
-export default function VehiclesPage() {
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+export default function ProfilesPage() {
+  const [profiles, setProfiles] = useState<ProfileRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
   // History panel
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState<ProfileRecord | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
@@ -48,33 +48,33 @@ export default function VehiclesPage() {
     notes: '',
     cost: '',
   });
-  const [deletingVehicleId, setDeletingVehicleId] = useState<string | null>(null);
+  const [deletingProfileId, setDeletingProfileId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchVehicles();
+    fetchProfiles();
   }, []);
 
-  const fetchVehicles = async () => {
+  const fetchProfiles = async () => {
     try {
-      const res = await fetch(`${apiBaseUrl}/vehicles/list`, {
+      const res = await fetch(`${apiBaseUrl}/profiles/list`, {
         headers: getAuthHeaders(),
         cache: 'no-store',
       });
       if (res.ok) {
         const json = await res.json();
-        setVehicles(json.data || json);
+        setProfiles(json.data || json);
       }
     } catch (e) {
-      console.error('Failed to fetch vehicles:', e);
+      console.error('Failed to fetch profiles:', e);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchHistory = async (vehicleId: string) => {
+  const fetchHistory = async (profileId: string) => {
     setHistoryLoading(true);
     try {
-      const res = await fetch(`${apiBaseUrl}/vehicles/${vehicleId}/history`, {
+      const res = await fetch(`${apiBaseUrl}/profiles/${profileId}/history`, {
         headers: getAuthHeaders(),
         cache: 'no-store',
       });
@@ -89,13 +89,13 @@ export default function VehiclesPage() {
     }
   };
 
-  const selectVehicle = (vehicle: Vehicle) => {
-    setSelectedVehicle(vehicle);
-    fetchHistory(vehicle.id);
+  const selectProfile = (profile: ProfileRecord) => {
+    setSelectedProfile(profile);
+    fetchHistory(profile.id);
   };
 
   const addHistory = async () => {
-    if (!selectedVehicle) return;
+    if (!selectedProfile) return;
     try {
       const body: any = {
         description: historyForm.description,
@@ -104,7 +104,7 @@ export default function VehiclesPage() {
       if (historyForm.notes) body.notes = historyForm.notes;
       if (historyForm.cost) body.cost = parseInt(historyForm.cost);
 
-      const res = await fetch(`${apiBaseUrl}/vehicles/${selectedVehicle.id}/history`, {
+      const res = await fetch(`${apiBaseUrl}/profiles/${selectedProfile.id}/history`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify(body),
@@ -112,7 +112,7 @@ export default function VehiclesPage() {
       if (res.ok) {
         setHistoryModalOpen(false);
         setHistoryForm({ description: '', mileageAtService: '', notes: '', cost: '' });
-        fetchHistory(selectedVehicle.id);
+        fetchHistory(selectedProfile.id);
       } else {
         const err = await res.json();
         alert(err.message || 'Error');
@@ -123,37 +123,37 @@ export default function VehiclesPage() {
     }
   };
 
-  const deleteVehicle = async (vehicle: Vehicle) => {
+  const deleteProfile = async (profile: ProfileRecord) => {
     const confirmed = window.confirm(
-      `Удалить карточку ${vehicle.brand.name} ${vehicle.model.name}${vehicle.licensePlate ? ` (${vehicle.licensePlate})` : ''}?`,
+      `Удалить профиль ${profile.brand.name} ${profile.model.name}${profile.licensePlate ? ` (${profile.licensePlate})` : ''}?`,
     );
     if (!confirmed) return;
 
     try {
-      setDeletingVehicleId(vehicle.id);
-      const res = await fetch(`${apiBaseUrl}/vehicles/${vehicle.id}`, {
+      setDeletingProfileId(profile.id);
+      const res = await fetch(`${apiBaseUrl}/profiles/${profile.id}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
       });
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || 'Не удалось удалить карточку');
+        throw new Error(err.message || 'Не удалось удалить профиль');
       }
 
-      setVehicles((prev) => prev.filter((item) => item.id !== vehicle.id));
-      if (selectedVehicle?.id === vehicle.id) {
-        setSelectedVehicle(null);
+      setProfiles((prev) => prev.filter((item) => item.id !== profile.id));
+      if (selectedProfile?.id === profile.id) {
+        setSelectedProfile(null);
         setHistory([]);
       }
     } catch (e: any) {
-      alert(e.message || 'Ошибка удаления карточки');
+      alert(e.message || 'Ошибка удаления профиля');
     } finally {
-      setDeletingVehicleId(null);
+      setDeletingProfileId(null);
     }
   };
 
-  const filteredVehicles = vehicles.filter(v => {
+  const filteredProfiles = profiles.filter(v => {
     if (!search) return true;
     const q = search.toLowerCase();
     return (
@@ -169,7 +169,7 @@ export default function VehiclesPage() {
   if (loading) {
     return (
       <div className="flex flex-col gap-6">
-        <h1 className="text-2xl font-bold text-slate-900">Карточки профилей</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Профили детей</h1>
         <p className="text-sm text-slate-500">Загрузка...</p>
       </div>
     );
@@ -181,8 +181,8 @@ export default function VehiclesPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Карточки профилей</h1>
-            <p className="text-sm text-slate-500">{vehicles.length} карточек в системе</p>
+            <h1 className="text-2xl font-bold text-slate-900">Профили детей</h1>
+            <p className="text-sm text-slate-500">{profiles.length} профилей в системе</p>
           </div>
         </div>
 
@@ -192,20 +192,20 @@ export default function VehiclesPage() {
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Поиск по категории, подкатегории, идентификатору..."
+            placeholder="Поиск по профилю, идентификатору, коду..."
             className="w-full pl-9 pr-3 py-2 border rounded-lg text-sm"
           />
         </div>
 
         <div className="flex gap-6">
-          {/* Vehicles List */}
+          {/* Profiles List */}
           <div className="flex-1">
-            {filteredVehicles.length === 0 ? (
+            {filteredProfiles.length === 0 ? (
               <div className="card text-center py-12">
-                <IconCar size={48} className="mx-auto text-slate-300 mb-4" />
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">Нет карточек</h3>
+                <IconUser size={48} className="mx-auto text-slate-300 mb-4" />
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">Нет профилей</h3>
                 <p className="text-sm text-slate-500">
-                  Карточки создаются при оформлении сделок
+                  Профили создаются при оформлении сделок
                 </p>
               </div>
             ) : (
@@ -214,21 +214,21 @@ export default function VehiclesPage() {
                   <thead>
                     <tr className="text-left text-xs text-slate-500 uppercase border-b border-slate-200">
                       <th className="pb-3 pr-4">Профиль</th>
-                      <th className="pb-3 pr-4">Год</th>
-                      <th className="pb-3 pr-4">ID</th>
+                          <th className="pb-3 pr-4">Возраст</th>
+                          <th className="pb-3 pr-4">ID профиля</th>
                       <th className="pb-3 pr-4">Код</th>
-                      <th className="pb-3 pr-4">Индекс</th>
+                          <th className="pb-3 pr-4">Индекс</th>
                       <th className="pb-3 pr-4 text-center">История</th>
                       <th className="pb-3 pr-4 text-right">Действия</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredVehicles.map(v => (
+                    {filteredProfiles.map(v => (
                       <tr
                         key={v.id}
-                        onClick={() => selectVehicle(v)}
+                        onClick={() => selectProfile(v)}
                         className={`border-b border-slate-50 cursor-pointer hover:bg-orange-50 transition-colors ${
-                          selectedVehicle?.id === v.id ? 'bg-orange-50' : ''
+                          selectedProfile?.id === v.id ? 'bg-orange-50' : ''
                         }`}
                       >
                         <td className="py-3 pr-4">
@@ -245,7 +245,7 @@ export default function VehiclesPage() {
                           <span className="font-medium">{v.licensePlate || '—'}</span>
                         </td>
                         <td className="py-3 pr-4 text-slate-600">
-                          {v.mileage ? `${v.mileage.toLocaleString()} км` : '—'}
+                          {v.mileage ? `${v.mileage.toLocaleString()}` : '—'}
                         </td>
                         <td className="py-3 pr-4 text-center">
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
@@ -261,13 +261,13 @@ export default function VehiclesPage() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              deleteVehicle(v);
+                              deleteProfile(v);
                             }}
-                            disabled={deletingVehicleId === v.id}
+                            disabled={deletingProfileId === v.id}
                             className="inline-flex items-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
                           >
                             <IconTrash size={14} />
-                            {deletingVehicleId === v.id ? 'Удаление...' : 'Удалить'}
+                            {deletingProfileId === v.id ? 'Удаление...' : 'Удалить'}
                           </button>
                         </td>
                       </tr>
@@ -279,16 +279,16 @@ export default function VehiclesPage() {
           </div>
 
           {/* History Panel */}
-          {selectedVehicle && (
+          {selectedProfile && (
             <div className="w-96 flex-shrink-0">
               <div className="card sticky top-8">
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h3 className="font-semibold text-slate-900">
-                      {selectedVehicle.brand.name} {selectedVehicle.model.name}
+                      {selectedProfile.brand.name} {selectedProfile.model.name}
                     </h3>
                     <p className="text-xs text-slate-500">
-                      {selectedVehicle.licensePlate || selectedVehicle.vin || 'Без кода'}
+                      {selectedProfile.licensePlate || selectedProfile.vin || 'Без кода'}
                     </p>
                   </div>
                   <button

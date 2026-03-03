@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Clock, Car, PlayCircle } from 'lucide-react';
+import { Clock, User, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Deal {
@@ -54,7 +54,7 @@ const stageColors: Record<string, string> = {
 };
 
 export function DealCard({ deal, onStartTimer, hasActiveTimer }: DealCardProps) {
-  const carInfo = deal.vehicle
+  const profileInfo = deal.vehicle
     ? `${deal.vehicle.brand.cyrillicName || deal.vehicle.brand.name} ${
         deal.vehicle.model.cyrillicName || deal.vehicle.model.name
       }`
@@ -68,7 +68,7 @@ export function DealCard({ deal, onStartTimer, hasActiveTimer }: DealCardProps) 
 
   return (
     <div className="bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow touch-manipulation">
-      <Link href={`/crm/mechanic/deals/${deal.id}`} className="block">
+      <Link href={`/crm/operations/deals/${deal.id}`} className="block">
         <div className="mb-3">
           <div className="flex items-start justify-between mb-2">
             <div className="flex-1 min-w-0">
@@ -89,8 +89,8 @@ export function DealCard({ deal, onStartTimer, hasActiveTimer }: DealCardProps) 
           </div>
 
           <div className="flex items-center gap-2 text-sm text-gray-700 mb-2">
-            <Car className="w-4 h-4 flex-shrink-0" />
-            <span className="truncate">{carInfo}</span>
+            <User className="w-4 h-4 flex-shrink-0" />
+            <span className="truncate">{profileInfo}</span>
             {deal.vehicle?.licensePlate && (
               <span className="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded">
                 {deal.vehicle.licensePlate}

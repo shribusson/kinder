@@ -13,17 +13,17 @@ const navItems = [
   { label: "Сделки", href: "/crm/deals", icon: "🎯" },
   { label: "Обучение", href: "/crm/education", icon: "🎓" },
   { label: "Записи", href: "/crm/bookings", icon: "📅" },
-  { label: "Карточки", href: "/crm/profiles", icon: "🗂️" },
+  { label: "Профили детей", href: "/crm/profiles", icon: "🗂️" },
   { label: "Кампании", href: "/crm/campaigns", icon: "📢" },
   { label: "Аналитика", href: "/crm/analytics", icon: "📈" },
-  { label: "Операции", href: "/crm/mechanic", icon: "⚙️" }
+  { label: "Исполнение", href: "/crm/operations", icon: "⚙️" }
 ];
 
 const settingsItems = [
   { label: "Каталог", href: "/crm/settings/services", icon: "🛠️" },
   { label: "Справочники", href: "/crm/settings/directories", icon: "🏭" },
   { label: "Интеграции", href: "/crm/settings/integrations", icon: "🔌" },
-  { label: "План продаж", href: "/crm/settings/revenue-plan", icon: "💰" },
+  { label: "План выручки", href: "/crm/settings/revenue-plan", icon: "💰" },
   { label: "Ресурсы", href: "/crm/settings/resources", icon: "⚙️" },
   { label: "Пользователи", href: "/crm/settings/users", icon: "👤" },
   { label: "Документы", href: "/crm/settings/work-order", icon: "📋" }

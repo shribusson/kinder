@@ -29,7 +29,7 @@ export default function VehicleHistorySection({ vehicleId }: VehicleHistorySecti
   const loadHistory = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${apiBaseUrl}/vehicles/${vehicleId}/history`, {
+      const response = await fetch(`${apiBaseUrl}/profiles/${vehicleId}/history`, {
         headers: getAuthHeaders(),
         cache: 'no-store',
       });
@@ -40,11 +40,11 @@ export default function VehicleHistorySection({ vehicleId }: VehicleHistorySecti
           setHistory(data.data);
         }
       } else {
-        setError('Не удалось загрузить историю обслуживания');
+        setError('Не удалось загрузить историю активности профиля');
       }
     } catch (err) {
       console.error('Failed to load vehicle history:', err);
-      setError('Ошибка при загрузке истории');
+      setError('Ошибка при загрузке истории профиля');
     } finally {
       setLoading(false);
     }
@@ -57,7 +57,7 @@ export default function VehicleHistorySection({ vehicleId }: VehicleHistorySecti
   if (loading) {
     return (
       <div className="mt-8 border-t border-slate-200 pt-6">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">История обслуживания</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">История активности профиля</h3>
         <div className="text-sm text-slate-500">Загрузка...</div>
       </div>
     );
@@ -66,7 +66,7 @@ export default function VehicleHistorySection({ vehicleId }: VehicleHistorySecti
   if (error) {
     return (
       <div className="mt-8 border-t border-slate-200 pt-6">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">История обслуживания</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">История активности профиля</h3>
         <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
@@ -77,7 +77,7 @@ export default function VehicleHistorySection({ vehicleId }: VehicleHistorySecti
   return (
     <div className="mt-8 border-t border-slate-200 pt-6">
       <h3 className="text-lg font-semibold text-slate-900 mb-4">
-        История обслуживания
+        История активности профиля
         {history.length > 0 && (
           <span className="ml-2 text-sm font-normal text-slate-500">
             ({history.length} {history.length === 1 ? 'запись' : history.length < 5 ? 'записи' : 'записей'})
@@ -102,9 +102,9 @@ export default function VehicleHistorySection({ vehicleId }: VehicleHistorySecti
               />
             </svg>
           </div>
-          <p className="text-sm text-slate-600">История обслуживания пуста</p>
+          <p className="text-sm text-slate-600">История активности пока пуста</p>
           <p className="text-xs text-slate-500 mt-1">
-            Записи будут добавляться автоматически при закрытии сделок
+            Записи добавляются автоматически после завершения этапов сделки
           </p>
         </div>
       ) : (
@@ -138,7 +138,7 @@ export default function VehicleHistorySection({ vehicleId }: VehicleHistorySecti
                           d="M13 10V3L4 14h7v7l9-11h-7z"
                         />
                       </svg>
-                      <span>{entry.mileageAtService.toLocaleString('ru-RU')} км</span>
+                      <span>{entry.mileageAtService.toLocaleString('ru-RU')}</span>
                     </div>
                   )}
                 </div>

@@ -72,7 +72,7 @@ export function TimerWidget({ timer, onTimerStopped }: TimerWidgetProps) {
 
     setIsStopping(true);
     try {
-      const response = await apiCall(`/mechanic/time/${timer.id}/stop`, {
+      const response = await apiCall(`/operations/time/${timer.id}/stop`, {
         method: 'PUT',
       });
 
